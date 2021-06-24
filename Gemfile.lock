@@ -1,0 +1,15 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    racc (1.5.2)
+    rake (13.0.3)
+
+PLATFORMS
+  x86_64-darwin-19
+
+DEPENDENCIES
+  racc
+  rake
+
+BUNDLED WITH
+   2.2.16
