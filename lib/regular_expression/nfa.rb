@@ -52,6 +52,21 @@ module RegularExpression
     end
 
     class Transition
+      class Anchor
+        # State
+        attr_reader :state
+
+        # string
+        attr_reader :value
+
+        def initialize(state, value)
+          @state = state
+          @value = value
+        end
+
+        alias label value
+      end
+
       class Any
         # State
         attr_reader :state

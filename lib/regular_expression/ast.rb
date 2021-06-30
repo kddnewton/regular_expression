@@ -237,7 +237,8 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        raise NotImplementedError
+        transition = NFA::Transition::Anchor.new(finish, value)
+        start.add_transition(transition)
       end
     end
 
