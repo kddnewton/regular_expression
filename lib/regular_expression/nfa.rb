@@ -4,7 +4,6 @@ module RegularExpression
   module NFA
     def self.to_dot(nfa)
       require "graphviz"
-      require "set"
 
       graph = Graphviz::Graph.new(rankdir: "LR")
       nfa.to_dot(graph, {})
@@ -65,7 +64,7 @@ module RegularExpression
       end
     end
 
-    class Transition
+    module Transition
       class BeginAnchor
         # State
         attr_reader :state
@@ -134,11 +133,11 @@ module RegularExpression
         end
 
         def label
-          "[#{values.join}]"
+          values.inspect
         end
 
         def accept(string, index)
-          accepted = values.include?(string[index])
+          accepted = values.any? { |value| string[index..].start_with?(value) }
           accepted = !accepted if invert
 
           state.accept(string, index + 1) if accepted

@@ -3,6 +3,7 @@
 require_relative "./regular_expression/ast"
 require_relative "./regular_expression/lexer"
 require_relative "./regular_expression/nfa"
+require_relative "./regular_expression/optimize"
 require_relative "./regular_expression/parser"
 
 module RegularExpression
@@ -21,6 +22,9 @@ module RegularExpression
 
   def self.pattern(source)
     parser = RegularExpression::Parser.new
-    Pattern.new(parser.parse(source).to_nfa)
+    nfa = parser.parse(source).to_nfa
+
+    Optimize.optimize(nfa)
+    Pattern.new(nfa)
   end
 end
