@@ -15,7 +15,7 @@ module RegularExpression
     end
 
     def match?(string)
-      !!nfa.accept(string, 0)
+      string.length.times.any? { |index| nfa.accept(string, index) }
     end
   end
 
