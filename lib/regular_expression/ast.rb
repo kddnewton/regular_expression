@@ -91,10 +91,16 @@ module RegularExpression
         quantifier.to_dot(node) if quantifier
       end
 
-      def to_nfa(start, finish)
-        # TODO: capture
+      def to_nfa_once(start, finish)
         expressions.each { |expression| expression.to_nfa(start, finish) }
-        quantifier.to_nfa(start, finish) if quantifier
+      end
+
+      def to_nfa(start, finish)
+        if quantifier
+          quantifier.to_nfa(self, start, finish)
+        else
+          to_nfa_once(start, finish)
+        end
       end
     end
 
@@ -117,9 +123,16 @@ module RegularExpression
         quantifier.to_dot(node) if quantifier
       end
 
-      def to_nfa(start, finish)
+      def to_nfa_once(start, finish)
         item.to_nfa(start, finish)
-        quantifier.to_nfa(start, finish) if quantifier
+      end
+
+      def to_nfa(start, finish)
+        if quantifier
+          quantifier.to_nfa(self, start, finish)
+        else
+          to_nfa_once(start, finish)
+        end
       end
     end
 
@@ -145,7 +158,9 @@ module RegularExpression
 
       def to_nfa(start, finish)
         transitions = items.map { |item| item.to_nfa_transition(finish) }
-        transition = NFA::Transition::CharacterGroup.new(finish, transitions, invert)
+        transition =
+          NFA::Transition::CharacterGroup.new(finish, transitions, invert)
+
         start.add_transition(transition)
       end
     end
@@ -246,7 +261,8 @@ module RegularExpression
           parent.add_node(object_id, label: "*", shape: "box")
         end
 
-        def to_nfa(start, finish)
+        def to_nfa(node, start, finish)
+          node.to_nfa_once(start, finish)
           start.add_transition(NFA::Transition::Epsilon.new(finish))
           finish.add_transition(NFA::Transition::Epsilon.new(start))
         end
@@ -257,7 +273,8 @@ module RegularExpression
           parent.add_node(object_id, label: "+", shape: "box")
         end
       
-        def to_nfa(start, finish)
+        def to_nfa(node, start, finish)
+          node.to_nfa_once(start, finish)
           finish.add_transition(NFA::Transition::Epsilon.new(start))
         end
       end
@@ -267,7 +284,8 @@ module RegularExpression
           parent.add_node(object_id, label: "?", shape: "box")
         end
 
-        def to_nfa(start, finish)
+        def to_nfa(node, start, finish)
+          node.to_nfa_once(start, finish)
           start.add_transition(NFA::Transition::Epsilon.new(finish))
         end
       end
@@ -284,8 +302,12 @@ module RegularExpression
           parent.add_node(object_id, label: "{#{value}}", shape: "box")
         end
 
-        def to_nfa(start, finish)
-          raise NotImplementedError
+        def to_nfa(node, start, finish)
+          states = [start, *(value - 1).times.map { NFA::State.new }, finish]
+
+          value.times do |index|
+            node.to_nfa_once(states[index], states[index + 1])
+          end
         end
       end
 
@@ -301,8 +323,14 @@ module RegularExpression
           parent.add_node(object_id, label: "{#{value},}", shape: "box")
         end
 
-        def to_nfa(start, finish)
-          raise NotImplementedError
+        def to_nfa(node, start, finish)
+          states = [start, *(value - 1).times.map { NFA::State.new }, finish]
+
+          value.times do |index|
+            node.to_nfa_once(states[index], states[index + 1])
+          end
+
+          states[-1].add_transition(NFA::Transition::Epsilon.new(states[-2]))
         end
       end
 
@@ -319,8 +347,17 @@ module RegularExpression
           parent.add_node(object_id, label: "{#{lower},#{upper}}", shape: "box")
         end
 
-        def to_nfa(start, finish)
-          raise NotImplementedError
+        def to_nfa(node, start, finish)
+          states = [start, *(upper - 1).times.map { NFA::State.new }, finish]
+
+          upper.times do |index|
+            node.to_nfa_once(states[index], states[index + 1])
+          end
+
+          (upper - lower).times do |index|
+            transition = NFA::Transition::Epsilon.new(states[-1])
+            states[lower + index].add_transition(transition)
+          end
         end
       end
     end
