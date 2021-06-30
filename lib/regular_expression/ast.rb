@@ -92,11 +92,9 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        # TODO: quantifier
         # TODO: capture
-        expressions.each do |expression|
-          expression.to_nfa(start, finish)
-        end
+        expressions.each { |expression| expression.to_nfa(start, finish) }
+        quantifier.to_nfa(start, finish) if quantifier
       end
     end
 
@@ -120,8 +118,8 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        # TODO: quantifier
         item.to_nfa(start, finish)
+        quantifier.to_nfa(start, finish) if quantifier
       end
     end
 
@@ -242,14 +240,15 @@ module RegularExpression
       end
     end
 
-    class Quantifier
+    module Quantifier
       class ZeroOrMore
         def to_dot(parent)
           parent.add_node(object_id, label: "*", shape: "box")
         end
 
         def to_nfa(start, finish)
-          raise NotImplementedError
+          start.add_transition(NFA::Transition::Epsilon.new(finish))
+          finish.add_transition(NFA::Transition::Epsilon.new(start))
         end
       end
 
@@ -259,7 +258,7 @@ module RegularExpression
         end
       
         def to_nfa(start, finish)
-          raise NotImplementedError
+          finish.add_transition(NFA::Transition::Epsilon.new(start))
         end
       end
 
@@ -269,7 +268,7 @@ module RegularExpression
         end
 
         def to_nfa(start, finish)
-          raise NotImplementedError
+          start.add_transition(NFA::Transition::Epsilon.new(finish))
         end
       end
 
@@ -323,29 +322,6 @@ module RegularExpression
         def to_nfa(start, finish)
           raise NotImplementedError
         end
-      end
-
-      # ZeroOrMore | OneOrMore | Optional | Exact | AtLeast | Range
-      attr_reader :type
-
-      # bool
-      attr_reader :greedy
-
-      def initialize(type, greedy: true)
-        @type = type
-        @greedy = greedy
-      end
-
-      def to_dot(parent)
-        label = "Quantifier"
-        label = "#{label} (greedy)" if greedy
-
-        node = parent.add_node(object_id, label: label)
-        type.to_dot(node)
-      end
-
-      def to_nfa(start, finish)
-        raise NotImplementedError
       end
     end
   end

@@ -4,8 +4,12 @@ module RegularExpression
   module NFA
     def self.to_dot(nfa)
       require "graphviz"
+      require "set"
+
       graph = Graphviz::Graph.new(rankdir: "LR")
-      nfa.to_dot(graph)
+      visited = {}
+
+      nfa.to_dot(graph, visited)
     
       Graphviz.output(graph, path: "build/nfa.svg", format: "svg")
       graph.to_dot
@@ -23,11 +27,14 @@ module RegularExpression
         transitions << transition
       end
 
-      def to_dot(graph)
+      def to_dot(graph, visited)
+        return visited[self] if visited.include?(self)
+
         source = graph.add_node(object_id, label: "")
+        visited[self] = source
 
         transitions.each do |transition|
-          target = transition.state.to_dot(graph)
+          target = transition.state.to_dot(graph, visited)
           source.connect(target, label: transition.label)
         end
 
@@ -36,16 +43,16 @@ module RegularExpression
     end
 
     class StartState < State
-      def to_dot(graph)
-        super(graph).tap do |node|
+      def to_dot(graph, visited)
+        super(graph, visited).tap do |node|
           node.attributes.merge!(label: "Start", shape: "box")
         end
       end
     end
 
     class FinishState < State
-      def to_dot(graph)
-        super(graph).tap do |node|
+      def to_dot(graph, visited)
+        super(graph, visited).tap do |node|
           node.attributes.merge!(label: "Finish", shape: "box")
         end
       end
@@ -146,6 +153,19 @@ module RegularExpression
 
         def label
           "#{left}-#{right}"
+        end
+      end
+
+      class Epsilon
+        # State
+        attr_reader :state
+
+        def initialize(state)
+          @state = state
+        end
+
+        def label
+          "ε"
         end
       end
     end

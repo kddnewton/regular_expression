@@ -74,12 +74,6 @@ rule
     { result = RegularExpression::AST::Character.new(val[0]) }
 
   quantifier:
-    quantifier_type QMARK
-    { result = RegularExpression::AST::Quantifier.new(val[0], greedy: false) }
-    | quantifier_type
-    { result = RegularExpression::AST::Quantifier.new(val[0]) }
-
-  quantifier_type:
     LBRACE INTEGER COMMA INTEGER RBRACE
     { result = RegularExpression::AST::Quantifier::Range.new(val[1], val[3]) }
     | LBRACE INTEGER COMMA RBRACE
