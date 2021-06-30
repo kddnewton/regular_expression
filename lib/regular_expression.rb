@@ -4,4 +4,23 @@ require_relative "./regular_expression/ast"
 require_relative "./regular_expression/lexer"
 require_relative "./regular_expression/nfa"
 require_relative "./regular_expression/parser"
-require_relative "./regular_expression/pattern"
+
+module RegularExpression
+  class Pattern
+    # NFA::StartState
+    attr_reader :nfa
+
+    def initialize(nfa)
+      @nfa = nfa
+    end
+
+    def match?(string)
+      !!nfa.accept(string, 0)
+    end
+  end
+
+  def self.pattern(source)
+    parser = RegularExpression::Parser.new
+    Pattern.new(parser.parse(source).to_nfa)
+  end
+end
