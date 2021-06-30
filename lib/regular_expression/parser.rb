@@ -234,14 +234,14 @@ module_eval(<<'.,.,', 'parser.y', 14)
 
 module_eval(<<'.,.,', 'parser.y', 18)
   def _reduce_5(val, _values, result)
-     result = RegularExpression::AST::Expression.new(val[0] + val[2].items)
+     result = [RegularExpression::AST::Expression.new(val[0])] + val[2]
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 20)
   def _reduce_6(val, _values, result)
-     result = RegularExpression::AST::Expression.new(val[0])
+     result = [RegularExpression::AST::Expression.new(val[0])]
     result
   end
 .,.,
@@ -273,14 +273,14 @@ module_eval(<<'.,.,', 'parser.y', 32)
 
 module_eval(<<'.,.,', 'parser.y', 36)
   def _reduce_12(val, _values, result)
-     result = RegularExpression::AST::Group.new(val[2], quantifier: val[4], capture: false)
+     result = RegularExpression::AST::Group.new(val[1], quantifier: val[3], capture: false)
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 38)
   def _reduce_13(val, _values, result)
-     result = RegularExpression::AST::Group.new(val[2], capture: false)
+     result = RegularExpression::AST::Group.new(val[1], capture: false)
     result
   end
 .,.,

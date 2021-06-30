@@ -1,6 +1,15 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    ffi (1.15.3)
+    graphviz (1.2.1)
+      process-pipeline
+    process-group (1.2.3)
+      process-terminal (~> 0.2.0)
+    process-pipeline (1.0.2)
+      process-group
+    process-terminal (0.2.0)
+      ffi
     racc (1.5.2)
     rake (13.0.3)
 
@@ -8,6 +17,7 @@ PLATFORMS
   x86_64-darwin-19
 
 DEPENDENCIES
+  graphviz
   racc
   rake
 

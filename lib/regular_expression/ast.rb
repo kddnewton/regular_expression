@@ -3,14 +3,14 @@
 module RegularExpression
   module AST
     class Root
-      # Expression
-      attr_reader :expression
+      # Expression[]
+      attr_reader :expressions
 
       # bool
       attr_reader :at_start
 
-      def initialize(expression, at_start: false)
-        @expression = expression
+      def initialize(expressions, at_start: false)
+        @expressions = expressions
         @at_start = at_start
       end
     end
@@ -25,8 +25,8 @@ module RegularExpression
     end
 
     class Group
-      # Expression
-      attr_reader :expression
+      # Expression[]
+      attr_reader :expressions
 
       # Quantifier?
       attr_reader :quantifier
@@ -34,8 +34,8 @@ module RegularExpression
       # bool
       attr_reader :capture
 
-      def initialize(expression, quantifier: nil, capture: true)
-        @expression = expression
+      def initialize(expressions, quantifier: nil, capture: true)
+        @expressions = expressions
         @quantifier = quantifier
         @capture = capture
       end

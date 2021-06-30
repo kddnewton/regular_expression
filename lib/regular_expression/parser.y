@@ -16,9 +16,9 @@ rule
 
   expression:
     subexpression PIPE expression
-    { result = RegularExpression::AST::Expression.new(val[0] + val[2].items) }
+    { result = [RegularExpression::AST::Expression.new(val[0])] + val[2] }
     | subexpression
-    { result = RegularExpression::AST::Expression.new(val[0]) }
+    { result = [RegularExpression::AST::Expression.new(val[0])] }
 
   subexpression:
     item subexpression
@@ -34,9 +34,9 @@ rule
 
   group:
     NO_CAPTURE expression RPAREN quantifier
-    { result = RegularExpression::AST::Group.new(val[2], quantifier: val[4], capture: false) }
+    { result = RegularExpression::AST::Group.new(val[1], quantifier: val[3], capture: false) }
     | NO_CAPTURE expression RPAREN
-    { result = RegularExpression::AST::Group.new(val[2], capture: false) }
+    { result = RegularExpression::AST::Group.new(val[1], capture: false) }
     | LPAREN expression RPAREN quantifier
     { result = RegularExpression::AST::Group.new(val[1], quantifier: val[3]) }
     | LPAREN expression RPAREN
