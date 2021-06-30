@@ -29,11 +29,9 @@ module RegularExpression
 
       until @source.empty?
         case @source
-        when /\A\(\?:/
-          result << [:NO_CAPTURE, $&]
         when /\A\\[wWdD]/
           result << [:CHAR_CLASS, $&]
-        when /\A(?:\\[bBAzZG]|\$)/
+        when /\A(?:\\[Az]|\$)/
           result << [:ANCHOR, $&]
         when /\A[\^$()\[\]{}|*+?.\-,]/
           result << [SINGLE[$&], $&]

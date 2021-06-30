@@ -33,10 +33,16 @@ module RegularExpression
 
       def to_nfa
         start = NFA::StartState.new
-        finish = NFA::FinishState.new
+        current = start
 
+        if at_start
+          current = NFA::State.new
+          start.add_transition(NFA::Transition::BeginAnchor.new(current))
+        end
+
+        finish = NFA::FinishState.new
         expressions.each do |expression|
-          expression.to_nfa(start, finish)
+          expression.to_nfa(current, finish)
         end
 
         start
@@ -73,19 +79,14 @@ module RegularExpression
 
       # Quantifier?
       attr_reader :quantifier
-    
-      # bool
-      attr_reader :capture
 
-      def initialize(expressions, quantifier: nil, capture: true)
+      def initialize(expressions, quantifier: nil)
         @expressions = expressions
         @quantifier = quantifier
-        @capture = capture
       end
 
       def to_dot(parent)
-        label = "Group (#{capture ? "capture" : "no capture"})"
-        node = parent.add_node(object_id, label: label)
+        node = parent.add_node(object_id, label: "Group")
 
         expressions.each { |expression| expression.to_dot(node) }
         quantifier.to_dot(node) if quantifier
@@ -157,10 +158,8 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        transitions = items.map { |item| item.to_nfa_transition(finish) }
-        transition =
-          NFA::Transition::CharacterGroup.new(finish, transitions, invert)
-
+        values = items.flat_map(&:to_nfa_values).sort
+        transition = NFA::Transition::Set.new(finish, values, invert: invert)
         start.add_transition(transition)
       end
     end
@@ -178,7 +177,25 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        transition = NFA::Transition::CharacterClass.new(finish, value)
+        transition =
+          case value
+          when "\\w"
+            NFA::Transition::Set.new(
+              finish,
+              [*("a".."z"), *("A".."Z"), *("0".."9"), "_"]
+            )
+          when "\\W"
+            NFA::Transition::Set.new(
+              finish,
+              [*("a".."z"), *("A".."Z"), *("0".."9"), "_"],
+              invert: true
+            )
+          when "\\d"
+            NFA::Transition::Set.new(finish, ("0".."9").to_a)
+          when "\\D"
+            NFA::Transition::Set.new(finish, ("0".."9").to_a, invert: true)
+          end
+
         start.add_transition(transition)
       end
     end
@@ -195,12 +212,13 @@ module RegularExpression
         parent.add_node(object_id, label: value, shape: "box")
       end
 
-      def to_nfa_transition(finish)
-        NFA::Transition::Character.new(finish, value)
+      def to_nfa_values
+        [value]
       end
 
       def to_nfa(start, finish)
-        start.add_transition(to_nfa_transition(finish))
+        transition = NFA::Transition::Set.new(finish, to_nfa_values)
+        start.add_transition(transition)
       end
     end
 
@@ -228,17 +246,18 @@ module RegularExpression
         parent.add_node(object_id, label: "#{left}-#{right}", shape: "box")
       end
 
-      def to_nfa_transition(finish)
-        NFA::Transition::CharacterRange.new(finish, left, right)
+      def to_nfa_values
+        (left..right).to_a
       end
 
       def to_nfa(start, finish)
-        start.add_transition(to_nfa_transition(finish))
+        transition = NFA::Transition::Set.new(finish, to_nfa_values)
+        start.add_transition(transition)
       end
     end
 
     class Anchor
-      # "\b" | "\B" | "\A" | "\z" | "\Z" | "\G" | "$"
+      # "\A" | "\z" | "$"
       attr_reader :value
 
       def initialize(value)
@@ -250,7 +269,16 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        transition = NFA::Transition::Anchor.new(finish, value)
+        transition =
+          case value
+          when "\\A"
+            NFA::Transition::BeginAnchor.new(finish)
+          when "\\z"
+            NFA::Transition::EndAnchor.new(finish)
+          when "$"
+            NFA::Transition::EndAnchor.new(finish)
+          end
+
         start.add_transition(transition)
       end
     end

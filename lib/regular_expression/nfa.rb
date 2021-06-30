@@ -7,9 +7,7 @@ module RegularExpression
       require "set"
 
       graph = Graphviz::Graph.new(rankdir: "LR")
-      visited = {}
-
-      nfa.to_dot(graph, visited)
+      nfa.to_dot(graph, {})
     
       Graphviz.output(graph, path: "build/nfa.svg", format: "svg")
       graph.to_dot
@@ -40,6 +38,15 @@ module RegularExpression
 
         source
       end
+
+      def accept(string, index)
+        return self if transitions.empty?
+
+        transitions.detect do |transition|
+          accepted = transition.accept(string, index)
+          break accepted if accepted
+        end
+      end
     end
 
     class StartState < State
@@ -59,19 +66,38 @@ module RegularExpression
     end
 
     class Transition
-      class Anchor
+      class BeginAnchor
         # State
         attr_reader :state
 
-        # string
-        attr_reader :value
-
-        def initialize(state, value)
+        def initialize(state)
           @state = state
-          @value = value
         end
 
-        alias label value
+        def label
+          "\\A"
+        end
+
+        def accept(string, index)
+          state.accept(string, index) if index == 0
+        end
+      end
+
+      class EndAnchor
+        # State
+        attr_reader :state
+
+        def initialize(state)
+          @state = state
+        end
+
+        def label
+          "\\z"
+        end
+
+        def accept(string, index)
+          state.accept(string, index) if index == string.length
+        end
       end
 
       class Any
@@ -85,74 +111,37 @@ module RegularExpression
         def label
           "."
         end
-      end
 
-      class Character
-        # State
-        attr_reader :state
-
-        # string
-        attr_reader :value
-
-        def initialize(state, value)
-          @state = state
-          @value = value
+        def accept(string, index)
+          state.accept(state, index + 1) if index < string.length
         end
-
-        alias label value
       end
 
-      class CharacterClass
+      class Set
         # State
         attr_reader :state
 
-        # string
-        attr_reader :value
-
-        def initialize(state, value)
-          @state = state
-          @value = value
-        end
-
-        alias label value
-      end
-
-      class CharacterGroup
-        # State
-        attr_reader :state
-
-        # (CharacterRange | Character)[]
-        attr_reader :transitions
+        # string[]
+        attr_reader :values
 
         # bool
         attr_reader :invert
 
-        def initialize(state, transitions, invert)
+        def initialize(state, values, invert: false)
           @state = state
-          @transitions = transitions
+          @values = values
           @invert = invert
         end
 
         def label
-          "[#{transitions.map(&:label).join}]"
-        end
-      end
-
-      class CharacterRange
-        # State
-        attr_reader :state
-
-        # string
-        attr_reader :left, :right
-
-        def initialize(state, left, right)
-          @state = state
-          @left = left
-          @right = right
+          "[#{values.join}]"
         end
 
-        def label
-          "#{left}-#{right}"
+        def accept(string, index)
+          accepted = values.include?(string[index])
+          accepted = !accepted if invert
+
+          state.accept(string, index + 1) if accepted
         end
       end
 
@@ -166,6 +155,10 @@ module RegularExpression
 
         def label
           "ε"
+        end
+
+        def accept(string, index)
+          state.accept(string, index)
         end
       end
     end
