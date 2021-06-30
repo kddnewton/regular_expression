@@ -6,8 +6,8 @@ require "regular_expression"
 
 root = RegularExpression::Parser.new.parse(ARGV.first)
 
-puts "=== Ruby ===\n\n"
+puts "=== AST ===\n\n"
 pp root
 
-puts "\n=== Dot ===\n\n"
-puts root.to_graph
+puts "\n=== NFA === \n\n"
+puts RegularExpression::NFA.to_dot(root.to_nfa)

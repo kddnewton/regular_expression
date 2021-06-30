@@ -2,6 +2,15 @@
 
 module RegularExpression
   module AST
+    def self.to_dot(root)
+      require "graphviz"
+      graph = Graphviz::Graph.new
+      root.to_dot(graph)
+
+      Graphviz.output(graph, path: "build/ast.svg", format: "svg")
+      graph.to_dot
+    end
+
     class Root
       # Expression[]
       attr_reader :expressions
@@ -13,6 +22,25 @@ module RegularExpression
         @expressions = expressions
         @at_start = at_start
       end
+
+      def to_dot(graph)
+        label = "Root"
+        label = "#{label} (at start)" if at_start
+
+        node = graph.add_node(object_id, label: label)
+        expressions.each { |expression| expression.to_dot(node) }
+      end
+
+      def to_nfa
+        start = NFA::StartState.new
+        finish = NFA::FinishState.new
+
+        expressions.each do |expression|
+          expression.to_nfa(start, finish)
+        end
+
+        start
+      end
     end
 
     class Expression
@@ -21,6 +49,21 @@ module RegularExpression
 
       def initialize(items)
         @items = items
+      end
+
+      def to_dot(parent)
+        node = parent.add_node(object_id, label: "Expression")
+
+        items.each { |item| item.to_dot(node) }
+      end
+
+      def to_nfa(start, finish)
+        inner = items.length > 1 ? Array.new(items.length - 2) { NFA::State.new } : []
+        states = [start, *inner, finish]
+
+        items.each_with_index do |item, index|
+          item.to_nfa(states[index], states[index + 1])
+        end
       end
     end
 
@@ -39,6 +82,22 @@ module RegularExpression
         @quantifier = quantifier
         @capture = capture
       end
+
+      def to_dot(parent)
+        label = "Group (#{capture ? "capture" : "no capture"})"
+        node = parent.add_node(object_id, label: label)
+
+        expressions.each { |expression| expression.to_dot(node) }
+        quantifier.to_dot(node) if quantifier
+      end
+
+      def to_nfa(start, finish)
+        # TODO: quantifier
+        # TODO: capture
+        expressions.each do |expression|
+          expression.to_nfa(start, finish)
+        end
+      end
     end
 
     class Match
@@ -51,6 +110,18 @@ module RegularExpression
       def initialize(item, quantifier: nil)
         @item = item
         @quantifier = quantifier
+      end
+
+      def to_dot(parent)
+        node = parent.add_node(object_id, label: "Match")
+
+        item.to_dot(node)
+        quantifier.to_dot(node) if quantifier
+      end
+
+      def to_nfa(start, finish)
+        # TODO: quantifier
+        item.to_nfa(start, finish)
       end
     end
 
@@ -65,6 +136,20 @@ module RegularExpression
         @items = items
         @invert = invert
       end
+
+      def to_dot(parent)
+        label = "CharacterGroup"
+        label = "#{label} (invert)" if invert
+
+        node = parent.add_node(object_id, label: label)
+        items.each { |item| item.to_dot(node) }
+      end
+
+      def to_nfa(start, finish)
+        transitions = items.map { |item| item.to_nfa_transition(finish) }
+        transition = NFA::Transition::CharacterGroup.new(finish, transitions, invert)
+        start.add_transition(transition)
+      end
     end
 
     class CharacterClass
@@ -73,6 +158,15 @@ module RegularExpression
 
       def initialize(value)
         @value = value
+      end
+
+      def to_dot(parent)
+        parent.add_node(object_id, label: value, shape: "box")
+      end
+
+      def to_nfa(start, finish)
+        transition = NFA::Transition::CharacterClass.new(finish, value)
+        start.add_transition(transition)
       end
     end
 
@@ -83,9 +177,29 @@ module RegularExpression
       def initialize(value)
         @value = value
       end
+
+      def to_dot(parent)
+        parent.add_node(object_id, label: value, shape: "box")
+      end
+
+      def to_nfa_transition(finish)
+        NFA::Transition::Character.new(finish, value)
+      end
+
+      def to_nfa(start, finish)
+        start.add_transition(to_nfa_transition(finish))
+      end
     end
 
     class Period
+      def to_dot(parent)
+        parent.add_node(object_id, label: ".", shape: "box")
+      end
+
+      def to_nfa(start, finish)
+        transition = NFA::Transition::Any.new(finish)
+        start.add_transition(transition)
+      end
     end
 
     class CharacterRange
@@ -96,6 +210,18 @@ module RegularExpression
         @left = left
         @right = right
       end
+
+      def to_dot(parent)
+        parent.add_node(object_id, label: "#{left}-#{right}", shape: "box")
+      end
+
+      def to_nfa_transition(finish)
+        NFA::Transition::CharacterRange.new(finish, left, right)
+      end
+
+      def to_nfa(start, finish)
+        start.add_transition(to_nfa_transition(finish))
+      end
     end
 
     class Anchor
@@ -105,16 +231,98 @@ module RegularExpression
       def initialize(value)
         @value = value
       end
+
+      def to_dot(parent)
+        parent.add_node(object_id, label: value, shape: "box")
+      end
+
+      def to_nfa(start, finish)
+        raise NotImplementedError
+      end
     end
 
     class Quantifier
-      ZeroOrMore = Class.new
-      OneOrMore = Class.new
-      Optional = Class.new
+      class ZeroOrMore
+        def to_dot(parent)
+          parent.add_node(object_id, label: "*", shape: "box")
+        end
 
-      Exact = Struct.new(:value)
-      AtLeast = Struct.new(:value)
-      Range = Struct.new(:lower, :upper)
+        def to_nfa(start, finish)
+          raise NotImplementedError
+        end
+      end
+
+      class OneOrMore
+        def to_dot(parent)
+          parent.add_node(object_id, label: "+", shape: "box")
+        end
+      
+        def to_nfa(start, finish)
+          raise NotImplementedError
+        end
+      end
+
+      class Optional
+        def to_dot(parent)
+          parent.add_node(object_id, label: "?", shape: "box")
+        end
+
+        def to_nfa(start, finish)
+          raise NotImplementedError
+        end
+      end
+
+      class Exact
+        # Integer
+        attr_reader :value
+
+        def initialize(value)
+          @value = value
+        end
+
+        def to_dot(parent)
+          parent.add_node(object_id, label: "{#{value}}", shape: "box")
+        end
+
+        def to_nfa(start, finish)
+          raise NotImplementedError
+        end
+      end
+
+      class AtLeast
+        # Integer
+        attr_reader :value
+
+        def initialize(value)
+          @value = value
+        end
+
+        def to_dot(parent)
+          parent.add_node(object_id, label: "{#{value},}", shape: "box")
+        end
+
+        def to_nfa(start, finish)
+          raise NotImplementedError
+        end
+      end
+
+      class Range
+        # Integer
+        attr_reader :lower, :upper
+
+        def initialize(lower, upper)
+          @lower = lower
+          @upper = upper
+        end
+
+        def to_dot(parent)
+          parent.add_node(object_id, label: "{#{lower},#{upper}}", shape: "box")
+        end
+
+        def to_nfa(start, finish)
+          raise NotImplementedError
+        end
+      end
 
       # ZeroOrMore | OneOrMore | Optional | Exact | AtLeast | Range
       attr_reader :type
@@ -125,6 +333,18 @@ module RegularExpression
       def initialize(type, greedy: true)
         @type = type
         @greedy = greedy
+      end
+
+      def to_dot(parent)
+        label = "Quantifier"
+        label = "#{label} (greedy)" if greedy
+
+        node = parent.add_node(object_id, label: label)
+        type.to_dot(node)
+      end
+
+      def to_nfa(start, finish)
+        raise NotImplementedError
       end
     end
   end
