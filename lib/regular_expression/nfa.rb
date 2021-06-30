@@ -4,7 +4,7 @@ module RegularExpression
   module NFA
     def self.to_dot(nfa)
       require "graphviz"
-      graph = Graphviz::Graph.new
+      graph = Graphviz::Graph.new(rankdir: "LR")
       nfa.to_dot(graph)
     
       Graphviz.output(graph, path: "build/nfa.svg", format: "svg")
@@ -24,7 +24,7 @@ module RegularExpression
       end
 
       def to_dot(graph)
-        source = graph.add_node(object_id)
+        source = graph.add_node(object_id, label: "")
 
         transitions.each do |transition|
           target = transition.state.to_dot(graph)
@@ -36,9 +36,19 @@ module RegularExpression
     end
 
     class StartState < State
+      def to_dot(graph)
+        super(graph).tap do |node|
+          node.attributes.merge!(label: "Start", shape: "box")
+        end
+      end
     end
 
     class FinishState < State
+      def to_dot(graph)
+        super(graph).tap do |node|
+          node.attributes.merge!(label: "Finish", shape: "box")
+        end
+      end
     end
 
     class Transition

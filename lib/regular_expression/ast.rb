@@ -58,7 +58,7 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        inner = items.length > 1 ? Array.new(items.length - 2) { NFA::State.new } : []
+        inner = Array.new(items.length - 1) { NFA::State.new }
         states = [start, *inner, finish]
 
         items.each_with_index do |item, index|
