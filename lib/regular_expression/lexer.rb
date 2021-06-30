@@ -2,7 +2,7 @@
 
 module RegularExpression
   class Lexer
-    SIMPLE = {
+    SINGLE = {
       "^" => :CARET,
       "$" => :ENDING,
       "(" => :LPAREN,
@@ -29,20 +29,18 @@ module RegularExpression
 
       until @source.empty?
         case @source
-        when /\A\?:/
+        when /\A\(\?:/
           result << [:NO_CAPTURE, $&]
         when /\A\\[wWdD]/
           result << [:CHAR_CLASS, $&]
         when /\A(?:\\[bBAzZG]|\$)/
           result << [:ANCHOR, $&]
         when /\A[\^$()\[\]{}|*+?.\-,]/
-          result << [SIMPLE[$&], $&]
+          result << [SINGLE[$&], $&]
         when /\A\d+/
           result << [:INTEGER, $&.to_i]
         when /\A(?:\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD]|[\u100000-\u10FFFF])/
           result << [:CHAR, $&]
-        when /\A[a-zA-Z]+/
-          result << [:LETTERS, $&]
         else
           raise SyntaxError, @source
         end

@@ -2,7 +2,7 @@
 
 require "rake/testtask"
 
-file "lib/regular_expression/parser.rb" do |t|
+file "lib/regular_expression/parser.rb" => "lib/regular_expression/parser.y" do |t|
   `bundle exec racc lib/regular_expression/parser.y -o lib/regular_expression/parser.rb`
 end
 

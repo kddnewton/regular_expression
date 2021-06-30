@@ -33,9 +33,9 @@ rule
     { result = RegularExpression::AST::Anchor.new(val[0]) }
 
   group:
-    LPAREN NO_CAPTURE expression RPAREN quantifier
+    NO_CAPTURE expression RPAREN quantifier
     { result = RegularExpression::AST::Group.new(val[2], quantifier: val[4], capture: false) }
-    | LPAREN NO_CAPTURE expression RPAREN
+    | NO_CAPTURE expression RPAREN
     { result = RegularExpression::AST::Group.new(val[2], capture: false) }
     | LPAREN expression RPAREN quantifier
     { result = RegularExpression::AST::Group.new(val[1], quantifier: val[3]) }
