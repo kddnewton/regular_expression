@@ -39,8 +39,6 @@ module RegularExpression
       end
 
       def accept(string, index)
-        return self if transitions.empty?
-
         transitions.detect do |transition|
           accepted = transition.accept(string, index)
           break accepted if accepted
@@ -61,6 +59,10 @@ module RegularExpression
         super(graph, visited).tap do |node|
           node.attributes.merge!(label: "Finish", shape: "box")
         end
+      end
+
+      def accept(string, index)
+        self
       end
     end
 

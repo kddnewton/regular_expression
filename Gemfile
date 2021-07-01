@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 gem "bundler"
 gem "graphviz"
+gem "minitest"
 gem "rake"
 
 gemspec

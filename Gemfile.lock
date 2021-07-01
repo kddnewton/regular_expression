@@ -10,6 +10,7 @@ GEM
     ffi (1.15.3)
     graphviz (1.2.1)
       process-pipeline
+    minitest (5.14.4)
     process-group (1.2.3)
       process-terminal (~> 0.2.0)
     process-pipeline (1.0.2)
@@ -25,6 +26,7 @@ PLATFORMS
 DEPENDENCIES
   bundler
   graphviz
+  minitest
   rake
   regular_expression!
 
