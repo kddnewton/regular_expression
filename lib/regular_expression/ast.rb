@@ -31,7 +31,7 @@ module RegularExpression
         expressions.each { |expression| expression.to_dot(node) }
       end
 
-      def to_nfa
+      def to_nfa(optimize: true)
         start = NFA::StartState.new
         current = start
 
@@ -45,6 +45,7 @@ module RegularExpression
           expression.to_nfa(current, finish)
         end
 
+        Optimize.optimize(start) if optimize
         start
       end
     end

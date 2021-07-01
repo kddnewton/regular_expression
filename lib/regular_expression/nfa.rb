@@ -139,10 +139,10 @@ module RegularExpression
         end
 
         def accept(string, index)
-          accepted = values.any? { |value| string[index..].start_with?(value) }
+          accepted = values.detect { |value| string[index..].start_with?(value) }
           accepted = !accepted if invert
 
-          state.accept(string, index + 1) if accepted
+          state.accept(string, index + accepted.length) if accepted
         end
       end
 
