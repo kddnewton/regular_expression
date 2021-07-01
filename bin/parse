@@ -6,4 +6,7 @@ require "regular_expression"
 
 root = RegularExpression::Parser.new.parse(ARGV.first)
 RegularExpression::AST.to_dot(root)
-RegularExpression::NFA.to_dot(root.to_nfa)
+
+nfa = root.to_nfa
+RegularExpression::Optimize.optimize(nfa)
+RegularExpression::NFA.to_dot(nfa)
