@@ -2,6 +2,8 @@
 
 source "https://rubygems.org"
 
+gem "bundler"
 gem "graphviz"
-gem "racc"
 gem "rake"
+
+gemspec

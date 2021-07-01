@@ -5,6 +5,7 @@ require_relative "./regular_expression/lexer"
 require_relative "./regular_expression/nfa"
 require_relative "./regular_expression/optimize"
 require_relative "./regular_expression/parser"
+require_relative "./regular_expression/version"
 
 module RegularExpression
   class Pattern

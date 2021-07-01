@@ -1,3 +1,9 @@
+PATH
+  remote: .
+  specs:
+    regular_expression (0.1.0)
+      racc
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -17,9 +23,10 @@ PLATFORMS
   x86_64-darwin-19
 
 DEPENDENCIES
+  bundler
   graphviz
-  racc
   rake
+  regular_expression!
 
 BUNDLED WITH
    2.2.16
