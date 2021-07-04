@@ -4,4 +4,5 @@ source "https://rubygems.org"
 
 gem "graphviz"
 gem "racc"
+gem "rspec"
 gem "rake"

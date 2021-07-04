@@ -290,9 +290,8 @@ module RegularExpression
         end
 
         def to_nfa(node, start, finish)
-          node.to_nfa_once(start, finish)
+          node.to_nfa_once(start, start)
           start.add_transition(NFA::Transition::Epsilon.new(finish))
-          finish.add_transition(NFA::Transition::Epsilon.new(start))
         end
       end
 
