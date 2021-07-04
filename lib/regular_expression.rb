@@ -5,6 +5,12 @@ require_relative "./regular_expression/lexer"
 require_relative "./regular_expression/nfa"
 require_relative "./regular_expression/optimize"
 require_relative "./regular_expression/parser"
+require_relative "./regular_expression/bytecode"
+require_relative "./regular_expression/compiler"
+require_relative "./regular_expression/interpreter"
+require_relative "./regular_expression/cfg"
+require_relative "./regular_expression/rubygen"
+require_relative "./regular_expression/nativegen"
 
 module RegularExpression
   class Pattern

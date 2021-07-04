@@ -1,7 +1,10 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    crabstone (4.0.3)
+      ffi
     ffi (1.15.3)
+    fisk (2.0.0)
     graphviz (1.2.1)
       process-pipeline
     process-group (1.2.3)
@@ -17,6 +20,8 @@ PLATFORMS
   x86_64-darwin-19
 
 DEPENDENCIES
+  crabstone
+  fisk
   graphviz
   racc
   rake
