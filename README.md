@@ -22,6 +22,20 @@ Or install it yourself as:
 
 ## Usage
 
+To create a regular expression pattern, use:
+
+```ruby
+pattern = RegularExpression.pattern("ab?c")
+```
+
+Patterns can be queried for whether or not they match a test string, as in:
+
+```ruby
+pattern.match?("abc") # => true
+pattern.match?("ac") # => true
+pattern.match?("ab") # => false
+```
+
 ## Development
 
 After checking out the repo, run `bundle install` to install dependencies. Then, run `bundle exec rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
