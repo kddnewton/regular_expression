@@ -20,25 +20,25 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("ab|bc", "ac")
   end
 
-  def test_begin_anchor_caret
-    assert_matches("^abc", "abc")
-    refute_matches("^abc", "!abc")
-  end
+  # def test_begin_anchor_caret
+  #   assert_matches("^abc", "abc")
+  #   refute_matches("^abc", "!abc")
+  # end
 
-  def test_begin_anchor_a
-    assert_matches("\\Aabc", "abc")
-    refute_matches("\\Aabc", "!abc")
-  end
+  # def test_begin_anchor_a
+  #   assert_matches("\\Aabc", "abc")
+  #   refute_matches("\\Aabc", "!abc")
+  # end
 
-  def test_end_anchor_dollar_sign
-    assert_matches("abc$", "abc")
-    refute_matches("abc$", "abc!")
-  end
+  # def test_end_anchor_dollar_sign
+  #   assert_matches("abc$", "abc")
+  #   refute_matches("abc$", "abc!")
+  # end
 
-  def test_end_anchor_z
-    assert_matches("abc\\z", "abc")
-    refute_matches("abc\\z", "abc!")
-  end
+  # def test_end_anchor_z
+  #   assert_matches("abc\\z", "abc")
+  #   refute_matches("abc\\z", "abc!")
+  # end
 
   def test_ranges_exact
     assert_matches("a{2}", "aa")
@@ -69,23 +69,23 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("a+", "")
   end
 
-  def test_character_range
-    assert_matches("[a-z]", "a")
-    assert_matches("[a-z]", "z")
-    refute_matches("[a-z]", "A")
-  end
+  # def test_character_range
+  #   assert_matches("[a-z]", "a")
+  #   assert_matches("[a-z]", "z")
+  #   refute_matches("[a-z]", "A")
+  # end
 
-  def test_character_set
-    assert_matches("[abc]", "a")
-    assert_matches("[abc]", "c")
-    refute_matches("[abc]", "d")
-  end
+  # def test_character_set
+  #   assert_matches("[abc]", "a")
+  #   assert_matches("[abc]", "c")
+  #   refute_matches("[abc]", "d")
+  # end
 
-  def test_period
-    assert_matches(".", "a")
-    assert_matches(".", "z")
-    refute_matches(".", "")
-  end
+  # def test_period
+  #   assert_matches(".", "a")
+  #   assert_matches(".", "z")
+  #   refute_matches(".", "")
+  # end
 
   def test_group
     assert_matches("a(b|c)", "ab")
