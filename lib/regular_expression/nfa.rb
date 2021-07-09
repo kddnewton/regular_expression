@@ -55,39 +55,27 @@ module RegularExpression
     end
 
     module Transition
-      class BeginAnchor
-        attr_reader :state # State
-
-        def initialize(state)
-          @state = state
-        end
-
+      class BeginAnchor < Struct.new(:state)
         def label
           "\\A"
         end
       end
 
-      class EndAnchor
-        attr_reader :state # State
-
-        def initialize(state)
-          @state = state
-        end
-
+      class EndAnchor < Struct.new(:state)
         def label
           "\\z"
         end
       end
 
-      class Any
-        attr_reader :state # State
-
-        def initialize(state)
-          @state = state
-        end
-
+      class Any < Struct.new(:state)
         def label
           "."
+        end
+      end
+
+      class Value < Struct.new(:state, :value)
+        def label
+          value.inspect
         end
       end
 
@@ -124,13 +112,7 @@ module RegularExpression
         end
       end
 
-      class Epsilon
-        attr_reader :state # State
-
-        def initialize(state)
-          @state = state
-        end
-
+      class Epsilon < Struct.new(:state)
         def label
           "ε"
         end

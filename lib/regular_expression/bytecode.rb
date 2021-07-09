@@ -35,6 +35,8 @@ module RegularExpression
                 raise if transition.invert
 
                 builder.push(Insns::Read.new(transition.values.first, label[transition.state]))
+              when NFA::Transition::Value
+                builder.push(Insns::Read.new(transition.value, label[transition.state]))
               when NFA::Transition::Range
                 raise if transition.invert
                 builder.push(Insns::Range.new(transition.left, transition.right, label[transition.state]))
