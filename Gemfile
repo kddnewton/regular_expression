@@ -4,9 +4,8 @@ source "https://rubygems.org"
 
 gem "bundler"
 gem "graphviz"
-gem "racc"
-gem "rspec"
 gem "minitest"
+gem "racc"
 gem "rake"
 
 gemspec
