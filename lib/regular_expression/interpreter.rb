@@ -17,6 +17,10 @@ module RegularExpression
             return false if start_n != 0
 
             insn_n = bytecode.labels[insn.then]
+          when Bytecode::Insns::End
+            break if string_n != string.size
+
+            insn_n = bytecode.labels[insn.then]
           when Bytecode::Insns::Any
             if string_n < string.size
               string_n += 1

@@ -30,15 +30,15 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("\\Aabc", "!abc")
   end
 
-  # def test_end_anchor_dollar_sign
-  #   assert_matches("abc$", "abc")
-  #   refute_matches("abc$", "abc!")
-  # end
+  def test_end_anchor_dollar_sign
+    assert_matches("abc$", "abc")
+    refute_matches("abc$", "abc!")
+  end
 
-  # def test_end_anchor_z
-  #   assert_matches("abc\\z", "abc")
-  #   refute_matches("abc\\z", "abc!")
-  # end
+  def test_end_anchor_z
+    assert_matches("abc\\z", "abc")
+    refute_matches("abc\\z", "abc!")
+  end
 
   def test_ranges_exact
     assert_matches("a{2}", "aa")

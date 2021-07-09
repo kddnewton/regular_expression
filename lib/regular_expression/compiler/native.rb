@@ -48,6 +48,9 @@ module RegularExpression
                 cmp rcx, imm8(0)
                 jne label(:search_loop_exit)
                 jmp label(cfg.exit_map[insn.then].name)
+              when Bytecode::Insns::End
+                cmp rcx, rsi
+                je label(cfg.exit_map[insn.then].name)
               when Bytecode::Insns::Any
                 cmp rcx, rsi
                 no_match_label = :"no_match_#{insn.object_id}"
