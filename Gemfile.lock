@@ -1,3 +1,9 @@
+PATH
+  remote: .
+  specs:
+    regular_expression (0.1.0)
+      racc
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -5,6 +11,7 @@ GEM
     ffi (1.15.3)
     graphviz (1.2.1)
       process-pipeline
+    minitest (5.14.4)
     process-group (1.2.3)
       process-terminal (~> 0.2.0)
     process-pipeline (1.0.2)
@@ -12,7 +19,7 @@ GEM
     process-terminal (0.2.0)
       ffi
     racc (1.5.2)
-    rake (13.0.3)
+    rake (13.0.6)
     rspec (3.10.0)
       rspec-core (~> 3.10.0)
       rspec-expectations (~> 3.10.0)
@@ -29,11 +36,14 @@ GEM
 
 PLATFORMS
   x86_64-darwin-19
+  x86_64-linux
 
 DEPENDENCIES
+  bundler
   graphviz
-  racc
+  minitest
   rake
+  regular_expression!
   rspec
 
 BUNDLED WITH

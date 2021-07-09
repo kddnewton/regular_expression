@@ -31,7 +31,7 @@ module RegularExpression
         expressions.each { |expression| expression.to_dot(node) }
       end
 
-      def to_nfa
+      def to_nfa(optimize: true)
         start = NFA::StartState.new
         current = start
 
@@ -45,6 +45,7 @@ module RegularExpression
           expression.to_nfa(current, finish)
         end
 
+        Optimize.optimize(start) if optimize
         start
       end
     end
@@ -77,10 +78,10 @@ module RegularExpression
       # Expression[]
       attr_reader :expressions
 
-      # Quantifier?
+      # Quantifier
       attr_reader :quantifier
 
-      def initialize(expressions, quantifier: nil)
+      def initialize(expressions, quantifier: Quantifier::Once.new)
         @expressions = expressions
         @quantifier = quantifier
       end
@@ -89,18 +90,12 @@ module RegularExpression
         node = parent.add_node(object_id, label: "Group")
 
         expressions.each { |expression| expression.to_dot(node) }
-        quantifier.to_dot(node) if quantifier
-      end
-
-      def to_nfa_once(start, finish)
-        expressions.each { |expression| expression.to_nfa(start, finish) }
+        quantifier.to_dot(node)
       end
 
       def to_nfa(start, finish)
-        if quantifier
-          quantifier.to_nfa(self, start, finish)
-        else
-          to_nfa_once(start, finish)
+        quantifier.quantify(start, finish) do |start, finish|
+          expressions.each { |expression| expression.to_nfa(start, finish) }
         end
       end
     end
@@ -109,10 +104,10 @@ module RegularExpression
       # CharacterGroup | CharacterClass | Character | Period
       attr_reader :item
 
-      # Quantifier?
+      # Quantifier
       attr_reader :quantifier
 
-      def initialize(item, quantifier: nil)
+      def initialize(item, quantifier: Quantifier::Once.new)
         @item = item
         @quantifier = quantifier
       end
@@ -124,15 +119,9 @@ module RegularExpression
         quantifier.to_dot(node) if quantifier
       end
 
-      def to_nfa_once(start, finish)
-        item.to_nfa(start, finish)
-      end
-
       def to_nfa(start, finish)
-        if quantifier
-          quantifier.to_nfa(self, start, finish)
-        else
-          to_nfa_once(start, finish)
+        quantifier.quantify(start, finish) do |start, finish|
+          item.to_nfa(start, finish)
         end
       end
     end
@@ -284,13 +273,22 @@ module RegularExpression
     end
 
     module Quantifier
+      class Once
+        def to_dot(parent)
+        end
+
+        def quantify(start, finish)
+          yield start, finish
+        end
+      end
+
       class ZeroOrMore
         def to_dot(parent)
           parent.add_node(object_id, label: "*", shape: "box")
         end
 
-        def to_nfa(node, start, finish)
-          node.to_nfa_once(start, start)
+        def quantify(start, finish)
+          yield start, start
           start.add_transition(NFA::Transition::Epsilon.new(finish))
         end
       end
@@ -300,8 +298,8 @@ module RegularExpression
           parent.add_node(object_id, label: "+", shape: "box")
         end
       
-        def to_nfa(node, start, finish)
-          node.to_nfa_once(start, finish)
+        def quantify(start, finish)
+          yield start, finish
           finish.add_transition(NFA::Transition::Epsilon.new(start))
         end
       end
@@ -311,8 +309,8 @@ module RegularExpression
           parent.add_node(object_id, label: "?", shape: "box")
         end
 
-        def to_nfa(node, start, finish)
-          node.to_nfa_once(start, finish)
+        def quantify(start, finish)
+          yield start, finish
           start.add_transition(NFA::Transition::Epsilon.new(finish))
         end
       end
@@ -329,11 +327,11 @@ module RegularExpression
           parent.add_node(object_id, label: "{#{value}}", shape: "box")
         end
 
-        def to_nfa(node, start, finish)
+        def quantify(start, finish)
           states = [start, *(value - 1).times.map { NFA::State.new }, finish]
 
           value.times do |index|
-            node.to_nfa_once(states[index], states[index + 1])
+            yield states[index], states[index + 1]
           end
         end
       end
@@ -350,11 +348,11 @@ module RegularExpression
           parent.add_node(object_id, label: "{#{value},}", shape: "box")
         end
 
-        def to_nfa(node, start, finish)
+        def quantify(start, finish)
           states = [start, *(value - 1).times.map { NFA::State.new }, finish]
 
           value.times do |index|
-            node.to_nfa_once(states[index], states[index + 1])
+            yield states[index], states[index + 1]
           end
 
           states[-1].add_transition(NFA::Transition::Epsilon.new(states[-2]))
@@ -374,11 +372,11 @@ module RegularExpression
           parent.add_node(object_id, label: "{#{lower},#{upper}}", shape: "box")
         end
 
-        def to_nfa(node, start, finish)
+        def quantify(start, finish)
           states = [start, *(upper - 1).times.map { NFA::State.new }, finish]
 
           upper.times do |index|
-            node.to_nfa_once(states[index], states[index + 1])
+            yield states[index], states[index + 1]
           end
 
           (upper - lower).times do |index|
