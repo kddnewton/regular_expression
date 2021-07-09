@@ -17,10 +17,9 @@ module RegularExpression
 
         cfg.blocks.each do |block|
           ruby_src.push "      when #{block.name.inspect}"
+
           block.insns.each do |insn|
             case insn
-            when Bytecode::Insns::Start
-              next
             when Bytecode::Insns::Any
               ruby_src.push "        if string_n < string.size"
               ruby_src.push "          string_n += 1"
@@ -36,7 +35,7 @@ module RegularExpression
             when Bytecode::Insns::Jump
               ruby_src.push "        block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "        next"
-            when Bytecode::Insns::Finish
+            when Bytecode::Insns::Match
               ruby_src.push "        return true"
             when Bytecode::Insns::Fail
               ruby_src.push "        start_n += 1"

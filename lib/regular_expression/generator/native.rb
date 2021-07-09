@@ -32,8 +32,6 @@ module RegularExpression
 
             block.insns.each do |insn|
               case insn
-              when Bytecode::Insns::Start
-                next
               when Bytecode::Insns::Any
                 cmp rcx, rsi
                 no_match_label = :"no_match_#{insn.object_id}"
@@ -64,7 +62,7 @@ module RegularExpression
                 make_label no_match_label
               when Bytecode::Insns::Jump
                 jmp label(cfg.exit_map[insn.target].name)
-              when Bytecode::Insns::Finish
+              when Bytecode::Insns::Match
                 # return 1
                 mov rax, imm64(1)
                 pop rbp

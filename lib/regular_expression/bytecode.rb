@@ -16,7 +16,7 @@ module RegularExpression
 
           case state
           when NFA::FinishState
-            builder.push(Insns::Finish.new)
+            builder.push(Insns::Match.new)
           when NFA::State
             # Other states have transitions out of them. Go through each
             # transition.
@@ -85,9 +85,6 @@ module RegularExpression
     end
 
     module Insns
-      # Start matching against the given string
-      Start = Class.new
-
       # Read off 1 character if possible, transition to then
       Any = Struct.new(:then)
 
@@ -98,7 +95,7 @@ module RegularExpression
       Jump = Struct.new(:target)
 
       # Successfully match against the given string
-      Finish = Class.new
+      Match = Class.new
 
       # Fail to match against the given string
       Fail = Class.new

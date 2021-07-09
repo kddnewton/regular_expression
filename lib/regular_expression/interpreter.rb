@@ -13,8 +13,6 @@ module RegularExpression
           insn = bytecode.insns[insn_n]
 
           case insn
-          when Bytecode::Insns::Start
-            insn_n += 1
           when Bytecode::Insns::Any
             if string_n < string.size
               string_n += 1
@@ -31,7 +29,7 @@ module RegularExpression
             end
           when Bytecode::Insns::Jump
             insn_n = bytecode.labels[insn.target]
-          when Bytecode::Insns::Finish
+          when Bytecode::Insns::Match
             return true
           when Bytecode::Insns::Fail
             break

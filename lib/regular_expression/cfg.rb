@@ -117,9 +117,6 @@ module RegularExpression
             block_insns.push insn
 
             case insn
-            when Bytecode::Insns::Start
-              insn_n += 1
-              next
             when Bytecode::Insns::Any, Bytecode::Insns::Read
               # Remember this block exits to this target.
               block_exits.add insn.then
@@ -129,10 +126,7 @@ module RegularExpression
               # Remember this block exits to this target.
               block_exits.add insn.target
               break
-            when Bytecode::Insns::Finish
-              # Ends the block.
-              break
-            when Bytecode::Insns::Fail
+            when Bytecode::Insns::Match, Bytecode::Insns::Fail
               # Ends the block.
               break
             else
