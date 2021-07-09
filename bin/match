@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+$:.unshift(File.expand_path("../lib", __dir__))
+require "regular_expression"
+
+pattern = RegularExpression.pattern(ARGV.shift)
+
+ARGV.each do |string|
+  puts "#{string}: #{pattern.match?(string)}"
+ end

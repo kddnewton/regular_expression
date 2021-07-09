@@ -288,9 +288,8 @@ module RegularExpression
         end
 
         def quantify(start, finish)
-          yield start, finish
+          yield start, start
           start.add_transition(NFA::Transition::Epsilon.new(finish))
-          finish.add_transition(NFA::Transition::Epsilon.new(start))
         end
       end
 
