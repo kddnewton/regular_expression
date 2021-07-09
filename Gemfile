@@ -2,8 +2,12 @@
 
 source "https://rubygems.org"
 
-gem "graphviz"
-gem "fisk"
+gem "bundler"
 gem "crabstone"
+gem "fisk"
+gem "graphviz"
+gem "minitest"
 gem "racc"
 gem "rake"
+
+gemspec

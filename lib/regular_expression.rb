@@ -11,6 +11,7 @@ require_relative "./regular_expression/interpreter"
 require_relative "./regular_expression/cfg"
 require_relative "./regular_expression/rubygen"
 require_relative "./regular_expression/nativegen"
+require_relative "./regular_expression/version"
 
 module RegularExpression
   class Pattern
@@ -22,7 +23,7 @@ module RegularExpression
     end
 
     def match?(string)
-      string.length.times.any? { |index| nfa.accept(string, index) }
+      (string.length + 1).times.any? { |index| nfa.accept(string, index) }
     end
   end
 
