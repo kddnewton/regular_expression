@@ -1,15 +1,27 @@
 # frozen_string_literal: true
 
 module RegularExpression
-  module Generator
+  module Compiler
     module Ruby
+      class Compiled
+        attr_reader :source
+
+        def initialize(source)
+          @source = source
+        end
+
+        def to_proc
+          eval(source)
+        end
+      end
+
       # Generate Ruby code for a CFG. This looks just like the intepreter, but
       # abstracted in time one level!
-      def self.generate(cfg)
+      def self.compile(cfg)
         ruby_src = []
         ruby_src.push "-> (string) {"
         ruby_src.push "  start_n = 0"
-        ruby_src.push "  while start_n < string.size"
+        ruby_src.push "  while start_n <= string.size"
         ruby_src.push "    string_n = start_n"
         ruby_src.push "    block = #{cfg.start.name.inspect}"
         ruby_src.push "    while true"
@@ -27,14 +39,13 @@ module RegularExpression
               ruby_src.push "          next"
               ruby_src.push "        end"
             when Bytecode::Insns::Read
-              ruby_src.push "        if string[string_n] == #{insn.char.inspect}"
+              ruby_src.push "        if string_n < string.size && string[string_n] == #{insn.char.inspect}"
               ruby_src.push "          string_n += 1"
               ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
             when Bytecode::Insns::Range
-              ruby_src.push "        value = string[string_n] "
-              ruby_src.push "        if value >= #{insn.left.inspect} && value <= #{insn.right.inspect}"
+              ruby_src.push "        if string_n < string.size && string[string_n] >= #{insn.left.inspect} && string[string_n] <= #{insn.right.inspect}"
               ruby_src.push "          string_n += 1"
               ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
               ruby_src.push "          next"
@@ -58,7 +69,8 @@ module RegularExpression
         ruby_src.push "  end"
         ruby_src.push "  false"
         ruby_src.push "}"
-        ruby_src.join($/)
+
+        Compiled.new(ruby_src.join($/))
       end
     end
   end

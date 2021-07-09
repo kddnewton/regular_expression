@@ -14,5 +14,5 @@ require_relative "./regular_expression/parser"
 require_relative "./regular_expression/pattern"
 require_relative "./regular_expression/version"
 
-require_relative "./regular_expression/generator/ruby"
-require_relative "./regular_expression/generator/native"
+require_relative "./regular_expression/compiler/ruby"
+require_relative "./regular_expression/compiler/native"

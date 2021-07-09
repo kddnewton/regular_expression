@@ -1,16 +1,28 @@
 # frozen_string_literal: true
 
 module RegularExpression
-  module Generator
+  module Compiler
     module Native
+      class Compiled
+        attr_reader :asm
+
+        def initialize(asm)
+          @asm = asm
+        end
+
+        def to_proc
+          function = asm.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
+          -> (string) { function.call(string, string.size) == 1 }
+        end
+      end
+
       # Generate native code for a CFG. This looks just like the Ruby generator
       # but abstracted one level, or just like the interpreter but abstracted
       # two levels!
-      def self.generate(cfg)
+      def self.compile(cfg)
         fisk = Fisk.new
         jitbuf = Fisk::Helpers.jitbuffer(1024)
-
-        fisk.asm(jitbuf) do
+        asm = fisk.asm(jitbuf) do
           # rdi (string) = arg[0]
           # rsi (string.size) = arg[1]
           push rbp
@@ -107,6 +119,8 @@ module RegularExpression
           pop rbp
           ret
         end
+
+        Compiled.new(asm)
       end
     end
   end

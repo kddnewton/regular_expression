@@ -112,8 +112,11 @@ class RegularExpressionTest < Minitest::Test
     pattern = RegularExpression::Pattern.new(source)
     assert_operator pattern, :match?, value, message
   
-    pattern.jit!
+    pattern.compile(compiler: RegularExpression::Compiler::Native)
     assert_operator pattern, :match?, value, "#{message} (native)"
+
+    pattern.compile(compiler: RegularExpression::Compiler::Ruby)
+    assert_operator pattern, :match?, value, "#{message} (ruby)"
   end
 
   def refute_matches(source, value)
@@ -122,7 +125,10 @@ class RegularExpressionTest < Minitest::Test
     pattern = RegularExpression::Pattern.new(source)
     refute_operator pattern, :match?, value, message
 
-    pattern.jit!
+    pattern.compile(compiler: RegularExpression::Compiler::Native)
     refute_operator pattern, :match?, value, "#{message} (native)"
+
+    pattern.compile(compiler: RegularExpression::Compiler::Ruby)
+    refute_operator pattern, :match?, value, "#{message} (ruby)"
   end
 end
