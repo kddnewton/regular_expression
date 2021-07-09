@@ -22,7 +22,7 @@ module RegularExpression
           # while rdx (start_n) < rsi (string.size)
           make_label :start_loop_head
           cmp rdx, rsi
-          jge label(:search_loop_exit)
+          jg label(:search_loop_exit)
 
           # rcx (string_n) = (rdx) start_n
           mov rcx, rdx

@@ -101,11 +101,23 @@ class RegularExpressionTest < Minitest::Test
 
   private
 
-  def assert_matches(pattern, value)
-    assert_operator RegularExpression::Pattern.new(pattern), :match?, value
+  def assert_matches(source, value)
+    message = "Expected /#{source}/ to match #{value.inspect}"
+
+    pattern = RegularExpression::Pattern.new(source)
+    assert_operator pattern, :match?, value, message
+  
+    pattern.jit!
+    assert_operator pattern, :match?, value, "#{message} (native)"
   end
 
-  def refute_matches(pattern, value)
-    refute_operator RegularExpression::Pattern.new(pattern), :match?, value
+  def refute_matches(source, value)
+    message = "Expected /#{source}/ to not match #{value.inspect}"
+  
+    pattern = RegularExpression::Pattern.new(source)
+    refute_operator pattern, :match?, value, message
+
+    pattern.jit!
+    refute_operator pattern, :match?, value, "#{message} (native)"
   end
 end
