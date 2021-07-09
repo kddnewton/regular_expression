@@ -18,7 +18,7 @@ GEM
     process-terminal (0.2.0)
       ffi
     racc (1.5.2)
-    rake (13.0.4)
+    rake (13.0.6)
 
 PLATFORMS
   x86_64-darwin-19
