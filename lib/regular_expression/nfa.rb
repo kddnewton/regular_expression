@@ -13,8 +13,7 @@ module RegularExpression
     end
 
     class State
-      # Transition[]
-      attr_reader :transitions
+      attr_reader :transitions # Transition[]
 
       def initialize
         @transitions = []
@@ -68,8 +67,7 @@ module RegularExpression
 
     module Transition
       class BeginAnchor
-        # State
-        attr_reader :state
+        attr_reader :state # State
 
         def initialize(state)
           @state = state
@@ -85,8 +83,7 @@ module RegularExpression
       end
 
       class EndAnchor
-        # State
-        attr_reader :state
+        attr_reader :state # State
 
         def initialize(state)
           @state = state
@@ -102,8 +99,7 @@ module RegularExpression
       end
 
       class Any
-        # State
-        attr_reader :state
+        attr_reader :state # State
 
         def initialize(state)
           @state = state
@@ -119,14 +115,9 @@ module RegularExpression
       end
 
       class Set
-        # State
-        attr_reader :state
-
-        # string[]
-        attr_reader :values
-
-        # bool
-        attr_reader :invert
+        attr_reader :state # State
+        attr_reader :values # String[]
+        attr_reader :invert # bool
 
         def initialize(state, values, invert: false)
           @state = state
@@ -147,8 +138,7 @@ module RegularExpression
       end
 
       class Epsilon
-        # State
-        attr_reader :state
+        attr_reader :state # State
 
         def initialize(state)
           @state = state

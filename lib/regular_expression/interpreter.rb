@@ -5,9 +5,7 @@ module RegularExpression
   # to enter at a given state and deoptimise to it from the compiled code?
   class Interpreter
     def match?(compiled, string)
-      start_n = 0
-
-      while start_n < string.size
+      (0..string.size).any? do |start_n|
         string_n = start_n
         insn_n = 0
 
@@ -34,10 +32,7 @@ module RegularExpression
             raise
           end
         end
-
-        start_n += 1
       end
-      false
     end
   end
 end

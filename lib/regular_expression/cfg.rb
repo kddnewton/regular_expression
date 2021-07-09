@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
-require "set"
-
 module RegularExpression
   # The CFG is a directed graph of extended basic blocks of bytecode
   # instructions. This module has objects to represent the EBB, a graph object
   # which contains a set of EBB, and a builder that creates a CFG from a
   # compiled bytecode object.
   module CFG
-    # An Extended Basic Block is a linear sequence of instructions with one entry point and zero or more exit points.
+    # An Extended Basic Block is a linear sequence of instructions with one
+    # entry point and zero or more exit points.
     class ExtendedBasicBlock
       attr_reader :name, :insns, :exits
 

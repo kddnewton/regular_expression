@@ -12,11 +12,8 @@ module RegularExpression
     end
 
     class Root
-      # Expression[]
-      attr_reader :expressions
-
-      # bool
-      attr_reader :at_start
+      attr_reader :expressions # Expression[]
+      attr_reader :at_start # bool
 
       def initialize(expressions, at_start: false)
         @expressions = expressions
@@ -50,8 +47,7 @@ module RegularExpression
     end
 
     class Expression
-      # Group | Match | Anchor
-      attr_reader :items
+      attr_reader :items # Group | Match | Anchor
 
       def initialize(items)
         @items = items
@@ -74,11 +70,8 @@ module RegularExpression
     end
 
     class Group
-      # Expression[]
-      attr_reader :expressions
-
-      # Quantifier
-      attr_reader :quantifier
+      attr_reader :expressions # Expression[]
+      attr_reader :quantifier # Quantifier
 
       def initialize(expressions, quantifier: Quantifier::Once.new)
         @expressions = expressions
@@ -100,11 +93,8 @@ module RegularExpression
     end
 
     class Match
-      # CharacterGroup | CharacterClass | Character | Period
-      attr_reader :item
-
-      # Quantifier
-      attr_reader :quantifier
+      attr_reader :item # CharacterGroup | CharacterClass | Character | Period
+      attr_reader :quantifier # Quantifier
 
       def initialize(item, quantifier: Quantifier::Once.new)
         @item = item
@@ -126,11 +116,8 @@ module RegularExpression
     end
 
     class CharacterGroup
-      # (CharacterRange | Character)[]
-      attr_reader :items
-
-      # bool
-      attr_reader :invert
+      attr_reader :items # (CharacterRange | Character)[]
+      attr_reader :invert # bool
 
       def initialize(items, invert: false)
         @items = items
@@ -153,8 +140,7 @@ module RegularExpression
     end
 
     class CharacterClass
-      # "\w" | "\W" | "\d" | "\D"
-      attr_reader :value
+      attr_reader :value # "\w" | "\W" | "\d" | "\D"
 
       def initialize(value)
         @value = value
@@ -189,8 +175,7 @@ module RegularExpression
     end
 
     class Character
-      # string
-      attr_reader :value
+      attr_reader :value # String
 
       def initialize(value)
         @value = value
@@ -222,8 +207,7 @@ module RegularExpression
     end
 
     class CharacterRange
-      # string
-      attr_reader :left, :right
+      attr_reader :left, :right # String
 
       def initialize(left, right)
         @left = left
@@ -245,8 +229,7 @@ module RegularExpression
     end
 
     class Anchor
-      # "\A" | "\z" | "$"
-      attr_reader :value
+      attr_reader :value # "\A" | "\z" | "$"
 
       def initialize(value)
         @value = value
@@ -315,8 +298,7 @@ module RegularExpression
       end
 
       class Exact
-        # Integer
-        attr_reader :value
+        attr_reader :value # Integer
 
         def initialize(value)
           @value = value
@@ -336,8 +318,7 @@ module RegularExpression
       end
 
       class AtLeast
-        # Integer
-        attr_reader :value
+        attr_reader :value # Integer
 
         def initialize(value)
           @value = value
@@ -359,8 +340,7 @@ module RegularExpression
       end
 
       class Range
-        # Integer
-        attr_reader :lower, :upper
+        attr_reader :lower, :upper # Integer
 
         def initialize(lower, upper)
           @lower = lower

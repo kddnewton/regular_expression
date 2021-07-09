@@ -44,11 +44,11 @@ module RegularExpression
         # Labels store name -> address, but if we want to print the label name
         # at its address, we need to store the address to the name as well.
         reverse_labels = {}
-        @labels.each do |label, n|
+        labels.each do |label, n|
           reverse_labels[n] = label
         end
 
-        @insns.each_with_index do |insn, n|
+        insns.each_with_index do |insn, n|
           label = reverse_labels[n]
           puts "#{label.to_s}:" if label
           puts "  #{insn}"
