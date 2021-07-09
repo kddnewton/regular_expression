@@ -31,6 +31,9 @@ module RegularExpression
                 raise if transition.invert
 
                 builder.push(Insns::Read.new(transition.values.first, label[transition.state]))
+              when NFA::Transition::Range
+                raise if transition.invert
+                builder.push(Insns::Range.new(transition.left, transition.right, label[transition.state]))
               when NFA::Transition::Epsilon
                 # Handled below.
               else
@@ -91,6 +94,9 @@ module RegularExpression
       # Read off 1 character and match against char, transition to then
       Read = Struct.new(:char, :then)
     
+      # Read off 1 character and test that it's between left and right, transition to then
+      Range = Struct.new(:left, :right, :then)
+
       # Jump to another instruction
       Jump = Struct.new(:target)
 

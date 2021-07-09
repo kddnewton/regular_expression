@@ -60,6 +60,28 @@ module RegularExpression
                 jmp label(cfg.exit_map[insn.then].name)
 
                 make_label no_match_label
+              when Bytecode::Insns::Range
+                no_match_label = :"no_match_#{insn.object_id}"
+
+                mov r8, rdi
+                add r8, rcx
+                mov r8, m64(r8)
+
+                # if string (rdi)[string_n (rcx)] < insn.left
+                cmp r8, imm8(insn.left.ord)
+                jl label(no_match_label)
+
+                # if string (rdi)[string_n (rcx)] > insn.right
+                cmp r8, imm8(insn.right.ord)
+                jg label(no_match_label)
+
+                # rcx (string_n) += 1
+                inc rcx
+
+                # goto next block
+                jmp label(cfg.exit_map[insn.then].name)
+
+                make_label no_match_label
               when Bytecode::Insns::Jump
                 jmp label(cfg.exit_map[insn.target].name)
               when Bytecode::Insns::Match

@@ -81,10 +81,10 @@ class RegularExpressionTest < Minitest::Test
   #   refute_matches("[abc]", "d")
   # end
 
-  # def test_character_class
-  #   assert_matches("\\d", "0")
+  def test_character_class
+    assert_matches("\\d", "0")
   #   refute_matches("\\d", "a")
-  # end
+  end
 
   def test_period
     assert_matches(".", "a")

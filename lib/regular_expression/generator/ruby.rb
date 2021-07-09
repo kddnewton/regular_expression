@@ -32,6 +32,13 @@ module RegularExpression
               ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
+            when Bytecode::Insns::Range
+              ruby_src.push "        value = string[string_n] "
+              ruby_src.push "        if value >= #{insn.left.inspect} && value <= #{insn.right.inspect}"
+              ruby_src.push "          string_n += 1"
+              ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
+              ruby_src.push "          next"
+              ruby_src.push "        end"
             when Bytecode::Insns::Jump
               ruby_src.push "        block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "        next"

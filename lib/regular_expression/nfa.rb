@@ -107,6 +107,23 @@ module RegularExpression
         end
       end
 
+      class Range
+        attr_reader :state # State
+        attr_reader :left, :right # String
+        attr_reader :invert # bool
+
+        def initialize(state, left, right, invert: false)
+          @state = state
+          @left = left
+          @right = right
+          @invert = invert
+        end
+
+        def label
+          "#{left}-#{right}"
+        end
+      end
+
       class Epsilon
         attr_reader :state # State
 

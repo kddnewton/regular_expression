@@ -151,26 +151,24 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        transition =
-          case value
-          when "\\w"
-            NFA::Transition::Set.new(
-              finish,
-              [*("a".."z"), *("A".."Z"), *("0".."9"), "_"]
-            )
-          when "\\W"
-            NFA::Transition::Set.new(
-              finish,
-              [*("a".."z"), *("A".."Z"), *("0".."9"), "_"],
-              invert: true
-            )
-          when "\\d"
-            NFA::Transition::Set.new(finish, ("0".."9").to_a)
-          when "\\D"
-            NFA::Transition::Set.new(finish, ("0".."9").to_a, invert: true)
-          end
+        case value
+        when "\\w"
+          start.add_transition(NFA::Transition::Range.new(finish, "a", "z"))
+          start.add_transition(NFA::Transition::Range.new(finish, "A", "Z"))
+          start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
+          start.add_transition(NFA::Transition::Set.new(finish, ["_"]))
+        when "\\W"
+          transition =
+            NFA::Transition::Set.new(finish, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"], invert: true)
 
-        start.add_transition(transition)
+          start.add_transition(transition)
+        when "\\d"
+          start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
+        when "\\D"
+          start.add_transition(NFA::Transition::Range.new(finish, "0", "9", invert: true))
+        else
+          raise
+        end
       end
     end
 
@@ -223,7 +221,7 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        transition = NFA::Transition::Set.new(finish, to_nfa_values)
+        transition = NFA::Transition::Range.new(finish, left, right)
         start.add_transition(transition)
       end
     end

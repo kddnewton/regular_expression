@@ -27,6 +27,14 @@ module RegularExpression
             else
               insn_n += 1
             end
+          when Bytecode::Insns::Range
+            value = string[string_n]
+            if value >= insn.left && value <= insn.right
+              string_n += 1
+              insn_n = bytecode.labels[insn.then]
+            else
+              insn_n += 1
+            end
           when Bytecode::Insns::Jump
             insn_n = bytecode.labels[insn.target]
           when Bytecode::Insns::Match
