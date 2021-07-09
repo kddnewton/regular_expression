@@ -6,7 +6,7 @@ require "regular_expression"
 
 require "crabstone"
 
-pattern = RegularExpression.pattern(ARGV.shift)
+pattern = RegularExpression::Pattern.new(ARGV.shift)
 
 compiler = RegularExpression::Compiler.new
 compiled = compiler.compile(pattern.nfa)

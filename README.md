@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/kddeisz/regular_expression/workflows/Main/badge.svg)](https://github.com/kddeisz/regular_expression/actions)
 
-A WIP regular expression engine written in Ruby.
+A regular expression engine written in Ruby.
 
 ## Installation
 
@@ -25,7 +25,7 @@ Or install it yourself as:
 To create a regular expression pattern, use:
 
 ```ruby
-pattern = RegularExpression.pattern("ab?c")
+pattern = RegularExpression::Pattern.new("ab?c")
 ```
 
 Patterns can be queried for whether or not they match a test string, as in:

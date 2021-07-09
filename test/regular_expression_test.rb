@@ -102,10 +102,10 @@ class RegularExpressionTest < Minitest::Test
   private
 
   def assert_matches(pattern, value)
-    assert_operator RegularExpression.pattern(pattern), :match?, value
+    assert_operator RegularExpression::Pattern.new(pattern), :match?, value
   end
 
   def refute_matches(pattern, value)
-    refute_operator RegularExpression.pattern(pattern), :match?, value
+    refute_operator RegularExpression::Pattern.new(pattern), :match?, value
   end
 end
