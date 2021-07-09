@@ -21,15 +21,14 @@ module RegularExpression
               insn_n += 1
             end
           when Bytecode::Insns::Read
-            if string[string_n] == insn.char
+            if string_n < string.size && string[string_n] == insn.char
               string_n += 1
               insn_n = bytecode.labels[insn.then]
             else
               insn_n += 1
             end
           when Bytecode::Insns::Range
-            value = string[string_n]
-            if value >= insn.left && value <= insn.right
+            if string_n < string.size && string[string_n] >= insn.left && string[string_n] <= insn.right
               string_n += 1
               insn_n = bytecode.labels[insn.then]
             else
