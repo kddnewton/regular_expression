@@ -13,6 +13,10 @@ module RegularExpression
           insn = bytecode.insns[insn_n]
 
           case insn
+          when Bytecode::Insns::Begin
+            return false if start_n != 0
+
+            insn_n = bytecode.labels[insn.then]
           when Bytecode::Insns::Any
             if string_n < string.size
               string_n += 1

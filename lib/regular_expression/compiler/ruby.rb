@@ -32,6 +32,8 @@ module RegularExpression
 
           block.insns.each do |insn|
             case insn
+            when Bytecode::Insns::Begin
+              ruby_src.push "        return false if start_n != 0"
             when Bytecode::Insns::Any
               ruby_src.push "        if string_n < string.size"
               ruby_src.push "          string_n += 1"

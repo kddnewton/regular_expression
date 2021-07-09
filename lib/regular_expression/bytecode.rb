@@ -22,6 +22,8 @@ module RegularExpression
             # transition.
             state.transitions.each do |transition|
               case transition
+              when NFA::Transition::BeginAnchor
+                builder.push(Insns::Begin.new(label[transition.state]))
               when NFA::Transition::Any
                 builder.push(Insns::Any.new(label[transition.state]))
               when NFA::Transition::Set
@@ -48,7 +50,7 @@ module RegularExpression
             if epsilon_transition
               # Jump to the state the epsilon transition takes us to.
               builder.push(Insns::Jump.new(label[epsilon_transition.state]))
-            else
+            elsif state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) }
               # With no epsilon transition, no transitions match, which means we
               # jump to the failure case.
               builder.push(Insns::Jump.new(:fail))
@@ -88,6 +90,9 @@ module RegularExpression
     end
 
     module Insns
+      # Fail unless at the beginning of the string, transition to then
+      Begin = Struct.new(:then)
+
       # Read off 1 character if possible, transition to then
       Any = Struct.new(:then)
 

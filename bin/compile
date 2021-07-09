@@ -16,21 +16,21 @@ cfg.dump
 puts
 RegularExpression::CFG::Graph.to_dot(cfg)
 
-ruby_src = RegularExpression::Generator::Ruby.generate(cfg)
-puts ruby_src
+ruby_src = RegularExpression::Compiler::Ruby.compile(cfg)
+puts ruby_src.source
 puts
 
-ruby_proc = eval(ruby_src)
+ruby_proc = ruby_src.to_proc
 
 ARGV.each do |string|
   puts "#{string}: #{ruby_proc.call(string)}"
 end
 puts
 
-native_code = RegularExpression::Generator::Native.generate(cfg)
+compiled = RegularExpression::Compiler::Native.compile(cfg)
 crabstone = Crabstone::Disassembler.new(Crabstone::ARCH_X86, Crabstone::MODE_64)
 
-crabstone.disasm(native_code.memory.to_s(native_code.pos), native_code.memory.to_i).each do |i|
+crabstone.disasm(compiled.asm.memory.to_s(compiled.asm.pos), compiled.asm.memory.to_i).each do |i|
   printf "\t0x%<address>x:\t%<instruction>s\t%<details>s\n",
     address: i.address,
     instruction: i.mnemonic,
@@ -38,11 +38,7 @@ crabstone.disasm(native_code.memory.to_s(native_code.pos), native_code.memory.to
 end
 puts
 
-inner_proc = native_code.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
-
-native_proc = ->(string) {
-  inner_proc.call(string, string.size) == 1
-}
+native_proc = compiled.to_proc
 
 ARGV.each do |string|
   puts "#{string}: #{native_proc.call(string)}"

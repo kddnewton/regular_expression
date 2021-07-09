@@ -20,15 +20,15 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("ab|bc", "ac")
   end
 
-  # def test_begin_anchor_caret
-  #   assert_matches("^abc", "abc")
-  #   refute_matches("^abc", "!abc")
-  # end
+  def test_begin_anchor_caret
+    assert_matches("^abc", "abc")
+    refute_matches("^abc", "!abc")
+  end
 
-  # def test_begin_anchor_a
-  #   assert_matches("\\Aabc", "abc")
-  #   refute_matches("\\Aabc", "!abc")
-  # end
+  def test_begin_anchor_a
+    assert_matches("\\Aabc", "abc")
+    refute_matches("\\Aabc", "!abc")
+  end
 
   # def test_end_anchor_dollar_sign
   #   assert_matches("abc$", "abc")
