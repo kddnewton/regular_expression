@@ -36,13 +36,6 @@ module RegularExpression
 
         source
       end
-
-      def accept(string, index)
-        transitions.detect do |transition|
-          accepted = transition.accept(string, index)
-          break accepted if accepted
-        end
-      end
     end
 
     class StartState < State
@@ -59,10 +52,6 @@ module RegularExpression
           node.attributes.merge!(label: "Finish", shape: "box")
         end
       end
-
-      def accept(string, index)
-        self
-      end
     end
 
     module Transition
@@ -76,10 +65,6 @@ module RegularExpression
         def label
           "\\A"
         end
-
-        def accept(string, index)
-          state.accept(string, index) if index == 0
-        end
       end
 
       class EndAnchor
@@ -92,10 +77,6 @@ module RegularExpression
         def label
           "\\z"
         end
-
-        def accept(string, index)
-          state.accept(string, index) if index == string.length
-        end
       end
 
       class Any
@@ -107,10 +88,6 @@ module RegularExpression
 
         def label
           "."
-        end
-
-        def accept(string, index)
-          state.accept(state, index + 1) if index < string.length
         end
       end
 
@@ -128,13 +105,6 @@ module RegularExpression
         def label
           values.inspect
         end
-
-        def accept(string, index)
-          accepted = values.detect { |value| string[index..].start_with?(value) }
-          accepted = !accepted if invert
-
-          state.accept(string, index + accepted.length) if accepted
-        end
       end
 
       class Epsilon
@@ -146,10 +116,6 @@ module RegularExpression
 
         def label
           "ε"
-        end
-
-        def accept(string, index)
-          state.accept(string, index)
         end
       end
     end
