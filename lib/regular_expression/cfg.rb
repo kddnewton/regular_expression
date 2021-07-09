@@ -115,11 +115,12 @@ module RegularExpression
             # Examine each instruction.
             insn = compiled.insns[insn_n]
             block_insns.push insn
+
             case insn
             when Bytecode::Insns::Start
               insn_n += 1
               next
-            when Bytecode::Insns::Read
+            when Bytecode::Insns::Any, Bytecode::Insns::Read
               # Remember this block exits to this target.
               block_exits.add insn.then
               insn_n += 1

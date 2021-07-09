@@ -7,13 +7,11 @@ require "regular_expression"
 require "crabstone"
 
 pattern = RegularExpression::Pattern.new(ARGV.shift)
-
-compiled = RegularExpression::Bytecode.compile(pattern.nfa)
-compiled.dump
+pattern.bytecode.dump
 puts
 
 cfg_builder = RegularExpression::CFG::Builder.new
-cfg = cfg_builder.build(compiled)
+cfg = cfg_builder.build(pattern.bytecode)
 cfg.dump
 puts
 RegularExpression::CFG::Graph.to_dot(cfg)

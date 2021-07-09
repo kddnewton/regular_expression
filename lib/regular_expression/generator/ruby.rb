@@ -21,6 +21,12 @@ module RegularExpression
             case insn
             when Bytecode::Insns::Start
               next
+            when Bytecode::Insns::Any
+              ruby_src.push "        if string_n < string.size"
+              ruby_src.push "          string_n += 1"
+              ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
+              ruby_src.push "          next"
+              ruby_src.push "        end"
             when Bytecode::Insns::Read
               ruby_src.push "        if string[string_n] == #{insn.char.inspect}"
               ruby_src.push "          string_n += 1"

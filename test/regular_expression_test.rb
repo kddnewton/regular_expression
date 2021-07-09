@@ -81,11 +81,11 @@ class RegularExpressionTest < Minitest::Test
   #   refute_matches("[abc]", "d")
   # end
 
-  # def test_period
-  #   assert_matches(".", "a")
-  #   assert_matches(".", "z")
-  #   refute_matches(".", "")
-  # end
+  def test_period
+    assert_matches(".", "a")
+    assert_matches(".", "z")
+    refute_matches(".", "")
+  end
 
   def test_group
     assert_matches("a(b|c)", "ab")

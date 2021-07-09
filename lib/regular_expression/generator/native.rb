@@ -34,6 +34,18 @@ module RegularExpression
               case insn
               when Bytecode::Insns::Start
                 next
+              when Bytecode::Insns::Any
+                cmp rcx, rsi
+                no_match_label = :"no_match_#{insn.object_id}"
+                je label(no_match_label)
+
+                # rcx (string_n) += 1
+                inc rcx
+
+                # goto next block
+                jmp label(cfg.exit_map[insn.then].name)
+
+                make_label no_match_label
               when Bytecode::Insns::Read
                 # if string (rdi)[string_n (rcx)] == char
                 mov r8, rdi

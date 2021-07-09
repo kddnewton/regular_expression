@@ -4,26 +4,33 @@ module RegularExpression
   # An interpreter for our compiled bytecode. Maybe we could make this possible
   # to enter at a given state and deoptimise to it from the compiled code?
   class Interpreter
-    def match?(compiled, string)
+    def match?(bytecode, string)
       (0..string.size).any? do |start_n|
         string_n = start_n
         insn_n = 0
 
         while true
-          insn = compiled.insns[insn_n]
+          insn = bytecode.insns[insn_n]
 
           case insn
           when Bytecode::Insns::Start
             insn_n += 1
+          when Bytecode::Insns::Any
+            if string_n < string.size
+              string_n += 1
+              insn_n = bytecode.labels[insn.then]
+            else
+              insn_n += 1
+            end
           when Bytecode::Insns::Read
             if string[string_n] == insn.char
               string_n += 1
-              insn_n = compiled.labels[insn.then]
+              insn_n = bytecode.labels[insn.then]
             else
               insn_n += 1
             end
           when Bytecode::Insns::Jump
-            insn_n = compiled.labels[insn.target]
+            insn_n = bytecode.labels[insn.target]
           when Bytecode::Insns::Finish
             return true
           when Bytecode::Insns::Fail
