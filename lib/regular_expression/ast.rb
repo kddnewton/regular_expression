@@ -12,7 +12,7 @@ module RegularExpression
     end
 
     class Root
-      attr_reader :expressions # Expression[]
+      attr_reader :expressions # Array[Expression]
       attr_reader :at_start # bool
 
       def initialize(expressions, at_start: false)
@@ -70,7 +70,7 @@ module RegularExpression
     end
 
     class Group
-      attr_reader :expressions # Expression[]
+      attr_reader :expressions # Array[Expression]
       attr_reader :quantifier # Quantifier
 
       def initialize(expressions, quantifier: Quantifier::Once.new)
@@ -116,7 +116,7 @@ module RegularExpression
     end
 
     class CharacterGroup
-      attr_reader :items # (CharacterRange | Character)[]
+      attr_reader :items # Array[CharacterRange | Character]
       attr_reader :invert # bool
 
       def initialize(items, invert: false)

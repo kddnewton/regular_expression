@@ -8,8 +8,7 @@ module RegularExpression
       parser = RegularExpression::Parser.new
       @nfa = parser.parse(source).to_nfa
 
-      # compiler = RegularExpression::Compiler.new
-      # @compiled = compiler.compile(nfa)
+      # @compiled = RegularExpression::Bytecode.compile(nfa)
     end
 
     def match?(string)

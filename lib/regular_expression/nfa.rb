@@ -13,7 +13,7 @@ module RegularExpression
     end
 
     class State
-      attr_reader :transitions # Transition[]
+      attr_reader :transitions # Array[Transition]
 
       def initialize
         @transitions = []
@@ -116,7 +116,7 @@ module RegularExpression
 
       class Set
         attr_reader :state # State
-        attr_reader :values # String[]
+        attr_reader :values # Array[String]
         attr_reader :invert # bool
 
         def initialize(state, values, invert: false)

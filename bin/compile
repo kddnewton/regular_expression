@@ -8,9 +8,7 @@ require "crabstone"
 
 pattern = RegularExpression::Pattern.new(ARGV.shift)
 
-compiler = RegularExpression::Compiler.new
-compiled = compiler.compile(pattern.nfa)
-
+compiled = RegularExpression::Bytecode.compile(pattern.nfa)
 compiled.dump
 puts
 

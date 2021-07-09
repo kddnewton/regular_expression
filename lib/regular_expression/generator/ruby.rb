@@ -5,7 +5,7 @@ module RegularExpression
     module Ruby
       # Generate Ruby code for a CFG. This looks just like the intepreter, but
       # abstracted in time one level!
-      def self.build(cfg)
+      def self.generate(cfg)
         ruby_src = []
         ruby_src.push "-> (string) {"
         ruby_src.push "  start_n = 0"
