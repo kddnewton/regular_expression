@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+$:.unshift(File.expand_path("../lib", __dir__))
+require "regular_expression"
+
+require "crabstone"
+
+pattern = RegularExpression.pattern(ARGV.shift)
+
+compiler = RegularExpression::Compiler.new
+compiled = compiler.compile(pattern.nfa)
+
+compiled.dump
+puts
+
+cfg_builder = RegularExpression::CFG::Builder.new
+cfg = cfg_builder.build(compiled)
+cfg.dump
+puts
+RegularExpression::CFG::Graph.to_dot(cfg)
+
+rubygen = RegularExpression::RubyGen.new
+ruby_src = rubygen.build(cfg)
+puts ruby_src
+puts
+
+ruby_proc = eval(ruby_src)
+
+ARGV.each do |string|
+  puts "#{string}: #{ruby_proc.call(string)}"
+end
+puts
+
+nativegen = RegularExpression::NativeGen.new
+native_code = nativegen.build(cfg)
+
+crabstone = Crabstone::Disassembler.new(Crabstone::ARCH_X86, Crabstone::MODE_64)
+crabstone.disasm(native_code.memory.to_s(native_code.pos), native_code.memory.to_i).each do |i|
+  printf "\t0x%<address>x:\t%<instruction>s\t%<details>s\n",
+    address: i.address,
+    instruction: i.mnemonic,
+    details: i.op_str
+end
+puts
+
+inner_proc = native_code.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
+
+native_proc = ->(string) {
+  inner_proc.call(string, string.size) == 1
+}
+
+ARGV.each do |string|
+  puts "#{string}: #{native_proc.call(string)}"
+end
