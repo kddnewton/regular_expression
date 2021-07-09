@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
-require "set"
-
 module RegularExpression
-  # The Compiler module translate an NFA to compiled bytecode through abstract interpretation.
+  # The Compiler module translate an NFA to compiled bytecode through abstract
+  # interpretation.
   class Compiler
-
     def compile(nfa)
       builder = Bytecode::Builder.new
 
@@ -66,11 +64,10 @@ module RegularExpression
         state = worklist.pop
         next if states.include?(state)
         states.add state
-        worklist.push *state.transitions.map(&:state)
+        worklist.push(*state.transitions.map(&:state))
       end
 
       states.to_a
     end
-
   end
 end

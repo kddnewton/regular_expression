@@ -3,14 +3,13 @@
 require "set"
 
 module RegularExpression
-  # The CFG is a directed graph of extended basic blocks of bytecode instructions. This module has objects to represent
-  # the EBB, a graph object which contains a set of EBB, and a builder that creates a CFG from a Compiled bytecode
-  # object.
+  # The CFG is a directed graph of extended basic blocks of bytecode
+  # instructions. This module has objects to represent the EBB, a graph object
+  # which contains a set of EBB, and a builder that creates a CFG from a
+  # compiled bytecode object.
   module CFG
-
     # An Extended Basic Block is a linear sequence of instructions with one entry point and zero or more exit points.
     class ExtendedBasicBlock
-
       attr_reader :name, :insns, :exits
 
       def initialize(name, insns, exits)
@@ -28,12 +27,10 @@ module RegularExpression
           puts "    #{exit} -> #{exit_map[exit].name}"
         end
       end
-
     end
 
     # A graph is a set of EBBs.
     class Graph
-
       attr_reader :blocks, :exit_map
 
       def initialize(blocks, exit_map)
@@ -79,11 +76,9 @@ module RegularExpression
         Graphviz.output(graph, path: "build/cfg.svg", format: "svg")
         graph.to_dot
       end
-
     end
 
     class Builder
-
       def build(compiled)
         # Each label in the compiled bytecode starts a block, as does the first instruction
         all_blocks = {start: 0}.merge(compiled.labels)
@@ -158,8 +153,6 @@ module RegularExpression
 
         Graph.new(blocks.values, exit_map)
       end
-
     end
-
   end
 end

@@ -28,9 +28,9 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  bundler
   crabstone
   fisk
-  bundler
   graphviz
   minitest
   racc

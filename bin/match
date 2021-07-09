@@ -8,4 +8,4 @@ pattern = RegularExpression.pattern(ARGV.shift)
 
 ARGV.each do |string|
   puts "#{string}: #{pattern.match?(string)}"
- end
+end
