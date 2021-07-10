@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     regular_expression (0.1.0)
+      fisk
       racc
 
 GEM
@@ -9,6 +10,7 @@ GEM
   specs:
     crabstone (4.0.3)
       ffi
+    docile (1.4.0)
     ffi (1.15.3)
     fisk (2.0.0)
     graphviz (1.2.1)
@@ -22,6 +24,12 @@ GEM
       ffi
     racc (1.5.2)
     rake (13.0.6)
+    simplecov (0.21.2)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.12.3)
+    simplecov_json_formatter (0.1.3)
 
 PLATFORMS
   x86_64-darwin-19
@@ -30,12 +38,11 @@ PLATFORMS
 DEPENDENCIES
   bundler
   crabstone
-  fisk
   graphviz
   minitest
-  racc
   rake
   regular_expression!
+  simplecov
 
 BUNDLED WITH
    2.2.16

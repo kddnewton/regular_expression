@@ -4,10 +4,9 @@ source "https://rubygems.org"
 
 gem "bundler"
 gem "crabstone"
-gem "fisk"
 gem "graphviz"
 gem "minitest"
-gem "racc"
 gem "rake"
+gem "simplecov"
 
 gemspec
