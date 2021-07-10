@@ -31,7 +31,7 @@ module RegularExpression
               when NFA::Transition::Set
                 # For the set transition, we want to try to read the given
                 # character, and if we find it, jump to the target state's code.
-                raise unless transition.values.size == 1
+                raise if transition.values.size != 1
                 raise if transition.invert
 
                 builder.push(Insns::Read.new(transition.values.first, label[transition.state]))

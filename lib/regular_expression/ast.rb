@@ -133,14 +133,14 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        if items.length == 1 && !invert
-          # Small optimization here, if we have something like [a-z], then we
-          # don't need to do the whole flattening.
-          items.first.to_nfa(start, finish)
-        else
+        if invert
           values = items.flat_map(&:to_nfa_values).sort
           transition = NFA::Transition::Set.new(finish, values, invert: invert)
           start.add_transition(transition)
+        else
+          items.each do |item|
+            item.to_nfa(start, finish)
+          end
         end
       end
     end
@@ -164,10 +164,7 @@ module RegularExpression
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
           start.add_transition(NFA::Transition::Value.new(finish, "_"))
         when "\\W"
-          transition =
-            NFA::Transition::Set.new(finish, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"], invert: true)
-
-          start.add_transition(transition)
+          start.add_transition(NFA::Transition::Set.new(finish, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"], invert: true))
         when "\\d"
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
         when "\\D"
