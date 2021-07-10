@@ -4,14 +4,30 @@ module RegularExpression
   module Compiler
     module X86
       class Compiled
-        attr_reader :asm
+        attr_reader :buffer
 
-        def initialize(asm)
-          @asm = asm
+        def initialize(buffer)
+          @buffer = buffer
+        end
+
+        def disasm
+          output = StringIO.new
+
+          crabstone = Crabstone::Disassembler.new(Crabstone::ARCH_X86, Crabstone::MODE_64)
+          crabstone.disasm(buffer.memory.to_s(buffer.pos), buffer.memory.to_i).each do |insn|
+            output.printf(
+              "0x%<address>x:\t%<instruction>s\t%<details>s\n",
+              address: insn.address,
+              instruction: insn.mnemonic,
+              details: insn.op_str
+            )
+          end
+
+          output.string
         end
 
         def to_proc
-          function = asm.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
+          function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
           -> (string) { function.call(string, string.size) == 1 }
         end
       end
@@ -21,8 +37,9 @@ module RegularExpression
       # two levels!
       def self.compile(cfg)
         fisk = Fisk.new
-        jitbuf = Fisk::Helpers.jitbuffer(1024)
-        asm = fisk.asm(jitbuf) do
+        buffer = Fisk::Helpers.jitbuffer(1024)
+
+        fisk.asm(buffer) do
           # rdi (string) = arg[0]
           # rsi (string.size) = arg[1]
           push rbp
@@ -127,7 +144,7 @@ module RegularExpression
           ret
         end
 
-        Compiled.new(asm)
+        Compiled.new(buffer)
       end
     end
   end

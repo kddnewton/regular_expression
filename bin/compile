@@ -16,30 +16,23 @@ cfg.dump
 puts
 RegularExpression::CFG::Graph.to_dot(cfg)
 
-ruby_src = RegularExpression::Compiler::Ruby.compile(cfg)
-puts ruby_src.source
+compiled = RegularExpression::Compiler::Ruby.compile(cfg)
+puts compiled.source
 puts
 
-ruby_proc = ruby_src.to_proc
+matcher = compiled.to_proc
 
 ARGV.each do |string|
-  puts "#{string}: #{ruby_proc.call(string)}"
+  puts "#{string}: #{matcher.call(string)}"
 end
 puts
 
 compiled = RegularExpression::Compiler::X86.compile(cfg)
-crabstone = Crabstone::Disassembler.new(Crabstone::ARCH_X86, Crabstone::MODE_64)
-
-crabstone.disasm(compiled.asm.memory.to_s(compiled.asm.pos), compiled.asm.memory.to_i).each do |i|
-  printf "\t0x%<address>x:\t%<instruction>s\t%<details>s\n",
-    address: i.address,
-    instruction: i.mnemonic,
-    details: i.op_str
-end
+puts compiled.disasm
 puts
 
-native_proc = compiled.to_proc
+matcher = compiled.to_proc
 
 ARGV.each do |string|
-  puts "#{string}: #{native_proc.call(string)}"
+  puts "#{string}: #{matcher.call(string)}"
 end
