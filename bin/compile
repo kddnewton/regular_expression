@@ -27,7 +27,7 @@ ARGV.each do |string|
 end
 puts
 
-compiled = RegularExpression::Compiler::Native.compile(cfg)
+compiled = RegularExpression::Compiler::X86.compile(cfg)
 crabstone = Crabstone::Disassembler.new(Crabstone::ARCH_X86, Crabstone::MODE_64)
 
 crabstone.disasm(compiled.asm.memory.to_s(compiled.asm.pos), compiled.asm.memory.to_i).each do |i|

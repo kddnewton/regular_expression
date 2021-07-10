@@ -15,4 +15,4 @@ require_relative "./regular_expression/pattern"
 require_relative "./regular_expression/version"
 
 require_relative "./regular_expression/compiler/ruby"
-require_relative "./regular_expression/compiler/native"
+require_relative "./regular_expression/compiler/x86"

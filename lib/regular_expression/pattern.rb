@@ -11,7 +11,7 @@ module RegularExpression
       @bytecode = RegularExpression::Bytecode.compile(nfa)
     end
 
-    def compile(compiler: RegularExpression::Generator::Native)
+    def compile(compiler: RegularExpression::Generator::X86)
       builder = RegularExpression::CFG::Builder.new
 
       singleton_class.undef_method(:match?)

@@ -2,7 +2,7 @@
 
 module RegularExpression
   module Compiler
-    module Native
+    module X86
       class Compiled
         attr_reader :asm
 
