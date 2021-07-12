@@ -117,7 +117,9 @@ module RegularExpression
             block_insns.push insn
 
             case insn
-            when Bytecode::Insns::Begin, Bytecode::Insns::End, Bytecode::Insns::Any, Bytecode::Insns::Read, Bytecode::Insns::Range
+            when Bytecode::Insns::BeginAnchor, Bytecode::Insns::EndAnchor,
+                 Bytecode::Insns::Any, Bytecode::Insns::Set, Bytecode::Insns::Range,
+                 Bytecode::Insns::Value
               # Remember this block exits to this target.
               block_exits.add insn.then
               insn_n += 1

@@ -35,20 +35,16 @@ module RegularExpression
         state.transitions.each do |transition|
           case transition
           when NFA::Transition::BeginAnchor
-            builder.push(Insns::Begin.new(label[transition.state]))
+            builder.push(Insns::BeginAnchor.new(label[transition.state]))
           when NFA::Transition::EndAnchor
-            builder.push(Insns::End.new(label[transition.state]))
+            builder.push(Insns::EndAnchor.new(label[transition.state]))
           when NFA::Transition::Any
             builder.push(Insns::Any.new(label[transition.state]))
           when NFA::Transition::Set
-            # For the set transition, we want to try to read the given
-            # character, and if we find it, jump to the target state's code.
-            raise if transition.values.size != 1
             raise if transition.invert
-
-            builder.push(Insns::Read.new(transition.values.first, label[transition.state]))
+            builder.push(Insns::Set.new(transition.values, label[transition.state]))
           when NFA::Transition::Value
-            builder.push(Insns::Read.new(transition.value, label[transition.state]))
+            builder.push(Insns::Value.new(transition.value, label[transition.state]))
           when NFA::Transition::Range
             raise if transition.invert
             builder.push(Insns::Range.new(transition.left, transition.right, label[transition.state]))
@@ -74,17 +70,20 @@ module RegularExpression
 
     module Insns
       # Fail unless at the beginning of the string, transition to then
-      Begin = Struct.new(:then)
+      BeginAnchor = Struct.new(:then)
 
       # Fail unless at the end of the string, transition to then
-      End = Struct.new(:then)
+      EndAnchor = Struct.new(:then)
 
       # Read off 1 character if possible, transition to then
       Any = Struct.new(:then)
 
       # Read off 1 character and match against char, transition to then
-      Read = Struct.new(:char, :then)
+      Value = Struct.new(:char, :then)
     
+      # Read off 1 character and test that it's in the value list, transition to then
+      Set = Struct.new(:values, :then)
+
       # Read off 1 character and test that it's between left and right, transition to then
       Range = Struct.new(:left, :right, :then)
 

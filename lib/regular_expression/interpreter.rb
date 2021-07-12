@@ -13,11 +13,11 @@ module RegularExpression
           insn = bytecode.insns[insn_n]
 
           case insn
-          when Bytecode::Insns::Begin
+          when Bytecode::Insns::BeginAnchor
             return false if start_n != 0
 
             insn_n = bytecode.labels[insn.then]
-          when Bytecode::Insns::End
+          when Bytecode::Insns::EndAnchor
             break if string_n != string.size
 
             insn_n = bytecode.labels[insn.then]
@@ -28,13 +28,15 @@ module RegularExpression
             else
               insn_n += 1
             end
-          when Bytecode::Insns::Read
+          when Bytecode::Insns::Value
             if string_n < string.size && string[string_n] == insn.char
               string_n += 1
               insn_n = bytecode.labels[insn.then]
             else
               insn_n += 1
             end
+          when Bytecode::Insns::Set
+            raise
           when Bytecode::Insns::Range
             if string_n < string.size && string[string_n] >= insn.left && string[string_n] <= insn.right
               string_n += 1

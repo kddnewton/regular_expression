@@ -32,9 +32,9 @@ module RegularExpression
 
           block.insns.each do |insn|
             case insn
-            when Bytecode::Insns::Begin
+            when Bytecode::Insns::BeginAnchor
               ruby_src.push "        return false if start_n != 0"
-            when Bytecode::Insns::End
+            when Bytecode::Insns::EndAnchor
               ruby_src.push "        if string_n == string.size"
               ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
               ruby_src.push "          next"
@@ -45,12 +45,14 @@ module RegularExpression
               ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
-            when Bytecode::Insns::Read
+            when Bytecode::Insns::Value
               ruby_src.push "        if string_n < string.size && string[string_n] == #{insn.char.inspect}"
               ruby_src.push "          string_n += 1"
               ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
+            when Bytecode::Insns::Set
+              raise
             when Bytecode::Insns::Range
               ruby_src.push "        if string_n < string.size && string[string_n] >= #{insn.left.inspect} && string[string_n] <= #{insn.right.inspect}"
               ruby_src.push "          string_n += 1"

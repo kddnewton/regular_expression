@@ -61,11 +61,11 @@ module RegularExpression
 
             block.insns.each do |insn|
               case insn
-              when Bytecode::Insns::Begin
+              when Bytecode::Insns::BeginAnchor
                 cmp rcx, imm8(0)
                 jne label(:search_loop_exit)
                 jmp label(cfg.exit_map[insn.then].name)
-              when Bytecode::Insns::End
+              when Bytecode::Insns::EndAnchor
                 cmp rcx, rsi
                 je label(cfg.exit_map[insn.then].name)
               when Bytecode::Insns::Any
@@ -80,7 +80,7 @@ module RegularExpression
                 jmp label(cfg.exit_map[insn.then].name)
 
                 make_label no_match_label
-              when Bytecode::Insns::Read
+              when Bytecode::Insns::Value
                 # if string (rdi)[string_n (rcx)] == char
                 mov r8, rdi
                 add r8, rcx
@@ -96,6 +96,8 @@ module RegularExpression
                 jmp label(cfg.exit_map[insn.then].name)
 
                 make_label no_match_label
+              when Bytecode::Insns::Set
+                raise
               when Bytecode::Insns::Range
                 no_match_label = :"no_match_#{insn.object_id}"
 
