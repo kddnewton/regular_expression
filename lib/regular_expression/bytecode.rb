@@ -35,9 +35,9 @@ module RegularExpression
         state.transitions.each do |transition|
           case transition
           when NFA::Transition::BeginAnchor
-            builder.push(Insns::BeginAnchor.new(label[transition.state]))
+            builder.push(Insns::GuardBegin.new(label[transition.state]))
           when NFA::Transition::EndAnchor
-            builder.push(Insns::EndAnchor.new(label[transition.state]))
+            builder.push(Insns::GuardEnd.new(label[transition.state]))
           when NFA::Transition::Any
             builder.push(Insns::Any.new(label[transition.state]))
           when NFA::Transition::Set
@@ -70,10 +70,10 @@ module RegularExpression
 
     module Insns
       # Fail unless at the beginning of the string, transition to then
-      BeginAnchor = Struct.new(:then)
+      GuardBegin = Struct.new(:then)
 
       # Fail unless at the end of the string, transition to then
-      EndAnchor = Struct.new(:then)
+      GuardEnd = Struct.new(:then)
 
       # Read off 1 character if possible, transition to then
       Any = Struct.new(:then)

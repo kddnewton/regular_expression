@@ -117,7 +117,7 @@ module RegularExpression
             block_insns.push insn
 
             case insn
-            when Bytecode::Insns::BeginAnchor, Bytecode::Insns::EndAnchor,
+            when Bytecode::Insns::GuardBegin, Bytecode::Insns::GuardEnd,
                  Bytecode::Insns::Any, Bytecode::Insns::Set, Bytecode::Insns::Range,
                  Bytecode::Insns::Value
               # Remember this block exits to this target.

@@ -61,11 +61,11 @@ module RegularExpression
 
             block.insns.each do |insn|
               case insn
-              when Bytecode::Insns::BeginAnchor
+              when Bytecode::Insns::GuardBegin
                 cmp rcx, imm8(0)
                 jne label(:search_loop_exit)
                 jmp label(cfg.exit_map[insn.then].name)
-              when Bytecode::Insns::EndAnchor
+              when Bytecode::Insns::GuardEnd
                 cmp rcx, rsi
                 je label(cfg.exit_map[insn.then].name)
               when Bytecode::Insns::Any

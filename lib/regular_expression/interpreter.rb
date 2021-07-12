@@ -13,11 +13,11 @@ module RegularExpression
           insn = bytecode.insns[insn_n]
 
           case insn
-          when Bytecode::Insns::BeginAnchor
+          when Bytecode::Insns::GuardBegin
             return false if start_n != 0
 
             insn_n = bytecode.labels[insn.then]
-          when Bytecode::Insns::EndAnchor
+          when Bytecode::Insns::GuardEnd
             break if string_n != string.size
 
             insn_n = bytecode.labels[insn.then]
