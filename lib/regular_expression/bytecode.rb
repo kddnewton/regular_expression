@@ -5,92 +5,71 @@ module RegularExpression
   # storing a stream of them, and a builder object for creating the compiled
   # object.
   module Bytecode
-    class << self
-      def compile(nfa)
-        builder = Builder.new
-        label = ->(state) { :"state_#{state.object_id}" }
+    # Never recurse a graph in a compiler! We don't know how deep it is and
+    # don't want to limit how large a program we can accept due to arbitrary
+    # stack space. Always use a worklist.
+    def self.compile(nfa)
+      builder = Builder.new
+      label = ->(state) { :"state_#{state.object_id}" }
 
-        each_state(nfa) do |state|
-          # Label the start of the state.
-          builder.mark_label(label[state])
+      visited = Set.new
+      worklist = [nfa]
 
-          case state
-          when NFA::FinishState
-            builder.push(Insns::Match.new)
-          when NFA::State
-            # Other states have transitions out of them. Go through each
-            # transition.
-            state.transitions.each do |transition|
-              case transition
-              when NFA::Transition::BeginAnchor
-                builder.push(Insns::Begin.new(label[transition.state]))
-              when NFA::Transition::EndAnchor
-                builder.push(Insns::End.new(label[transition.state]))
-              when NFA::Transition::Any
-                builder.push(Insns::Any.new(label[transition.state]))
-              when NFA::Transition::Set
-                # For the set transition, we want to try to read the given
-                # character, and if we find it, jump to the target state's code.
-                raise if transition.values.size != 1
-                raise if transition.invert
+      # For each state in the NFA.
+      until worklist.empty?
+        state = worklist.pop
 
-                builder.push(Insns::Read.new(transition.values.first, label[transition.state]))
-              when NFA::Transition::Value
-                builder.push(Insns::Read.new(transition.value, label[transition.state]))
-              when NFA::Transition::Range
-                raise if transition.invert
-                builder.push(Insns::Range.new(transition.left, transition.right, label[transition.state]))
-              when NFA::Transition::Epsilon
-                # Handled below.
-              else
-                raise
-              end
-            end
+        next if visited.include?(state)
+        visited.add(state)
 
-            # Do we have an epsilon transition? If so we handle it last, as
-            # fallthrough.
-            epsilon_transition = state.transitions.find { |t| t.is_a?(NFA::Transition::Epsilon) }
+        # Label the start of the state.
+        builder.mark_label(label[state])
 
-            if epsilon_transition
-              # Jump to the state the epsilon transition takes us to.
-              builder.push(Insns::Jump.new(label[epsilon_transition.state]))
-            elsif state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) }
-              # With no epsilon transition, no transitions match, which means we
-              # jump to the failure case.
-              builder.push(Insns::Jump.new(:fail))
-            end
+        if state.is_a?(NFA::FinishState)
+          builder.push(Insns::Match.new)
+          next
+        end
+
+        # Other states have transitions out of them. Go through each
+        # transition.
+        state.transitions.each do |transition|
+          case transition
+          when NFA::Transition::BeginAnchor
+            builder.push(Insns::Begin.new(label[transition.state]))
+          when NFA::Transition::EndAnchor
+            builder.push(Insns::End.new(label[transition.state]))
+          when NFA::Transition::Any
+            builder.push(Insns::Any.new(label[transition.state]))
+          when NFA::Transition::Set
+            # For the set transition, we want to try to read the given
+            # character, and if we find it, jump to the target state's code.
+            raise if transition.values.size != 1
+            raise if transition.invert
+
+            builder.push(Insns::Read.new(transition.values.first, label[transition.state]))
+          when NFA::Transition::Value
+            builder.push(Insns::Read.new(transition.value, label[transition.state]))
+          when NFA::Transition::Range
+            raise if transition.invert
+            builder.push(Insns::Range.new(transition.left, transition.right, label[transition.state]))
+          when NFA::Transition::Epsilon
+            builder.push(Insns::Jump.new(label[transition.state]))
           else
             raise
           end
+
+          worklist.push(transition.state)
         end
 
-        # We always have a failure case - it's just the failure instruction.
-        builder.mark_label(:fail)
-        builder.push(Insns::Fail.new)
-        builder.build
-      end
-
-      private
-
-      def each_state(nfa)
-        visited = Set.new
-
-        # Never recurse a graph in a compiler! We don't know how deep it is and
-        # don't want to limit how large a program we can accept due to arbitrary
-        # stack space. Always use a worklist.
-        worklist = [nfa]
-
-        # For each state in the NFA.
-        until worklist.empty?
-          state = worklist.pop
-
-          next if visited.include?(state)
-          visited.add(state)
-
-          yield state
-          worklist.push(*state.transitions.map(&:state))
+        if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) }
+          builder.push(Insns::Jump.new(:fail))
         end
       end
+
+      # We always have a failure case - it's just the failure instruction.
+      builder.mark_label(:fail)
+      builder.push(Insns::Fail.new)
+      builder.build
     end
 
     module Insns
