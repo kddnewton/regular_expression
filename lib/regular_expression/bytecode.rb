@@ -111,8 +111,8 @@ module RegularExpression
         labels[label] = insns.size
       end
 
-      def push(insn)
-        insns.push(insn)
+      def push(*new_insns)
+        insns.push(*new_insns)
       end
 
       def build
