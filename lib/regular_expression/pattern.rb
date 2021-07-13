@@ -5,21 +5,19 @@ module RegularExpression
     attr_reader :bytecode
 
     def initialize(source)
-      parser = RegularExpression::Parser.new
-      nfa = parser.parse(source).to_nfa
-
-      @bytecode = RegularExpression::Bytecode.compile(nfa)
+      ast = Parser.new.parse(source)
+      @bytecode = Bytecode.compile(ast.to_nfa)
     end
 
-    def compile(compiler: RegularExpression::Generator::X86)
-      cfg = RegularExpression::CFG.build(bytecode)
+    def compile(compiler: Generator::X86)
+      cfg = CFG.build(bytecode)
 
       singleton_class.undef_method(:match?)
       define_singleton_method(:match?, &compiler.compile(cfg))
     end
 
     def match?(string)
-      RegularExpression::Interpreter.new(bytecode).match?(string)
+      Interpreter.new(bytecode).match?(string)
     end
   end
 end
