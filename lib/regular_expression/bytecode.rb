@@ -10,14 +10,14 @@ module RegularExpression
     # stack space. Always use a worklist.
     def self.compile(nfa)
       builder = Builder.new
-      label = ->(state) { :"state_#{state.object_id}" }
+      label = -> (state, index = 0) { :"state_#{state.object_id}_#{index}" }
 
       visited = Set.new
-      worklist = [nfa]
+      worklist = [[nfa, Insns::Jump.new(:fail)]]
 
       # For each state in the NFA.
       until worklist.empty?
-        state = worklist.pop
+        state, fallback = worklist.pop
 
         next if visited.include?(state)
         visited.add(state)
@@ -56,11 +56,11 @@ module RegularExpression
             raise
           end
 
-          worklist.push(transition.state)
+          worklist.push([transition.state, fallback])
         end
 
-        if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) }
-          builder.push(Insns::Jump.new(:fail))
+        if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) || t.is_a?(NFA::Transition::Epsilon) }
+          builder.push(fallback)
         end
       end
 
