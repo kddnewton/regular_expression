@@ -142,6 +142,8 @@ module RegularExpression
       end
 
       def dump
+        output = StringIO.new
+
         # Labels store name -> address, but if we want to print the label name
         # at its address, we need to store the address to the name as well.
         reverse_labels = {}
@@ -151,9 +153,11 @@ module RegularExpression
 
         insns.each_with_index do |insn, n|
           label = reverse_labels[n]
-          puts "#{label.to_s}:" if label
-          puts "  #{insn}"
+          output.puts("#{label}:") if label
+          output.puts("  #{insn}")
         end
+
+        output.string
       end
     end
   end

@@ -4,7 +4,19 @@ module RegularExpression
   # An interpreter for our compiled bytecode. Maybe we could make this possible
   # to enter at a given state and deoptimise to it from the compiled code?
   class Interpreter
-    def match?(bytecode, string)
+    attr_reader :bytecode
+
+    def initialize(bytecode)
+      @bytecode = bytecode
+    end
+
+    # This is just here for API parity with the compiled outputs.
+    def to_proc
+      interpreter = self
+      -> (string) { interpreter.match?(string) }
+    end
+
+    def match?(string)
       (0..string.size).any? do |start_n|
         string_n = start_n
         insn_n = 0

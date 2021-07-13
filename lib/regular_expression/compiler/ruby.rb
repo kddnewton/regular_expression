@@ -88,6 +88,7 @@ module RegularExpression
         ruby_src.push "  end"
         ruby_src.push "  false"
         ruby_src.push "}"
+        ruby_src.push ""
 
         Compiled.new(ruby_src.join($/))
       end
