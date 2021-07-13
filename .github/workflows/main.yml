@@ -9,6 +9,8 @@ jobs:
     env:
       CI: true
     steps:
+    - name: Install graphviz
+      run: sudo apt-get install graphviz
     - uses: actions/checkout@master
     - uses: ruby/setup-ruby@v1
       with:
