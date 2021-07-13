@@ -13,7 +13,7 @@ module RegularExpression
       label = -> (state, index = 0) { :"state_#{state.object_id}_#{index}" }
 
       visited = Set.new
-      worklist = [[nfa, Insns::Jump.new(:fail)]]
+      worklist = [[nfa, [Insns::Jump.new(:fail)]]]
 
       # For each state in the NFA.
       until worklist.empty?
@@ -65,7 +65,7 @@ module RegularExpression
 
           next_fallback =
             if state.transitions.length > 1 && index != state.transitions.length - 1
-              Insns::Jump.new(label[state, index + 1])
+              [Insns::Jump.new(label[state, index + 1])]
             else
               fallback
             end
@@ -76,7 +76,7 @@ module RegularExpression
         # If we don't have one of the transitions that always executes, then we
         # need to add the fallback to the output for this state.
         if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) || t.is_a?(NFA::Transition::Epsilon) }
-          builder.push(fallback)
+          builder.push(*fallback)
         end
       end
 
