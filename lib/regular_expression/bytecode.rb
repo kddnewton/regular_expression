@@ -10,14 +10,14 @@ module RegularExpression
     # stack space. Always use a worklist.
     def self.compile(nfa)
       builder = Builder.new
-      label = ->(state) { :"state_#{state.object_id}" }
+      label = -> (state, index = 0) { :"state_#{state.object_id}_#{index}" }
 
       visited = Set.new
-      worklist = [nfa]
+      worklist = [[nfa, [Insns::Jump.new(:fail)]]]
 
       # For each state in the NFA.
       until worklist.empty?
-        state = worklist.pop
+        state, fallback = worklist.pop
 
         next if visited.include?(state)
         visited.add(state)
@@ -32,7 +32,13 @@ module RegularExpression
 
         # Other states have transitions out of them. Go through each
         # transition.
-        state.transitions.each do |transition|
+        state.transitions.each_with_index do |transition, index|
+          builder.mark_label(label[state, index])
+
+          if state.transitions.length > 1 && index != state.transitions.length - 1
+            builder.push(Insns::PushIndex.new)
+          end
+
           case transition
           when NFA::Transition::BeginAnchor
             builder.push(Insns::GuardBegin.new(label[transition.state]))
@@ -43,7 +49,7 @@ module RegularExpression
           when NFA::Transition::Value
             builder.push(Insns::JumpValue.new(transition.value, label[transition.state]))
           when NFA::Transition::Invert
-            builder.push(Insns::JumpInvert.new(transition.values, label[transition.state]))
+            builder.push(Insns::JumpValuesInvert.new(transition.values, label[transition.state]))
           when NFA::Transition::Range
             if transition.invert
               builder.push(Insns::JumpRangeInvert.new(transition.left, transition.right, label[transition.state]))
@@ -56,11 +62,20 @@ module RegularExpression
             raise
           end
 
-          worklist.push(transition.state)
+          next_fallback =
+            if state.transitions.length > 1 && index != state.transitions.length - 1
+              [Insns::PopIndex.new, Insns::Jump.new(label[state, index + 1])]
+            else
+              fallback
+            end
+
+          worklist.push([transition.state, next_fallback])
         end
 
-        if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) }
-          builder.push(Insns::Jump.new(:fail))
+        # If we don't have one of the transitions that always executes, then we
+        # need to add the fallback to the output for this state.
+        if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) || t.is_a?(NFA::Transition::Epsilon) }
+          builder.push(*fallback)
         end
       end
 
@@ -71,34 +86,54 @@ module RegularExpression
     end
 
     module Insns
-      # Fail unless at the beginning of the string, transition to then
+      # Push the current string index onto the stack. This is necessary to
+      # support backtracking so that we can pop it off later when we want to go
+      # backward.
+      PushIndex = Class.new
+
+      # Pop the string index off the stack. This is necessary so that we can
+      # support backtracking.
+      PopIndex = Class.new
+
+      # If we're at the beginning of the string, then jump to the then
+      # instruction. Otherwise fail the entire match.
       GuardBegin = Struct.new(:then)
 
-      # Fail unless at the end of the string, transition to then
+      # If we're at the end of the string, then jump to the then instruction.
+      # Otherwise fail the match at the current index.
       GuardEnd = Struct.new(:then)
 
-      # Read off 1 character, transition to target
+      # If it's possible to read a character off the input, then do so and jump
+      # to the target instruction.
       JumpAny = Struct.new(:target)
 
-      # Read off 1 character and match against char, transition to target
+      # If it's possible to read a character off the input and that character
+      # matches the char value, then do so and jump to the target instruction.
       JumpValue = Struct.new(:char, :target)
     
-      # Read off 1 character and test that it's not in the value list, transition to target
-      JumpInvert = Struct.new(:values, :target)
+      # If it's possible to read a character off the input and that character is
+      # not contained within the list of values, then do so and jump to the
+      # target instruction.
+      JumpValuesInvert = Struct.new(:values, :target)
 
-      # Read off 1 character and test that it's between left and right, transition to target
+      # If it's possible to read a character off the input and that character is
+      # within the range of possible values, then do so and jump to the target
+      # instruction.
       JumpRange = Struct.new(:left, :right, :target)
 
-      # Read off 1 character and test that it's not between left and right, transition to target
+      # If it's possible to read a character off the input and that character is
+      # not within the range of possible values, then do so and jump to the
+      # target instruction.
       JumpRangeInvert = Struct.new(:left, :right, :target)
 
-      # Jump to another instruction
+      # Jump directly to the target instruction.
       Jump = Struct.new(:target)
 
-      # Successfully match against the given string
+      # Successfully match the string and stop executing instructions.
       Match = Class.new
 
-      # Fail to match against the given string
+      # Fail to match the string at the current index. Increment the starting
+      # index and try again if possible.
       Fail = Class.new
     end
 
@@ -133,6 +168,8 @@ module RegularExpression
       end
 
       def dump
+        output = StringIO.new
+
         # Labels store name -> address, but if we want to print the label name
         # at its address, we need to store the address to the name as well.
         reverse_labels = {}
@@ -142,9 +179,11 @@ module RegularExpression
 
         insns.each_with_index do |insn, n|
           label = reverse_labels[n]
-          puts "#{label.to_s}:" if label
-          puts "  #{insn}"
+          output.puts("#{label}:") if label
+          output.puts("  #{insn}")
         end
+
+        output.string
       end
     end
   end

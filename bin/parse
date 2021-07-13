@@ -3,7 +3,47 @@
 
 $:.unshift(File.expand_path("../lib", __dir__))
 require "regular_expression"
+require "crabstone"
 
-root = RegularExpression::Parser.new.parse(ARGV.first)
-RegularExpression::AST.to_dot(root)
-RegularExpression::NFA.to_dot(root.to_nfa)
+# Pass the source through the various parsing phases
+source = ARGV.shift
+ast = RegularExpression::Parser.new.parse(source)
+nfa = ast.to_nfa
+bytecode = RegularExpression::Bytecode.compile(nfa)
+
+# Compile the graph into various outputs
+cfg = RegularExpression::CFG.build(bytecode)
+ruby = RegularExpression::Compiler::Ruby.compile(cfg)
+x86 = RegularExpression::Compiler::X86.compile(cfg)
+
+# Make sure we get some nice dot output
+RegularExpression::AST.to_dot(ast)
+RegularExpression::NFA.to_dot(nfa)
+RegularExpression::CFG.to_dot(cfg)
+
+# Dump out the bytecode and cfg to strings
+puts "#{bytecode.dump}\n"
+puts "#{cfg.dump}\n"
+
+check =
+  if ARGV.any?
+    -> (source) {
+      checker = source.to_proc
+      ARGV.each { |string| puts "#{string}: #{checker.call(string)}" }
+      puts
+    }
+  else
+    -> (_source) {}
+  end
+
+# Test the interpreter against any passed strings
+interpreter = RegularExpression::Interpreter.new(bytecode)
+check.call(interpreter)
+
+# Dump out the compiled ruby source and match against any passed values
+puts "#{ruby.source}\n"
+check.call(ruby)
+
+# Dump out the diassembled x86 source and match against any passed values
+puts "#{x86.disasm}\n"
+check.call(x86)

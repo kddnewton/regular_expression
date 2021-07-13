@@ -12,15 +12,14 @@ module RegularExpression
     end
 
     def compile(compiler: RegularExpression::Generator::X86)
-      builder = RegularExpression::CFG::Builder.new
+      cfg = RegularExpression::CFG.build(bytecode)
 
       singleton_class.undef_method(:match?)
-      define_singleton_method(:match?, &compiler.compile(builder.build(bytecode)))
+      define_singleton_method(:match?, &compiler.compile(cfg))
     end
 
     def match?(string)
-      interpreter = RegularExpression::Interpreter.new
-      interpreter.match?(bytecode, string)
+      RegularExpression::Interpreter.new(bytecode).match?(string)
     end
   end
 end

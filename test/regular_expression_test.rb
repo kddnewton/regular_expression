@@ -20,6 +20,12 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("ab|bc", "ac")
   end
 
+  def test_alternation_backtracking
+    assert_matches("ab|ac", "ab")
+    assert_matches("ab|ac", "ac")
+    refute_matches("ab|ac", "bc")
+  end
+
   def test_begin_anchor_caret
     assert_matches("^abc", "abc")
     refute_matches("^abc", "!abc")
