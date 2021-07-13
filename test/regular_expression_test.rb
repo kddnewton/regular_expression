@@ -86,20 +86,20 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("\\d", "a")
   end
 
-  # def test_character_class_D
-  #   assert_matches("\\D", "a")
-  #   refute_matches("\\D", "0")
-  # end
+  def test_character_class_D
+    assert_matches("\\D", "a")
+    refute_matches("\\D", "0")
+  end
 
   def test_character_class_w
     assert_matches("\\w", "a")
     refute_matches("\\w", "!")
   end
 
-  # def test_character_class_W
-  #   assert_matches("\\W", "!")
-  #   refute_matches("\\W", "a")
-  # end
+  def test_character_class_W
+    assert_matches("\\W", "!")
+    refute_matches("\\W", "a")
+  end
 
   def test_character_group
     assert_matches("[a-ce]", "b")

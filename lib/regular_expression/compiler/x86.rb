@@ -142,6 +142,33 @@ module RegularExpression
                 jmp label(cfg.exit_map[insn.target].name)
 
                 make_label no_match_label
+              when Bytecode::Insns::JumpRangeInvert
+                match_label = :"match_#{insn.object_id}"
+
+                cmp rcx, rsi
+                je label(no_match_label)
+
+                mov r8, rdi
+                add r8, rcx
+                mov r8, m64(r8)
+
+                # if string (rdi)[string_n (rcx)] < insn.left
+                cmp r8, imm8(insn.left.ord)
+                jl label(match_label)
+
+                # if string (rdi)[string_n (rcx)] <= insn.right
+                cmp r8, imm8(insn.right.ord)
+                jle label(no_match_label)
+
+                make_label match_label
+
+                # rcx (string_n) += 1
+                inc rcx
+
+                # goto next block
+                jmp label(cfg.exit_map[insn.target].name)
+
+                make_label no_match_label
               when Bytecode::Insns::Jump
                 jmp label(cfg.exit_map[insn.target].name)
               when Bytecode::Insns::Match

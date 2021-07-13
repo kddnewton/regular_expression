@@ -49,6 +49,13 @@ module RegularExpression
             else
               insn_n += 1
             end
+          when Bytecode::Insns::JumpRangeInvert
+            if string_n < string.size && (string[string_n] < insn.left || string[string_n] > insn.right)
+              string_n += 1
+              insn_n = bytecode.labels[insn.target]
+            else
+              insn_n += 1
+            end
           when Bytecode::Insns::Jump
             insn_n = bytecode.labels[insn.target]
           when Bytecode::Insns::Match

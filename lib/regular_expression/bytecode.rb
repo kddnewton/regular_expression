@@ -45,8 +45,11 @@ module RegularExpression
           when NFA::Transition::Invert
             builder.push(Insns::JumpInvert.new(transition.values, label[transition.state]))
           when NFA::Transition::Range
-            raise if transition.invert
-            builder.push(Insns::JumpRange.new(transition.left, transition.right, label[transition.state]))
+            if transition.invert
+              builder.push(Insns::JumpRangeInvert.new(transition.left, transition.right, label[transition.state]))
+            else
+              builder.push(Insns::JumpRange.new(transition.left, transition.right, label[transition.state]))
+            end
           when NFA::Transition::Epsilon
             builder.push(Insns::Jump.new(label[transition.state]))
           else
@@ -85,6 +88,9 @@ module RegularExpression
 
       # Read off 1 character and test that it's between left and right, transition to target
       JumpRange = Struct.new(:left, :right, :target)
+
+      # Read off 1 character and test that it's not between left and right, transition to target
+      JumpRangeInvert = Struct.new(:left, :right, :target)
 
       # Jump to another instruction
       Jump = Struct.new(:target)

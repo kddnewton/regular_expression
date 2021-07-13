@@ -63,6 +63,12 @@ module RegularExpression
               ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
+            when Bytecode::Insns::JumpRangeInvert
+              ruby_src.push "        if string_n < string.size && (string[string_n] < #{insn.left.inspect} || string[string_n] > #{insn.right.inspect})"
+              ruby_src.push "          string_n += 1"
+              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
+              ruby_src.push "          next"
+              ruby_src.push "        end"
             when Bytecode::Insns::Jump
               ruby_src.push "        block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "        next"
