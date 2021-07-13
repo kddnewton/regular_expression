@@ -60,6 +60,8 @@ module RegularExpression
             make_label block.name
 
             block.insns.each do |insn|
+              no_match_label = :"no_match_#{insn.object_id}"
+
               case insn
               when Bytecode::Insns::GuardBegin
                 cmp rcx, imm8(0)
@@ -68,38 +70,40 @@ module RegularExpression
               when Bytecode::Insns::GuardEnd
                 cmp rcx, rsi
                 je label(cfg.exit_map[insn.then].name)
-              when Bytecode::Insns::Any
+              when Bytecode::Insns::JumpAny
                 cmp rcx, rsi
-                no_match_label = :"no_match_#{insn.object_id}"
                 je label(no_match_label)
 
                 # rcx (string_n) += 1
                 inc rcx
 
                 # goto next block
-                jmp label(cfg.exit_map[insn.then].name)
+                jmp label(cfg.exit_map[insn.target].name)
 
                 make_label no_match_label
-              when Bytecode::Insns::Value
+              when Bytecode::Insns::JumpValue
+                cmp rcx, rsi
+                je label(no_match_label)
+
                 # if string (rdi)[string_n (rcx)] == char
                 mov r8, rdi
                 add r8, rcx
                 mov r8, m64(r8)
                 cmp r8, imm8(insn.char.ord) # I want to do rdi[rcx] but can't figure out how in Fisk
-                no_match_label = :"no_match_#{insn.object_id}"
                 jne label(no_match_label)
 
                 # rcx (string_n) += 1
                 inc rcx
 
                 # goto next block
-                jmp label(cfg.exit_map[insn.then].name)
+                jmp label(cfg.exit_map[insn.target].name)
 
                 make_label no_match_label
-              when Bytecode::Insns::Set
+              when Bytecode::Insns::JumpSet
                 raise
-              when Bytecode::Insns::Range
-                no_match_label = :"no_match_#{insn.object_id}"
+              when Bytecode::Insns::JumpRange
+                cmp rcx, rsi
+                je label(no_match_label)
 
                 mov r8, rdi
                 add r8, rcx
@@ -117,7 +121,7 @@ module RegularExpression
                 inc rcx
 
                 # goto next block
-                jmp label(cfg.exit_map[insn.then].name)
+                jmp label(cfg.exit_map[insn.target].name)
 
                 make_label no_match_label
               when Bytecode::Insns::Jump

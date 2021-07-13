@@ -107,29 +107,28 @@ module RegularExpression
                 all_labels[target] = insn_n
                 all_labels_reverse[insn_n] = target
               end
-              block_insns.push Bytecode::Insns::Jump.new(target)
-              block_exits.add target
+              block_insns.push(Bytecode::Insns::Jump.new(target))
+              block_exits.add(target)
               break
             end
 
             # Examine each instruction.
             insn = compiled.insns[insn_n]
-            block_insns.push insn
+            block_insns.push(insn)
 
+            # Remember which blocks exit to this target.
             case insn
-            when Bytecode::Insns::GuardBegin, Bytecode::Insns::GuardEnd,
-                 Bytecode::Insns::Any, Bytecode::Insns::Set, Bytecode::Insns::Range,
-                 Bytecode::Insns::Value
-              # Remember this block exits to this target.
-              block_exits.add insn.then
+            when Bytecode::Insns::GuardBegin, Bytecode::Insns::GuardEnd
+              block_exits.add(insn.then)
               insn_n += 1
-              next
+            when Bytecode::Insns::JumpAny, Bytecode::Insns::JumpSet,
+                 Bytecode::Insns::JumpRange, Bytecode::Insns::JumpValue
+              block_exits.add(insn.target)
+              insn_n += 1
             when Bytecode::Insns::Jump
-              # Remember this block exits to this target.
-              block_exits.add insn.target
+              block_exits.add(insn.target)
               break
             when Bytecode::Insns::Match, Bytecode::Insns::Fail
-              # Ends the block.
               break
             else
               raise

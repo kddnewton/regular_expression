@@ -21,26 +21,31 @@ module RegularExpression
             break if string_n != string.size
 
             insn_n = bytecode.labels[insn.then]
-          when Bytecode::Insns::Any
+          when Bytecode::Insns::JumpAny
             if string_n < string.size
               string_n += 1
-              insn_n = bytecode.labels[insn.then]
+              insn_n = bytecode.labels[insn.target]
             else
               insn_n += 1
             end
-          when Bytecode::Insns::Value
+          when Bytecode::Insns::JumpValue
             if string_n < string.size && string[string_n] == insn.char
               string_n += 1
-              insn_n = bytecode.labels[insn.then]
+              insn_n = bytecode.labels[insn.target]
             else
               insn_n += 1
             end
-          when Bytecode::Insns::Set
-            raise
-          when Bytecode::Insns::Range
+          when Bytecode::Insns::JumpSet
+            if string_n < string.size && insn.values.include?(string[string_n])
+              string_n += 1
+              insn_n = bytecode.labels[insn.target]
+            else
+              insn_n += 1
+            end
+          when Bytecode::Insns::JumpRange
             if string_n < string.size && string[string_n] >= insn.left && string[string_n] <= insn.right
               string_n += 1
-              insn_n = bytecode.labels[insn.then]
+              insn_n = bytecode.labels[insn.target]
             else
               insn_n += 1
             end

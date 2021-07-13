@@ -39,15 +39,15 @@ module RegularExpression
           when NFA::Transition::EndAnchor
             builder.push(Insns::GuardEnd.new(label[transition.state]))
           when NFA::Transition::Any
-            builder.push(Insns::Any.new(label[transition.state]))
+            builder.push(Insns::JumpAny.new(label[transition.state]))
+          when NFA::Transition::Value
+            builder.push(Insns::JumpValue.new(transition.value, label[transition.state]))
           when NFA::Transition::Set
             raise if transition.invert
-            builder.push(Insns::Set.new(transition.values, label[transition.state]))
-          when NFA::Transition::Value
-            builder.push(Insns::Value.new(transition.value, label[transition.state]))
+            builder.push(Insns::JumpSet.new(transition.values, label[transition.state]))
           when NFA::Transition::Range
             raise if transition.invert
-            builder.push(Insns::Range.new(transition.left, transition.right, label[transition.state]))
+            builder.push(Insns::JumpRange.new(transition.left, transition.right, label[transition.state]))
           when NFA::Transition::Epsilon
             builder.push(Insns::Jump.new(label[transition.state]))
           else
@@ -75,17 +75,17 @@ module RegularExpression
       # Fail unless at the end of the string, transition to then
       GuardEnd = Struct.new(:then)
 
-      # Read off 1 character if possible, transition to then
-      Any = Struct.new(:then)
+      # Read off 1 character, transition to then
+      JumpAny = Struct.new(:target)
 
       # Read off 1 character and match against char, transition to then
-      Value = Struct.new(:char, :then)
+      JumpValue = Struct.new(:char, :target)
     
       # Read off 1 character and test that it's in the value list, transition to then
-      Set = Struct.new(:values, :then)
+      JumpSet = Struct.new(:values, :target)
 
       # Read off 1 character and test that it's between left and right, transition to then
-      Range = Struct.new(:left, :right, :then)
+      JumpRange = Struct.new(:left, :right, :target)
 
       # Jump to another instruction
       Jump = Struct.new(:target)

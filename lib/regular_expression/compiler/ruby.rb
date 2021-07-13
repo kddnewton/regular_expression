@@ -39,24 +39,28 @@ module RegularExpression
               ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
-            when Bytecode::Insns::Any
+            when Bytecode::Insns::JumpAny
               ruby_src.push "        if string_n < string.size"
               ruby_src.push "          string_n += 1"
-              ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
+              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
-            when Bytecode::Insns::Value
+            when Bytecode::Insns::JumpValue
               ruby_src.push "        if string_n < string.size && string[string_n] == #{insn.char.inspect}"
               ruby_src.push "          string_n += 1"
-              ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
+              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
-            when Bytecode::Insns::Set
-              raise
-            when Bytecode::Insns::Range
+            when Bytecode::Insns::JumpSet
+              ruby_src.push "        if string_n < string.size && #{insn.values.inspect}.include?(string[string_n])"
+              ruby_src.push "          string_n += 1"
+              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
+              ruby_src.push "          next"
+              ruby_src.push "        end"
+            when Bytecode::Insns::JumpRange
               ruby_src.push "        if string_n < string.size && string[string_n] >= #{insn.left.inspect} && string[string_n] <= #{insn.right.inspect}"
               ruby_src.push "          string_n += 1"
-              ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
+              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
             when Bytecode::Insns::Jump
