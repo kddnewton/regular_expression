@@ -44,7 +44,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/kddeisz/regular_expression.
+Bug reports and pull requests are welcome on GitHub at https://github.com/kddeisz/regular_expression. For information about how to contribute to the development of this gem, see the [CONTRIBUTING.md](CONTRIBUTING.md) document.
 
 ## License
 
