@@ -3,7 +3,6 @@
 module RegularExpression
   module AST
     def self.to_dot(root)
-      require "graphviz"
       graph = Graphviz::Graph.new
       root.to_dot(graph)
 

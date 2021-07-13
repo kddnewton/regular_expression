@@ -3,8 +3,6 @@
 module RegularExpression
   module NFA
     def self.to_dot(nfa)
-      require "graphviz"
-
       graph = Graphviz::Graph.new(rankdir: "LR")
       nfa.to_dot(graph, {})
 

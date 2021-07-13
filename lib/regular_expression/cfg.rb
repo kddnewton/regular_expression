@@ -86,7 +86,6 @@ module RegularExpression
     end
 
     def self.to_dot(cfg)
-      require "graphviz"
       graph = Graphviz::Graph.new
       cfg.to_dot(graph)
 
