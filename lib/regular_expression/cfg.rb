@@ -51,6 +51,8 @@ module RegularExpression
 
           # Remember which blocks exit to this target.
           case insn
+          when Bytecode::Insns::PushIndex, Bytecode::Insns::PopIndex
+            insn_n += 1
           when Bytecode::Insns::GuardBegin, Bytecode::Insns::GuardEnd
             block_exits.add(insn.then)
             insn_n += 1

@@ -35,6 +35,11 @@ module RegularExpression
         state.transitions.each_with_index do |transition, index|
           builder.mark_label(label[state, index])
 
+          if state.transitions.length > 1
+            builder.push(Insns::PushIndex.new) if index != state.transitions.length - 1
+            builder.push(Insns::PopIndex.new) if index != 0
+          end
+
           case transition
           when NFA::Transition::BeginAnchor
             builder.push(Insns::GuardBegin.new(label[transition.state]))
@@ -82,6 +87,15 @@ module RegularExpression
     end
 
     module Insns
+      # Push the current string index onto the stack. This is necessary to
+      # support backtracking so that we can pop it off later when we want to go
+      # backward.
+      PushIndex = Class.new
+
+      # Pop the string index off the stack. This is necessary so that we can
+      # support backtracking.
+      PopIndex = Class.new
+
       # If we're at the beginning of the string, then jump to the then
       # instruction. Otherwise fail the entire match.
       GuardBegin = Struct.new(:then)

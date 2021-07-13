@@ -17,6 +17,8 @@ module RegularExpression
     end
 
     def match?(string)
+      stack = []
+
       (0..string.size).any? do |start_n|
         string_n = start_n
         insn_n = 0
@@ -25,6 +27,12 @@ module RegularExpression
           insn = bytecode.insns[insn_n]
 
           case insn
+          when Bytecode::Insns::PushIndex
+            stack << string_n
+            insn_n += 1
+          when Bytecode::Insns::PopIndex
+            string_n = stack.pop
+            insn_n += 1
           when Bytecode::Insns::GuardBegin
             return false if start_n != 0
 

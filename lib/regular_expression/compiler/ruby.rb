@@ -21,6 +21,7 @@ module RegularExpression
         ruby_src = []
         ruby_src.push "-> (string) {"
         ruby_src.push "  start_n = 0"
+        ruby_src.push "  stack = []"
         ruby_src.push "  while start_n <= string.size"
         ruby_src.push "    string_n = start_n"
         ruby_src.push "    block = #{cfg.start.name.inspect}"
@@ -32,6 +33,10 @@ module RegularExpression
 
           block.insns.each do |insn|
             case insn
+            when Bytecode::Insns::PushIndex
+              ruby_src.push "        stack << string_n"
+            when Bytecode::Insns::PopIndex
+              ruby_src.push "        string_n = stack.pop"
             when Bytecode::Insns::GuardBegin
               ruby_src.push "        return false if start_n != 0"
             when Bytecode::Insns::GuardEnd

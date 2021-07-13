@@ -63,6 +63,10 @@ module RegularExpression
               no_match_label = :"no_match_#{insn.object_id}"
 
               case insn
+              when Bytecode::Insns::PushIndex
+                push rcx
+              when Bytecode::Insns::PopIndex
+                pop rcx
               when Bytecode::Insns::GuardBegin
                 cmp rcx, imm8(0)
                 jne label(:search_loop_exit)
