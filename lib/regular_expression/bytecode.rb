@@ -68,6 +68,8 @@ module RegularExpression
           worklist.push([transition.state, next_fallback])
         end
 
+        # If we don't have one of the transitions that always executes, then we
+        # need to add the fallback to the output for this state.
         if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) || t.is_a?(NFA::Transition::Epsilon) }
           builder.push(fallback)
         end
