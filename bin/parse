@@ -27,13 +27,13 @@ puts "#{cfg.dump}\n"
 
 check =
   if ARGV.any?
-    -> (source) {
-      checker = source.to_proc
+    lambda do |compiled|
+      checker = compiled.to_proc
       ARGV.each { |string| puts "#{string}: #{checker.call(string)}" }
       puts
-    }
+    end
   else
-    -> (_source) {}
+    ->(_compiled) {}
   end
 
 # Test the interpreter against any passed strings

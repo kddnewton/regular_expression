@@ -92,7 +92,7 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("\\d", "a")
   end
 
-  def test_character_class_D
+  def test_character_class_d_invert
     assert_matches("\\D", "a")
     refute_matches("\\D", "0")
   end
@@ -102,7 +102,7 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("\\w", "!")
   end
 
-  def test_character_class_W
+  def test_character_class_w_invert
     assert_matches("\\W", "!")
     refute_matches("\\W", "a")
   end
@@ -144,7 +144,7 @@ class RegularExpressionTest < Minitest::Test
 
     pattern = RegularExpression::Pattern.new(source)
     assert_operator pattern, :match?, value, message
-  
+
     pattern.compile(compiler: RegularExpression::Compiler::X86)
     assert_operator pattern, :match?, value, "#{message} (native)"
 
@@ -154,7 +154,7 @@ class RegularExpressionTest < Minitest::Test
 
   def refute_matches(source, value)
     message = "Expected /#{source}/ to not match #{value.inspect}"
-  
+
     pattern = RegularExpression::Pattern.new(source)
     refute_operator pattern, :match?, value, message
 

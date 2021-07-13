@@ -11,12 +11,13 @@ module RegularExpression
         end
 
         def to_proc
-          eval(source)
+          eval(source) # rubocop:disable Security/Eval
         end
       end
 
       # Generate Ruby code for a CFG. This looks just like the intepreter, but
       # abstracted in time one level!
+      # rubocop:disable Layout/LineLength
       def self.compile(cfg)
         ruby_src = []
         ruby_src.push "-> (string) {"
@@ -25,7 +26,7 @@ module RegularExpression
         ruby_src.push "  while start_n <= string.size"
         ruby_src.push "    string_n = start_n"
         ruby_src.push "    block = #{cfg.start.name.inspect}"
-        ruby_src.push "    while true"
+        ruby_src.push "    loop do"
         ruby_src.push "      case block"
 
         cfg.blocks.each do |block|
@@ -41,7 +42,7 @@ module RegularExpression
               ruby_src.push "        return false if start_n != 0"
             when Bytecode::Insns::GuardEnd
               ruby_src.push "        if string_n == string.size"
-              ruby_src.push "          block = #{cfg.exit_map[insn.then].name.inspect}"
+              ruby_src.push "          block = #{cfg.exit_map[insn.guarded].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
             when Bytecode::Insns::JumpAny
@@ -57,7 +58,7 @@ module RegularExpression
               ruby_src.push "          next"
               ruby_src.push "        end"
             when Bytecode::Insns::JumpValuesInvert
-              ruby_src.push "        if string_n < string.size && !#{insn.values.inspect}.include?(string[string_n])"
+              ruby_src.push "        if string_n < string.size && !#{insn.chars.inspect}.include?(string[string_n])"
               ruby_src.push "          string_n += 1"
               ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "          next"
@@ -97,6 +98,7 @@ module RegularExpression
 
         Compiled.new(ruby_src.join($/))
       end
+      # rubocop:enable Layout/LineLength
     end
   end
 end

@@ -7,7 +7,7 @@ module RegularExpression
 
       graph = Graphviz::Graph.new(rankdir: "LR")
       nfa.to_dot(graph, {})
-    
+
       Graphviz.output(graph, path: "build/nfa.svg", format: "svg")
       graph.to_dot
     end

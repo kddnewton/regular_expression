@@ -1,0 +1,42 @@
+AllCops:
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  NewCops: enable
+  SuggestExtensions: false
+  TargetRubyVersion: 3.0
+  Exclude:
+  - "lib/regular_expression/parser.rb"
+  - "vendor/**/*"
+
+Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Metrics:
+  Enabled: false
+
+Style/AccessorGrouping:
+  Enabled: false
+
+Style/CombinableLoops:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/HashEachMethods:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/PerlBackrefs:
+  Enabled: false
+
+Style/SpecialGlobalVars:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StructInheritance:
+  Enabled: false

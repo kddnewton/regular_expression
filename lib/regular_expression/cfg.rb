@@ -54,7 +54,7 @@ module RegularExpression
           when Bytecode::Insns::PushIndex, Bytecode::Insns::PopIndex
             insn_n += 1
           when Bytecode::Insns::GuardBegin, Bytecode::Insns::GuardEnd
-            block_exits.add(insn.then)
+            block_exits.add(insn.guarded)
             insn_n += 1
           when Bytecode::Insns::JumpAny, Bytecode::Insns::JumpValuesInvert,
                 Bytecode::Insns::JumpRange, Bytecode::Insns::JumpRangeInvert,
@@ -136,17 +136,17 @@ module RegularExpression
 
         blocks.each do |block|
           label = []
-          label.push "#{block.name}:"
-          block.insns.each do |insn|
-            label.push "  #{insn.to_s}"
-          end
+
+          label.push("#{block.name}:")
+          block.insns.each { |insn| label.push("  #{insn}") }
+
           nodes[block] = graph.add_node(block.object_id, label: label.join($/), labeljust: "l", shape: "box")
         end
 
         blocks.each do |block|
           successors = block.exits.map { |exit| nodes[exit_map[exit]] }.uniq
           successors.each do |successor|
-            nodes[block].connect successor
+            nodes[block].connect(successor)
           end
         end
       end

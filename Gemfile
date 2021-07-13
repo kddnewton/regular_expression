@@ -7,6 +7,7 @@ gem "crabstone"
 gem "graphviz"
 gem "minitest"
 gem "rake"
+gem "rubocop"
 gem "simplecov"
 
 gemspec

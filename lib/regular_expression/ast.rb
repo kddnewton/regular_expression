@@ -86,8 +86,8 @@ module RegularExpression
       end
 
       def to_nfa(start, finish)
-        quantifier.quantify(start, finish) do |start, finish|
-          expressions.each { |expression| expression.to_nfa(start, finish) }
+        quantifier.quantify(start, finish) do |qstart, qfinish|
+          expressions.each { |expression| expression.to_nfa(qstart, qfinish) }
         end
       end
     end
@@ -105,12 +105,12 @@ module RegularExpression
         node = parent.add_node(object_id, label: "Match")
 
         item.to_dot(node)
-        quantifier.to_dot(node) if quantifier
+        quantifier.to_dot(node)
       end
 
       def to_nfa(start, finish)
-        quantifier.quantify(start, finish) do |start, finish|
-          item.to_nfa(start, finish)
+        quantifier.quantify(start, finish) do |qstart, qfinish|
+          item.to_nfa(qstart, qfinish)
         end
       end
     end
@@ -243,9 +243,7 @@ module RegularExpression
           case value
           when "\\A"
             NFA::Transition::BeginAnchor.new(finish)
-          when "\\z"
-            NFA::Transition::EndAnchor.new(finish)
-          when "$"
+          when "\\z", "$"
             NFA::Transition::EndAnchor.new(finish)
           end
 
@@ -255,8 +253,7 @@ module RegularExpression
 
     module Quantifier
       class Once
-        def to_dot(parent)
-        end
+        def to_dot(parent); end
 
         def quantify(start, finish)
           yield start, finish
@@ -278,7 +275,7 @@ module RegularExpression
         def to_dot(parent)
           parent.add_node(object_id, label: "+", shape: "box")
         end
-      
+
         def quantify(start, finish)
           yield start, finish
           finish.add_transition(NFA::Transition::Epsilon.new(start))

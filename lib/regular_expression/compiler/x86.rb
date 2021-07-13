@@ -33,7 +33,7 @@ module RegularExpression
           function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
           success = SUCCESS
 
-          -> (string) { function.call(string, string.length) == success }
+          ->(string) { function.call(string, string.length) == success }
         end
       end
 
@@ -113,10 +113,10 @@ module RegularExpression
               when Bytecode::Insns::GuardBegin
                 cmp string_index, imm8(0)
                 jne label(:exit)
-                jmp label(cfg.exit_map[insn.then].name)
+                jmp label(cfg.exit_map[insn.guarded].name)
               when Bytecode::Insns::GuardEnd
                 cmp string_index, string_length
-                je label(cfg.exit_map[insn.then].name)
+                je label(cfg.exit_map[insn.guarded].name)
               when Bytecode::Insns::JumpAny
                 no_match_label = :"no_match_#{insn.object_id}"
 
@@ -168,7 +168,7 @@ module RegularExpression
                 # Compare the character buffer to each of the instruction's
                 # characters, continue on to the next instruction if any of them
                 # are equal
-                insn.values.each do |value|
+                insn.chars.each do |value|
                   cmp character_buffer, imm8(value.ord)
                   je label(no_match_label)
                 end

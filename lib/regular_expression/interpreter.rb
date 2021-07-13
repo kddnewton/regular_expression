@@ -13,7 +13,7 @@ module RegularExpression
     # This is just here for API parity with the compiled outputs.
     def to_proc
       interpreter = self
-      -> (string) { interpreter.match?(string) }
+      ->(string) { interpreter.match?(string) }
     end
 
     def match?(string)
@@ -23,7 +23,7 @@ module RegularExpression
         string_n = start_n
         insn_n = 0
 
-        while true
+        loop do
           insn = bytecode.insns[insn_n]
 
           case insn
@@ -36,11 +36,11 @@ module RegularExpression
           when Bytecode::Insns::GuardBegin
             return false if start_n != 0
 
-            insn_n = bytecode.labels[insn.then]
+            insn_n = bytecode.labels[insn.guarded]
           when Bytecode::Insns::GuardEnd
             break if string_n != string.size
 
-            insn_n = bytecode.labels[insn.then]
+            insn_n = bytecode.labels[insn.guarded]
           when Bytecode::Insns::JumpAny
             if string_n < string.size
               string_n += 1
@@ -56,7 +56,7 @@ module RegularExpression
               insn_n += 1
             end
           when Bytecode::Insns::JumpValuesInvert
-            if string_n < string.size && !insn.values.include?(string[string_n])
+            if string_n < string.size && !insn.chars.include?(string[string_n])
               string_n += 1
               insn_n = bytecode.labels[insn.target]
             else

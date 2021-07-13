@@ -10,7 +10,7 @@ module RegularExpression
     # stack space. Always use a worklist.
     def self.compile(nfa)
       builder = Builder.new
-      label = -> (state, index = 0) { :"state_#{state.object_id}_#{index}" }
+      label = ->(state, index = 0) { :"state_#{state.object_id}_#{index}" }
 
       visited = Set.new
       worklist = [[nfa, [Insns::Jump.new(:fail)]]]
@@ -18,12 +18,11 @@ module RegularExpression
       # For each state in the NFA.
       until worklist.empty?
         state, fallback = worklist.pop
-
         next if visited.include?(state)
-        visited.add(state)
 
         # Label the start of the state.
         builder.mark_label(label[state])
+        visited.add(state)
 
         if state.is_a?(NFA::FinishState)
           builder.push(Insns::Match.new)
@@ -97,11 +96,11 @@ module RegularExpression
 
       # If we're at the beginning of the string, then jump to the then
       # instruction. Otherwise fail the entire match.
-      GuardBegin = Struct.new(:then)
+      GuardBegin = Struct.new(:guarded)
 
       # If we're at the end of the string, then jump to the then instruction.
       # Otherwise fail the match at the current index.
-      GuardEnd = Struct.new(:then)
+      GuardEnd = Struct.new(:guarded)
 
       # If it's possible to read a character off the input, then do so and jump
       # to the target instruction.
@@ -110,11 +109,11 @@ module RegularExpression
       # If it's possible to read a character off the input and that character
       # matches the char value, then do so and jump to the target instruction.
       JumpValue = Struct.new(:char, :target)
-    
+
       # If it's possible to read a character off the input and that character is
       # not contained within the list of values, then do so and jump to the
       # target instruction.
-      JumpValuesInvert = Struct.new(:values, :target)
+      JumpValuesInvert = Struct.new(:chars, :target)
 
       # If it's possible to read a character off the input and that character is
       # within the range of possible values, then do so and jump to the target

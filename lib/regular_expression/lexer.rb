@@ -18,7 +18,7 @@ module RegularExpression
       "." => :PERIOD,
       "-" => :DASH,
       "," => :COMMA
-    }
+    }.freeze
 
     def initialize(source)
       @source = source.dup
@@ -37,7 +37,7 @@ module RegularExpression
           result << [SINGLE[$&], $&]
         when /\A\d+/
           result << [:INTEGER, $&.to_i]
-        when /\A(?:\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD]|[\u100000-\u10FFFF])/
+        when /\A(?:\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD])/
           result << [:CHAR, $&]
         else
           raise SyntaxError, @source
