@@ -137,6 +137,37 @@ class RegularExpressionTest < Minitest::Test
     refute_matches("a(b|c){2}", "ab")
   end
 
+  def test_raises_syntax_errors
+    assert_raises(SyntaxError) do
+      RegularExpression::Parser.new.parse("\u0000")
+    end
+  end
+
+  def test_raises_parse_errors
+    assert_raises(Racc::ParseError) do
+      RegularExpression::Parser.new.parse("(")
+    end
+  end
+
+  def test_debug
+    source = "^\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\d\D\w\W|.)\z$"
+
+    ast = RegularExpression::Parser.new.parse(source)
+    nfa = ast.to_nfa
+    bytecode = RegularExpression::Bytecode.compile(nfa)
+    cfg = RegularExpression::CFG.build(bytecode)
+
+    interpreter = RegularExpression::Interpreter.new(bytecode)
+    assert_kind_of(Proc, interpreter.to_proc)
+
+    assert_kind_of(String, bytecode.dump)
+    assert_kind_of(String, cfg.dump)
+
+    assert_kind_of(String, RegularExpression::AST.to_dot(ast))
+    assert_kind_of(String, RegularExpression::NFA.to_dot(nfa))
+    assert_kind_of(String, RegularExpression::CFG.to_dot(cfg))
+  end
+
   private
 
   def assert_matches(source, value)
