@@ -32,7 +32,9 @@ module RegularExpression
 
         # Other states have transitions out of them. Go through each
         # transition.
-        state.transitions.each do |transition|
+        state.transitions.each_with_index do |transition, index|
+          builder.mark_label(label[state, index])
+
           case transition
           when NFA::Transition::BeginAnchor
             builder.push(Insns::GuardBegin.new(label[transition.state]))
@@ -56,7 +58,14 @@ module RegularExpression
             raise
           end
 
-          worklist.push([transition.state, fallback])
+          next_fallback =
+            if state.transitions.length > 1 && index != state.transitions.length - 1
+              Insns::Jump.new(label[state, index + 1])
+            else
+              fallback
+            end
+
+          worklist.push([transition.state, next_fallback])
         end
 
         if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) || t.is_a?(NFA::Transition::Epsilon) }
