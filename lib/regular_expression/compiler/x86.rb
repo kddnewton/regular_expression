@@ -99,7 +99,7 @@ module RegularExpression
                 jmp label(cfg.exit_map[insn.target].name)
 
                 make_label no_match_label
-              when Bytecode::Insns::JumpInvert
+              when Bytecode::Insns::JumpValuesInvert
                 cmp rcx, rsi
                 je label(no_match_label)
 

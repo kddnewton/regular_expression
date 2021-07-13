@@ -45,7 +45,7 @@ module RegularExpression
           when NFA::Transition::Value
             builder.push(Insns::JumpValue.new(transition.value, label[transition.state]))
           when NFA::Transition::Invert
-            builder.push(Insns::JumpInvert.new(transition.values, label[transition.state]))
+            builder.push(Insns::JumpValuesInvert.new(transition.values, label[transition.state]))
           when NFA::Transition::Range
             if transition.invert
               builder.push(Insns::JumpRangeInvert.new(transition.left, transition.right, label[transition.state]))
@@ -80,34 +80,45 @@ module RegularExpression
     end
 
     module Insns
-      # Fail unless at the beginning of the string, transition to then
+      # If we're at the beginning of the string, then jump to the then
+      # instruction. Otherwise fail the entire match.
       GuardBegin = Struct.new(:then)
 
-      # Fail unless at the end of the string, transition to then
+      # If we're at the end of the string, then jump to the then instruction.
+      # Otherwise fail the match at the current index.
       GuardEnd = Struct.new(:then)
 
-      # Read off 1 character, transition to target
+      # If it's possible to read a character off the input, then do so and jump
+      # to the target instruction.
       JumpAny = Struct.new(:target)
 
-      # Read off 1 character and match against char, transition to target
+      # If it's possible to read a character off the input and that character
+      # matches the char value, then do so and jump to the target instruction.
       JumpValue = Struct.new(:char, :target)
     
-      # Read off 1 character and test that it's not in the value list, transition to target
-      JumpInvert = Struct.new(:values, :target)
+      # If it's possible to read a character off the input and that character is
+      # not contained within the list of values, then do so and jump to the
+      # target instruction.
+      JumpValuesInvert = Struct.new(:values, :target)
 
-      # Read off 1 character and test that it's between left and right, transition to target
+      # If it's possible to read a character off the input and that character is
+      # within the range of possible values, then do so and jump to the target
+      # instruction.
       JumpRange = Struct.new(:left, :right, :target)
 
-      # Read off 1 character and test that it's not between left and right, transition to target
+      # If it's possible to read a character off the input and that character is
+      # not within the range of possible values, then do so and jump to the
+      # target instruction.
       JumpRangeInvert = Struct.new(:left, :right, :target)
 
-      # Jump to another instruction
+      # Jump directly to the target instruction.
       Jump = Struct.new(:target)
 
-      # Successfully match against the given string
+      # Successfully match the string and stop executing instructions.
       Match = Class.new
 
-      # Fail to match against the given string
+      # Fail to match the string at the current index. Increment the starting
+      # index and try again if possible.
       Fail = Class.new
     end
 

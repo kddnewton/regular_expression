@@ -54,7 +54,7 @@ module RegularExpression
           when Bytecode::Insns::GuardBegin, Bytecode::Insns::GuardEnd
             block_exits.add(insn.then)
             insn_n += 1
-          when Bytecode::Insns::JumpAny, Bytecode::Insns::JumpInvert,
+          when Bytecode::Insns::JumpAny, Bytecode::Insns::JumpValuesInvert,
                 Bytecode::Insns::JumpRange, Bytecode::Insns::JumpRangeInvert,
                 Bytecode::Insns::JumpValue
             block_exits.add(insn.target)
