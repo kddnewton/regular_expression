@@ -3,9 +3,6 @@
 module RegularExpression
   module Compiler
     module X86
-      FAILURE = 0
-      SUCCESS = 1
-
       class Compiled
         attr_reader :buffer
 
@@ -31,9 +28,11 @@ module RegularExpression
 
         def to_proc
           function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
-          success = SUCCESS
 
-          ->(string) { function.call(string, string.length) == success }
+          lambda do |string|
+            value = function.call(string, string.length)
+            value if value != string.length + 1
+          end
         end
       end
 
@@ -85,9 +84,9 @@ module RegularExpression
           push frame_pointer
           mov frame_pointer, stack_pointer
 
-          # Now we're going to initialize the counter so that we attempt to
+          # Now we're going to initialize the counter to 0 so that we attempt to
           # match at each index of the input string
-          mov match_index, imm64(0)
+          xor match_index, match_index
 
           # This is the start of our loop, where at the beginning of the loop
           # we check if we have already finished looking at each index (in which
@@ -246,8 +245,8 @@ module RegularExpression
               when Bytecode::Insns::Match
                 # If we reach this instruction, then we've successfully matched
                 # against the input string, so we're going to return the integer
-                # that represents success
-                mov return_value, imm64(SUCCESS)
+                # that represents the index at which this match began
+                mov return_value, match_index
                 mov stack_pointer, frame_pointer
                 pop frame_pointer
                 ret
@@ -261,10 +260,11 @@ module RegularExpression
           end
 
           # If we reach this instruction, then we've failed to match at every
-          # possible index in the string, so we're going to return the integer
-          # that represents failure
+          # possible index in the string, so we're going to return the length
+          # of the string + 1 so that the caller knows that this match failed
           make_label :exit
-          mov return_value, imm64(FAILURE)
+          mov return_value, string_length
+          inc return_value
 
           # Here we make sure to clean up after ourselves by returning the frame
           # pointer to its former position
