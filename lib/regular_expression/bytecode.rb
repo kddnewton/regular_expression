@@ -35,9 +35,8 @@ module RegularExpression
         state.transitions.each_with_index do |transition, index|
           builder.mark_label(label[state, index])
 
-          if state.transitions.length > 1
-            builder.push(Insns::PushIndex.new) if index != state.transitions.length - 1
-            builder.push(Insns::PopIndex.new) if index != 0
+          if state.transitions.length > 1 && index != state.transitions.length - 1
+            builder.push(Insns::PushIndex.new)
           end
 
           case transition
@@ -65,7 +64,7 @@ module RegularExpression
 
           next_fallback =
             if state.transitions.length > 1 && index != state.transitions.length - 1
-              [Insns::Jump.new(label[state, index + 1])]
+              [Insns::PopIndex.new, Insns::Jump.new(label[state, index + 1])]
             else
               fallback
             end
