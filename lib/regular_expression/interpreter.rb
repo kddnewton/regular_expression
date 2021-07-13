@@ -35,8 +35,8 @@ module RegularExpression
             else
               insn_n += 1
             end
-          when Bytecode::Insns::JumpSet
-            if string_n < string.size && insn.values.include?(string[string_n])
+          when Bytecode::Insns::JumpInvert
+            if string_n < string.size && !insn.values.include?(string[string_n])
               string_n += 1
               insn_n = bytecode.labels[insn.target]
             else

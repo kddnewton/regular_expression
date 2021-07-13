@@ -51,8 +51,8 @@ module RegularExpression
               ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
-            when Bytecode::Insns::JumpSet
-              ruby_src.push "        if string_n < string.size && #{insn.values.inspect}.include?(string[string_n])"
+            when Bytecode::Insns::JumpInvert
+              ruby_src.push "        if string_n < string.size && !#{insn.values.inspect}.include?(string[string_n])"
               ruby_src.push "          string_n += 1"
               ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "          next"

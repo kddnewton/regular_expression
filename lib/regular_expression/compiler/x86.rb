@@ -99,8 +99,26 @@ module RegularExpression
                 jmp label(cfg.exit_map[insn.target].name)
 
                 make_label no_match_label
-              when Bytecode::Insns::JumpSet
-                raise
+              when Bytecode::Insns::JumpInvert
+                cmp rcx, rsi
+                je label(no_match_label)
+
+                mov r8, rdi
+                add r8, rcx
+                mov r8, m64(r8)
+
+                insn.values.each do |value|
+                  cmp r8, imm8(value.ord)
+                  je label(no_match_label)
+                end
+
+                # rcx (string_n) += 1
+                inc rcx
+
+                # goto next block
+                jmp label(cfg.exit_map[insn.target].name)
+
+                make_label no_match_label
               when Bytecode::Insns::JumpRange
                 cmp rcx, rsi
                 je label(no_match_label)

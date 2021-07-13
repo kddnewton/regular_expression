@@ -134,8 +134,7 @@ module RegularExpression
 
       def to_nfa(start, finish)
         if invert
-          values = items.flat_map(&:to_nfa_values).sort
-          transition = NFA::Transition::Set.new(finish, values, invert: invert)
+          transition = NFA::Transition::Invert.new(finish, items.flat_map(&:to_nfa_values).sort)
           start.add_transition(transition)
         else
           items.each do |item|
@@ -164,7 +163,7 @@ module RegularExpression
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
           start.add_transition(NFA::Transition::Value.new(finish, "_"))
         when "\\W"
-          start.add_transition(NFA::Transition::Set.new(finish, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"], invert: true))
+          start.add_transition(NFA::Transition::Invert.new(finish, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"]))
         when "\\d"
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
         when "\\D"

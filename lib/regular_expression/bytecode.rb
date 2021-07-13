@@ -42,9 +42,8 @@ module RegularExpression
             builder.push(Insns::JumpAny.new(label[transition.state]))
           when NFA::Transition::Value
             builder.push(Insns::JumpValue.new(transition.value, label[transition.state]))
-          when NFA::Transition::Set
-            raise if transition.invert
-            builder.push(Insns::JumpSet.new(transition.values, label[transition.state]))
+          when NFA::Transition::Invert
+            builder.push(Insns::JumpInvert.new(transition.values, label[transition.state]))
           when NFA::Transition::Range
             raise if transition.invert
             builder.push(Insns::JumpRange.new(transition.left, transition.right, label[transition.state]))
@@ -75,16 +74,16 @@ module RegularExpression
       # Fail unless at the end of the string, transition to then
       GuardEnd = Struct.new(:then)
 
-      # Read off 1 character, transition to then
+      # Read off 1 character, transition to target
       JumpAny = Struct.new(:target)
 
-      # Read off 1 character and match against char, transition to then
+      # Read off 1 character and match against char, transition to target
       JumpValue = Struct.new(:char, :target)
     
-      # Read off 1 character and test that it's in the value list, transition to then
-      JumpSet = Struct.new(:values, :target)
+      # Read off 1 character and test that it's not in the value list, transition to target
+      JumpInvert = Struct.new(:values, :target)
 
-      # Read off 1 character and test that it's between left and right, transition to then
+      # Read off 1 character and test that it's between left and right, transition to target
       JumpRange = Struct.new(:left, :right, :target)
 
       # Jump to another instruction

@@ -121,7 +121,7 @@ module RegularExpression
             when Bytecode::Insns::GuardBegin, Bytecode::Insns::GuardEnd
               block_exits.add(insn.then)
               insn_n += 1
-            when Bytecode::Insns::JumpAny, Bytecode::Insns::JumpSet,
+            when Bytecode::Insns::JumpAny, Bytecode::Insns::JumpInvert,
                  Bytecode::Insns::JumpRange, Bytecode::Insns::JumpValue
               block_exits.add(insn.target)
               insn_n += 1

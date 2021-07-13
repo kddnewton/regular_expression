@@ -101,6 +101,18 @@ class RegularExpressionTest < Minitest::Test
   #   refute_matches("\\W", "a")
   # end
 
+  def test_character_group
+    assert_matches("[a-ce]", "b")
+    assert_matches("[a-ce]", "e")
+    refute_matches("[a-ce]", "d")
+  end
+
+  def test_character_set_inverted
+    assert_matches("[^a-ce]", "d")
+    assert_matches("[^a-ce]", "f")
+    refute_matches("[^a-ce]", "a")
+  end
+
   def test_period
     assert_matches(".", "a")
     assert_matches(".", "z")

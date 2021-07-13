@@ -79,19 +79,17 @@ module RegularExpression
         end
       end
 
-      class Set
+      class Invert
         attr_reader :state # State
         attr_reader :values # Array[String]
-        attr_reader :invert # bool
 
-        def initialize(state, values, invert: false)
+        def initialize(state, values)
           @state = state
           @values = values
-          @invert = invert
         end
 
         def label
-          values.inspect
+          "[^#{values.join}]"
         end
       end
 
