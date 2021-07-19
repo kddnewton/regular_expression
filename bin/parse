@@ -15,6 +15,11 @@ end
 source = ARGV.shift
 ast = RegularExpression::Parser.new.parse(source)
 nfa = ast.to_nfa
+
+RegularExpression::NFA.to_dot(nfa)
+RegularExpression::NFA.to_dot(RegularExpression::DFA.build(nfa), filename: "dfa")
+
+__END__
 bytecode = RegularExpression::Bytecode.compile(nfa)
 
 # Compile the graph into various outputs
