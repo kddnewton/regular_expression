@@ -1,6 +1,7 @@
 # RegularExpression
 
-[![Build Status](https://github.com/kddeisz/regular_expression/workflows/Main/badge.svg)](https://github.com/kddeisz/regular_expression/actions)
+[![Build Status](https://github.com/kddnewton/regular_expression/workflows/Main/badge.svg)](https://github.com/kddnewton/regular_expression/actions)
+[![Gem Version](https://img.shields.io/gem/v/regular_expression.svg)](https://rubygems.org/gems/regular_expression)
 
 A regular expression engine written in Ruby.
 
@@ -44,7 +45,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/kddeisz/regular_expression. For information about how to contribute to the development of this gem, see the [CONTRIBUTING.md](CONTRIBUTING.md) document.
+Bug reports and pull requests are welcome on GitHub at https://github.com/kddnewton/regular_expression. For information about how to contribute to the development of this gem, see the [CONTRIBUTING.md](CONTRIBUTING.md) document.
 
 ## License
 

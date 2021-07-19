@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["kddnewton@gmail.com"]
 
   spec.summary       = "Regular expressions in Ruby"
-  spec.homepage      = "https://github.com/kddeisz/regular_expression"
+  spec.homepage      = "https://github.com/kddnewton/regular_expression"
   spec.license       = "MIT"
 
   spec.files         = Dir.chdir(__dir__) do
