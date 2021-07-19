@@ -2,11 +2,11 @@
 
 module RegularExpression
   module NFA
-    def self.to_dot(nfa)
+    def self.to_dot(nfa, filename: "nfa")
       graph = Graphviz::Graph.new(rankdir: "LR")
       nfa.to_dot(graph, {})
 
-      Graphviz.output(graph, path: "build/nfa.svg", format: "svg")
+      Graphviz.output(graph, path: "build/#{filename}.svg", format: "svg")
       graph.to_dot
     end
 
@@ -59,11 +59,27 @@ module RegularExpression
         def label
           %q{\A}
         end
+
+        def matches?(other)
+          other.is_a?(BeginAnchor)
+        end
+
+        def copy(new_state)
+          BeginAnchor.new(new_state)
+        end
       end
 
       class EndAnchor < Struct.new(:state)
         def label
           %q{\z}
+        end
+
+        def matches?(other)
+          other.is_a?(EndAnchor)
+        end
+
+        def copy(new_state)
+          EndAnchor.new(new_state)
         end
       end
 
@@ -83,11 +99,45 @@ module RegularExpression
         def label
           %q{.}
         end
+
+        def matches?(other)
+          case other
+          when Any, Value, Invert, Range
+            true
+          else
+            false
+          end
+        end
+
+        def copy(new_state)
+          Any.new(new_state)
+        end
       end
 
       class Value < Struct.new(:state, :value)
         def label
           value.inspect
+        end
+
+        def matches?(other)
+          case other
+          when Any
+            true
+          when Value
+            value == other.value
+          when Invert
+            !other.values.include?(value)
+          when Range
+            matches = value >= other.left && value <= other.right
+            matches = !matched if other.invert
+            matches
+          else
+            false
+          end
+        end
+
+        def copy(new_state)
+          Value.new(new_state, value)
         end
       end
 
@@ -109,6 +159,25 @@ module RegularExpression
         def label
           %Q{[^#{values.join}]}
         end
+
+        def matches?(other)
+          case other
+          when Any
+            true
+          when Value
+            !values.include?(other.value)
+          when Invert
+            values == other.values
+          when Range
+            raise NotImplemented
+          else
+            false
+          end
+        end
+
+        def copy(new_state)
+          Invert.new(new_state, values)
+        end
       end
 
       class Range
@@ -125,6 +194,27 @@ module RegularExpression
 
         def label
           %Q{#{left}-#{right}}
+        end
+
+        def matches?(other)
+          case other
+          when Any
+            true
+          when Value
+            matches = other.value >= left && other.value <= right
+            matches = !matches if invert
+            matches
+          when Invert
+            raise NotImplemented
+          when Range
+            left == other.left && right == other.right && invert == other.invert
+          else
+            false
+          end
+        end
+
+        def copy(new_state)
+          Range.new(new_state, left, right, invert: invert)
         end
       end
 
