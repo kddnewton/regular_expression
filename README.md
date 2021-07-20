@@ -25,11 +25,11 @@ Or install it yourself as:
 
 #### Capstone
 
-This library depends on Vapstone. On a Mac you can `brew install capstone`, or on Ubuntu you can `sudo apt-get install libcapstone-dev`. For other platforms, Googling _install capstone_ can tell you how.
+To call `#disasm` on the generated machine code, you'll need Capstone installed. On a Mac you can `brew install capstone`, or on Ubuntu you can `sudo apt-get install libcapstone-dev`. For other platforms, Googling _install capstone_ can tell you how.
 
 #### Graphviz
 
-To generate Dotfile output (to\_dot) or run the tests, you'll need Graphviz installed. On a Mac you can `brew install graphviz`, or on Ubuntu you can `sudo apt-get install graphviz`. For other platforms, Googling _install graphviz_ can tell you how.
+To call `#to_dot` on the syntax tree or the state machines, or run the tests, you'll need Graphviz installed. On a Mac you can `brew install graphviz`, or on Ubuntu you can `sudo apt-get install graphviz`. For other platforms, Googling _install graphviz_ can tell you how.
 
 ## Usage
 
