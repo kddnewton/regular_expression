@@ -33,7 +33,7 @@ module RegularExpression
           result << [:CHAR_CLASS, @scanner.matched]
         when @scanner.scan(/\\[Az]|\$/)
           result << [:ANCHOR, @scanner.matched]
-        when @scanner.scan(/[\^$()\[\]{}|*+?.\-,]/)
+        when @scanner.scan(/[()\[\]{}^$|*+?.\-,]/)
           result << [SINGLE[@scanner.matched], @scanner.matched]
         when @scanner.scan(/\d+/)
           result << [:INTEGER, @scanner.matched.to_i]
