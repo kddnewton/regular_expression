@@ -42,13 +42,14 @@ module RegularExpression
           end
 
           case transition
-          when NFA::Transition::BeginAnchor
-            builder.push(Insns::GuardBegin.new(label[transition.state]))
-          when NFA::Transition::EndAnchor
-            builder.push(Insns::GuardEnd.new(label[transition.state]))
-          when NFA::Transition::Any, NFA::Transition::Value,
+          when NFA::Transition::BeginAnchor, NFA::Transition::EndAnchor,
+              NFA::Transition::Any, NFA::Transition::Value,
               NFA::Transition::Invert, NFA::Transition::Range
             case transition
+            when NFA::Transition::BeginAnchor
+              builder.push(Insns::TestBegin.new)
+            when NFA::Transition::EndAnchor
+              builder.push(Insns::TestEnd.new)
             when NFA::Transition::Any
               builder.push(Insns::TestAny.new)
             when NFA::Transition::Value
@@ -131,13 +132,13 @@ module RegularExpression
       # support backtracking.
       PopIndex = Class.new
 
-      # If we're at the beginning of the string, then jump to the then
-      # instruction. Otherwise fail the entire match.
-      GuardBegin = Struct.new(:guarded)
+      # If we're at the beginning of the string, then set the flag, otherwise
+      # clear it.
+      TestBegin = Class.new
 
-      # If we're at the end of the string, then jump to the then instruction.
-      # Otherwise fail the match at the current index.
-      GuardEnd = Struct.new(:guarded)
+      # If we're at the end of the string, then jump to the then instruction,
+      # otherwise clear it.
+      TestEnd = Class.new
 
       # If it's possible to read a character off the input, then do so and set
       # the flag, otherwise clear it.

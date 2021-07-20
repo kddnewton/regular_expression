@@ -34,14 +34,12 @@ module RegularExpression
           when Bytecode::Insns::PopIndex
             string_n = stack.pop
             insn_n += 1
-          when Bytecode::Insns::GuardBegin
-            return false if start_n != 0
-
-            insn_n = bytecode.labels[insn.guarded]
-          when Bytecode::Insns::GuardEnd
-            break if string_n != string.size
-
-            insn_n = bytecode.labels[insn.guarded]
+          when Bytecode::Insns::TestBegin
+            flag = start_n.zero?
+            insn_n += 1
+          when Bytecode::Insns::TestEnd
+            flag = string_n == string.size
+            insn_n += 1
           when Bytecode::Insns::TestAny
             flag = string_n < string.size
             string_n += 1 if flag
