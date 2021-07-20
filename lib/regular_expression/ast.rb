@@ -156,16 +156,16 @@ module RegularExpression
 
       def to_nfa(start, finish)
         case value
-        when "\\w"
+        when %q{\w}
           start.add_transition(NFA::Transition::Range.new(finish, "a", "z"))
           start.add_transition(NFA::Transition::Range.new(finish, "A", "Z"))
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
           start.add_transition(NFA::Transition::Value.new(finish, "_"))
-        when "\\W"
+        when %q{\W}
           start.add_transition(NFA::Transition::Invert.new(finish, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"]))
-        when "\\d"
+        when %q{\d}
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
-        when "\\D"
+        when %q{\D}
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9", invert: true))
         else
           raise
@@ -240,9 +240,9 @@ module RegularExpression
       def to_nfa(start, finish)
         transition =
           case value
-          when "\\A"
+          when %q{\A}
             NFA::Transition::BeginAnchor.new(finish)
-          when "\\z", "$"
+          when %q{\z}, %q{$}
             NFA::Transition::EndAnchor.new(finish)
           end
 

@@ -4,137 +4,137 @@ require "test_helper"
 
 class RegularExpressionTest < Minitest::Test
   def test_basic
-    assert_matches("abc", "abc")
-    assert_matches("abc", "!abc")
+    assert_matches(%q{abc}, "abc")
+    assert_matches(%q{abc}, "!abc")
   end
 
   def test_optional
-    assert_matches("abc?", "ab")
-    assert_matches("abc?", "abc")
-    refute_matches("abc?", "ac")
+    assert_matches(%q{abc?}, "ab")
+    assert_matches(%q{abc?}, "abc")
+    refute_matches(%q{abc?}, "ac")
   end
 
   def test_alternation
-    assert_matches("ab|bc", "ab")
-    assert_matches("ab|bc", "bc")
-    refute_matches("ab|bc", "ac")
+    assert_matches(%q{ab|bc}, "ab")
+    assert_matches(%q{ab|bc}, "bc")
+    refute_matches(%q{ab|bc}, "ac")
   end
 
   def test_alternation_backtracking
-    assert_matches("ab|ac", "ab")
-    assert_matches("ab|ac", "ac")
-    refute_matches("ab|ac", "bc")
+    assert_matches(%q{ab|ac}, "ab")
+    assert_matches(%q{ab|ac}, "ac")
+    refute_matches(%q{ab|ac}, "bc")
   end
 
   def test_begin_anchor_caret
-    assert_matches("^abc", "abc")
-    refute_matches("^abc", "!abc")
+    assert_matches(%q{^abc}, "abc")
+    refute_matches(%q{^abc}, "!abc")
   end
 
   def test_begin_anchor_a
-    assert_matches("\\Aabc", "abc")
-    refute_matches("\\Aabc", "!abc")
+    assert_matches(%q{\Aabc}, "abc")
+    refute_matches(%q{\Aabc}, "!abc")
   end
 
   def test_end_anchor_dollar_sign
-    assert_matches("abc$", "abc")
-    refute_matches("abc$", "abc!")
+    assert_matches(%q{abc$}, "abc")
+    refute_matches(%q{abc$}, "abc!")
   end
 
   def test_end_anchor_z
-    assert_matches("abc\\z", "abc")
-    refute_matches("abc\\z", "abc!")
+    assert_matches(%q{abc\z}, "abc")
+    refute_matches(%q{abc\z}, "abc!")
   end
 
   def test_ranges_exact
-    assert_matches("a{2}", "aa")
-    refute_matches("a{2}", "a")
+    assert_matches(%q{a{2}}, "aa")
+    refute_matches(%q{a{2}}, "a")
   end
 
   def test_ranges_minimum
-    assert_matches("a{2,}", "aa")
-    assert_matches("a{2,}", "aaaa")
-    refute_matches("a{2,}", "a")
+    assert_matches(%q{a{2,}}, "aa")
+    assert_matches(%q{a{2,}}, "aaaa")
+    refute_matches(%q{a{2,}}, "a")
   end
 
   def test_ranges_minimum_and_maximum
-    assert_matches("a{2,5}", "aaa")
-    assert_matches("a{2,5}", "aaaaa")
-    refute_matches("a{2,5}", "a")
+    assert_matches(%q{a{2,5}}, "aaa")
+    assert_matches(%q{a{2,5}}, "aaaaa")
+    refute_matches(%q{a{2,5}}, "a")
   end
 
   def test_star
-    assert_matches("a*", "")
-    assert_matches("a*", "a")
-    assert_matches("a*", "aa")
+    assert_matches(%q{a*}, "")
+    assert_matches(%q{a*}, "a")
+    assert_matches(%q{a*}, "aa")
   end
 
   def test_plus
-    assert_matches("a+", "a")
-    assert_matches("a+", "aa")
-    refute_matches("a+", "")
+    assert_matches(%q{a+}, "a")
+    assert_matches(%q{a+}, "aa")
+    refute_matches(%q{a+}, "")
   end
 
   def test_character_range
-    assert_matches("[a-z]", "a")
-    assert_matches("[a-z]", "z")
-    refute_matches("[a-z]", "A")
+    assert_matches(%q{[a-z]}, "a")
+    assert_matches(%q{[a-z]}, "z")
+    refute_matches(%q{[a-z]}, "A")
   end
 
   def test_character_set
-    assert_matches("[abc]", "a")
-    assert_matches("[abc]", "c")
-    refute_matches("[abc]", "d")
+    assert_matches(%q{[abc]}, "a")
+    assert_matches(%q{[abc]}, "c")
+    refute_matches(%q{[abc]}, "d")
   end
 
   def test_character_class_d
-    assert_matches("\\d", "0")
-    refute_matches("\\d", "a")
+    assert_matches(%q{\d}, "0")
+    refute_matches(%q{\d}, "a")
   end
 
   def test_character_class_d_invert
-    assert_matches("\\D", "a")
-    refute_matches("\\D", "0")
+    assert_matches(%q{\D}, "a")
+    refute_matches(%q{\D}, "0")
   end
 
   def test_character_class_w
-    assert_matches("\\w", "a")
-    refute_matches("\\w", "!")
+    assert_matches(%q{\w}, "a")
+    refute_matches(%q{\w}, "!")
   end
 
   def test_character_class_w_invert
-    assert_matches("\\W", "!")
-    refute_matches("\\W", "a")
+    assert_matches(%q{\W}, "!")
+    refute_matches(%q{\W}, "a")
   end
 
   def test_character_group
-    assert_matches("[a-ce]", "b")
-    assert_matches("[a-ce]", "e")
-    refute_matches("[a-ce]", "d")
+    assert_matches(%q{[a-ce]}, "b")
+    assert_matches(%q{[a-ce]}, "e")
+    refute_matches(%q{[a-ce]}, "d")
   end
 
   def test_character_set_inverted
-    assert_matches("[^a-ce]", "d")
-    assert_matches("[^a-ce]", "f")
-    refute_matches("[^a-ce]", "a")
+    assert_matches(%q{[^a-ce]}, "d")
+    assert_matches(%q{[^a-ce]}, "f")
+    refute_matches(%q{[^a-ce]}, "a")
   end
 
   def test_period
-    assert_matches(".", "a")
-    assert_matches(".", "z")
-    refute_matches(".", "")
+    assert_matches(%q{.}, "a")
+    assert_matches(%q{.}, "z")
+    refute_matches(%q{.}, "")
   end
 
   def test_group
-    assert_matches("a(b|c)", "ab")
-    assert_matches("a(b|c)", "ac")
-    refute_matches("a(b|c)", "a")
+    assert_matches(%q{a(b|c)}, "ab")
+    assert_matches(%q{a(b|c)}, "ac")
+    refute_matches(%q{a(b|c)}, "a")
   end
 
   def test_group_quantifier
-    assert_matches("a(b|c){2}", "abc")
-    assert_matches("a(b|c){2}", "acb")
-    refute_matches("a(b|c){2}", "ab")
+    assert_matches(%q{a(b|c){2}}, "abc")
+    assert_matches(%q{a(b|c){2}}, "acb")
+    refute_matches(%q{a(b|c){2}}, "ab")
   end
 
   def test_raises_syntax_errors
@@ -145,12 +145,12 @@ class RegularExpressionTest < Minitest::Test
 
   def test_raises_parse_errors
     assert_raises(Racc::ParseError) do
-      RegularExpression::Parser.new.parse("(")
+      RegularExpression::Parser.new.parse(%q{(})
     end
   end
 
   def test_debug
-    source = "^\\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\\d\\D\\w\\W|.)\\z$"
+    source = %q{^\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\d\D\w\W|.)\z$}
 
     ast = RegularExpression::Parser.new.parse(source)
     nfa = ast.to_nfa

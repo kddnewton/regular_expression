@@ -55,19 +55,19 @@ module RegularExpression
     module Transition
       class BeginAnchor < Struct.new(:state)
         def label
-          "\\A"
+          %q{\A}
         end
       end
 
       class EndAnchor < Struct.new(:state)
         def label
-          "\\z"
+          %q{\z}
         end
       end
 
       class Any < Struct.new(:state)
         def label
-          "."
+          %q{.}
         end
       end
 
