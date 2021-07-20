@@ -29,6 +29,10 @@ Style/HashEachMethods:
 Style/IfUnlessModifier:
   Enabled: false
 
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    '%q': '{}'
+
 Style/PerlBackrefs:
   Enabled: false
 
