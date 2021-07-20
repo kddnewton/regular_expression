@@ -4,6 +4,7 @@ require "fisk"
 require "fisk/helpers"
 require "set"
 require "stringio"
+require "strscan"
 
 require_relative "./regular_expression/ast"
 require_relative "./regular_expression/bytecode"
