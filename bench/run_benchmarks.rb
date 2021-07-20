@@ -13,9 +13,10 @@ require_relative "../lib/regular_expression"
 
 BENCHMARKS = {
   "basics" => [
-    ["ab", "ab", true, 1_000],
-    ["ab", "ac", false, 1_000]
-  ]
+    ["ab", "ab", true, 100_000],
+    ["ab", "ac", false, 100_000],
+    ["(ab){2,5}", "ababab", true, 100_000]
+  ],
 }.freeze
 
 def time_all_matches(source, value, should_match: true, iters: 100)
@@ -58,6 +59,19 @@ def time_all_matches(source, value, should_match: true, iters: 100)
   samples
 end
 
+def mean(values)
+  return values.sum(0.0) / values.size
+end
+
+def stddev(values)
+  xbar = mean(values)
+  diff_sqrs = values.map { |v| (v-xbar)*(v-xbar) }
+  # Bessel's correction requires dividing by length - 1, not just length:
+  # https://en.wikipedia.org/wiki/Standard_deviation#Corrected_sample_standard_deviation
+  variance = diff_sqrs.sum(0.0) / (values.length - 1)
+  return Math.sqrt(variance)
+end
+
 def format_as_table(header, sample_rows, row_fmt)
   if header.size != row_fmt.size
     raise "Header and row format don't agree on the number of columns!"
@@ -89,21 +103,33 @@ BENCHMARKS.each do |category, benchmarks|
     time_all_matches(pattern, value, should_match: should_match, iters: iters)
   end
 
-  category_total_times = %i[ruby re re_x86 re_ruby].map do |impl|
-    samples.map { |s| s[impl] }.sum
+  category_total_times = []
+  category_stddev = []
+
+  %i[ruby re re_x86 re_ruby].each do |impl|
+    impl_samples = samples.map { |s| s[impl] }
+    samples_sum = impl_samples.sum
+    samples_mean = samples_sum / impl_samples.size
+    samples_stddev = stddev(impl_samples)
+    rel_stddev_pct = 100.0 * samples_stddev / samples_mean
+
+    category_total_times.push(impl_samples.sum)
+    category_stddev.push(rel_stddev_pct)
   end
   # For implementations, give their speed as a percentage of Ruby native time
-  category_pct = category_total_times.map { |time| category_total_times[0] * 100.0 / time }
+  category_pct = category_total_times.map { |time| 100.0 * category_total_times[0] / time }
+  category_relsttdev = category_stddev
   ruby_total_ms = category_total_times[0] * 1000.0
 
   # The final column is the number of milliseconds taken by the Ruby native regexps
-  category_rows.push [category] + category_pct + [ruby_total_ms]
+  category_rows.push [category] + category_pct + category_relsttdev + [ruby_total_ms]
 end
 
-header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "ruby (ms)"]
-row_f = ["%s"] + ["%.1f"] * 4 + ["%.2e"]
+header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "ruby relstddev (%)", "re relstddev (%)", "re_x86 relstddev (%)", "re_ruby relstddev (%)", "ruby (ms)"]
+row_f = ["%s"] + ["%.1f"] * 4 + ["%.2f"] * 4 + ["%.2e"]
 
 puts
 puts format_as_table(header, category_rows, row_f)
 puts
 puts "Percentages are percentage of the speed of Ruby native regular expressions. Bigger is better."
+puts "Relstddev is relative standard deviation (stddev divided by mean) given as a percent. Smaller is more stable/predictable."
