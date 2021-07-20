@@ -44,17 +44,21 @@ module RegularExpression
           when NFA::Transition::EndAnchor
             builder.push(Insns::GuardEnd.new(label[transition.state]))
           when NFA::Transition::Any
-            builder.push(Insns::JumpAny.new(label[transition.state]))
+            builder.push(Insns::TestAny.new)
+            builder.push(Insns::Branch.new(label[transition.state], label[state, index + 1]))
           when NFA::Transition::Value
-            builder.push(Insns::JumpValue.new(transition.value, label[transition.state]))
+            builder.push(Insns::TestValue.new(transition.value))
+            builder.push(Insns::Branch.new(label[transition.state], label[state, index + 1]))
           when NFA::Transition::Invert
-            builder.push(Insns::JumpValuesInvert.new(transition.values, label[transition.state]))
+            builder.push(Insns::TestValuesInvert.new(transition.values))
+            builder.push(Insns::Branch.new(label[transition.state], label[state, index + 1]))
           when NFA::Transition::Range
             if transition.invert
-              builder.push(Insns::JumpRangeInvert.new(transition.left, transition.right, label[transition.state]))
+              builder.push(Insns::TestRangeInvert.new(transition.left, transition.right))
             else
-              builder.push(Insns::JumpRange.new(transition.left, transition.right, label[transition.state]))
+              builder.push(Insns::TestRange.new(transition.left, transition.right))
             end
+            builder.push(Insns::Branch.new(label[transition.state], label[state, index + 1]))
           when NFA::Transition::Epsilon
             builder.push(Insns::Jump.new(label[transition.state]))
           else
@@ -70,6 +74,8 @@ module RegularExpression
 
           worklist.push([transition.state, next_fallback])
         end
+
+        builder.mark_label(label[state, state.transitions.size])
 
         # If we don't have one of the transitions that always executes, then we
         # need to add the fallback to the output for this state.
@@ -102,28 +108,32 @@ module RegularExpression
       # Otherwise fail the match at the current index.
       GuardEnd = Struct.new(:guarded)
 
-      # If it's possible to read a character off the input, then do so and jump
-      # to the target instruction.
-      JumpAny = Struct.new(:target)
+      # If it's possible to read a character off the input, then do so and set
+      # the flag, otherwise clear it.
+      TestAny = Class.new
 
       # If it's possible to read a character off the input and that character
-      # matches the char value, then do so and jump to the target instruction.
-      JumpValue = Struct.new(:char, :target)
+      # matches the char value, then do so and set the flag, otherwise clear it.
+      TestValue = Struct.new(:char)
 
       # If it's possible to read a character off the input and that character is
-      # not contained within the list of values, then do so and jump to the
-      # target instruction.
-      JumpValuesInvert = Struct.new(:chars, :target)
+      # not contained within the list of values, then do so and set the flag,
+      # otherwise clear it
+      TestValuesInvert = Struct.new(:chars)
 
       # If it's possible to read a character off the input and that character is
-      # within the range of possible values, then do so and jump to the target
-      # instruction.
-      JumpRange = Struct.new(:left, :right, :target)
+      # within the range of possible values, then do so set the flag, otherwise
+      # clear it
+      TestRange = Struct.new(:left, :right)
 
       # If it's possible to read a character off the input and that character is
-      # not within the range of possible values, then do so and jump to the
-      # target instruction.
-      JumpRangeInvert = Struct.new(:left, :right, :target)
+      # not within the range of possible values, then do so and set the flag,
+      # otherwise clear it
+      TestRangeInvert = Struct.new(:left, :right)
+
+      # If the flag has been set, jump to the true target, otherwise if it's
+      # been cleared jump to the false target.
+      Branch = Struct.new(:true_target, :false_target)
 
       # Jump directly to the target instruction.
       Jump = Struct.new(:target)

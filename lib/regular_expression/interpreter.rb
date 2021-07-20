@@ -19,9 +19,10 @@ module RegularExpression
     def match?(string)
       stack = []
 
-      (0..string.size).any? do |start_n|
+      (0..string.size).each do |start_n|
         string_n = start_n
         insn_n = 0
+        flag = false
 
         loop do
           insn = bytecode.insns[insn_n]
@@ -41,45 +42,36 @@ module RegularExpression
             break if string_n != string.size
 
             insn_n = bytecode.labels[insn.guarded]
-          when Bytecode::Insns::JumpAny
-            if string_n < string.size
-              string_n += 1
-              insn_n = bytecode.labels[insn.target]
-            else
-              insn_n += 1
-            end
-          when Bytecode::Insns::JumpValue
-            if string_n < string.size && string[string_n] == insn.char
-              string_n += 1
-              insn_n = bytecode.labels[insn.target]
-            else
-              insn_n += 1
-            end
-          when Bytecode::Insns::JumpValuesInvert
-            if string_n < string.size && !insn.chars.include?(string[string_n])
-              string_n += 1
-              insn_n = bytecode.labels[insn.target]
-            else
-              insn_n += 1
-            end
-          when Bytecode::Insns::JumpRange
-            if string_n < string.size && string[string_n] >= insn.left && string[string_n] <= insn.right
-              string_n += 1
-              insn_n = bytecode.labels[insn.target]
-            else
-              insn_n += 1
-            end
-          when Bytecode::Insns::JumpRangeInvert
-            if string_n < string.size && (string[string_n] < insn.left || string[string_n] > insn.right)
-              string_n += 1
-              insn_n = bytecode.labels[insn.target]
-            else
-              insn_n += 1
-            end
+          when Bytecode::Insns::TestAny
+            flag = string_n < string.size
+            string_n += 1 if flag
+            insn_n += 1
+          when Bytecode::Insns::TestValue
+            flag = string_n < string.size && string[string_n] == insn.char
+            string_n += 1 if flag
+            insn_n += 1
+          when Bytecode::Insns::TestValuesInvert
+            flag = string_n < string.size && !insn.chars.include?(string[string_n])
+            string_n += 1 if flag
+            insn_n += 1
+          when Bytecode::Insns::TestRange
+            flag = string_n < string.size && string[string_n] >= insn.left && string[string_n] <= insn.right
+            string_n += 1 if flag
+            insn_n += 1
+          when Bytecode::Insns::TestRangeInvert
+            flag = string_n < string.size && (string[string_n] < insn.left || string[string_n] > insn.right)
+            string_n += 1 if flag
+            insn_n += 1
+          when Bytecode::Insns::Branch
+            insn_n = if flag
+                       bytecode.labels[insn.true_target]
+                     else
+                       bytecode.labels[insn.false_target]
+                     end
           when Bytecode::Insns::Jump
             insn_n = bytecode.labels[insn.target]
           when Bytecode::Insns::Match
-            return true
+            return start_n
           when Bytecode::Insns::Fail
             break
           else
@@ -87,6 +79,8 @@ module RegularExpression
           end
         end
       end
+
+      nil
     end
   end
 end
