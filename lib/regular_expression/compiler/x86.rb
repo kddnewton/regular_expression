@@ -78,6 +78,8 @@ module RegularExpression
           # character value from the string
           character_buffer = r8
 
+          flag = r9
+
           # First we're going to do some initialization of the frame pointer and
           # stack pointer so we can clear the stack when we're done with this
           # function
@@ -116,8 +118,9 @@ module RegularExpression
               when Bytecode::Insns::GuardEnd
                 cmp string_index, string_length
                 je label(cfg.exit_map[insn.guarded].name)
-              when Bytecode::Insns::JumpAny
+              when Bytecode::Insns::TestAny
                 no_match_label = :"no_match_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
 
                 # Ensure we have a character we can read
                 cmp string_index, string_length
@@ -126,11 +129,16 @@ module RegularExpression
                 # Move the string index forward and jump to the target
                 # instruction
                 inc string_index
-                jmp label(cfg.exit_map[insn.target].name)
+                mov flag, imm32(1)
+                jmp label(end_label)
 
                 make_label no_match_label
-              when Bytecode::Insns::JumpValue
+                mov flag, imm32(0)
+
+                make_label end_label
+              when Bytecode::Insns::TestValue
                 no_match_label = :"no_match_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
 
                 # Ensure we have a character we can read
                 cmp string_index, string_length
@@ -149,11 +157,16 @@ module RegularExpression
                 # Move the string index forward and jump to the target
                 # instruction
                 inc string_index
-                jmp label(cfg.exit_map[insn.target].name)
+                mov flag, imm32(1)
+                jmp label(end_label)
 
                 make_label no_match_label
-              when Bytecode::Insns::JumpValuesInvert
+                mov flag, imm32(0)
+
+                make_label end_label
+              when Bytecode::Insns::TestValuesInvert
                 no_match_label = :"no_match_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
 
                 # Ensure we have a character we can read
                 cmp string_index, string_length
@@ -175,11 +188,16 @@ module RegularExpression
                 # Move the string index forward and jump to the target
                 # instruction
                 inc string_index
-                jmp label(cfg.exit_map[insn.target].name)
+                mov flag, imm32(1)
+                jmp label(end_label)
 
                 make_label no_match_label
-              when Bytecode::Insns::JumpRange
+                mov flag, imm32(0)
+
+                make_label end_label
+              when Bytecode::Insns::TestRange
                 no_match_label = :"no_match_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
 
                 # Ensure we have a character we can read
                 cmp string_index, string_length
@@ -205,12 +223,17 @@ module RegularExpression
                 # Move the string index forward and jump to the target
                 # instruction
                 inc string_index
-                jmp label(cfg.exit_map[insn.target].name)
+                mov flag, imm32(1)
+                jmp label(end_label)
 
                 make_label no_match_label
-              when Bytecode::Insns::JumpRangeInvert
+                mov flag, imm32(0)
+
+                make_label end_label
+              when Bytecode::Insns::TestRangeInvert
                 no_match_label = :"no_match_#{insn.object_id}"
                 match_label = :"match_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
 
                 # Ensure we have a character we can read
                 cmp string_index, string_length
@@ -237,9 +260,17 @@ module RegularExpression
                 # instruction
                 make_label match_label
                 inc string_index
-                jmp label(cfg.exit_map[insn.target].name)
+                mov flag, imm32(1)
+                jmp label(end_label)
 
                 make_label no_match_label
+                mov flag, imm32(0)
+
+                make_label end_label
+              when Bytecode::Insns::Branch
+                cmp r9, imm32(1)
+                je label(cfg.exit_map[insn.true_target].name)
+                jmp label(cfg.exit_map[insn.false_target].name)
               when Bytecode::Insns::Jump
                 jmp label(cfg.exit_map[insn.target].name)
               when Bytecode::Insns::Match

@@ -30,7 +30,7 @@ check =
   if ARGV.any?
     lambda do |compiled|
       checker = compiled.to_proc
-      ARGV.each { |string| puts "#{string}: #{checker.call(string)}" }
+      ARGV.each { |string| puts "#{string}: #{checker.call(string).inspect}" }
       puts
     end
   else

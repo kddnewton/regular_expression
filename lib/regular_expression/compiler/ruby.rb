@@ -45,41 +45,33 @@ module RegularExpression
               ruby_src.push "          block = #{cfg.exit_map[insn.guarded].name.inspect}"
               ruby_src.push "          next"
               ruby_src.push "        end"
-            when Bytecode::Insns::JumpAny
-              ruby_src.push "        if string_n < string.size"
-              ruby_src.push "          string_n += 1"
-              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
-              ruby_src.push "          next"
+            when Bytecode::Insns::TestAny
+              ruby_src.push "        flag = string_n < string.size"
+              ruby_src.push "        string_n += 1 if flag"
+            when Bytecode::Insns::TestValue
+              ruby_src.push "        flag = string_n < string.size && string[string_n] == #{insn.char.inspect}"
+              ruby_src.push "        string_n += 1 if flag"
+            when Bytecode::Insns::TestValuesInvert
+              ruby_src.push "        flag = string_n < string.size && !#{insn.chars.inspect}.include?(string[string_n])"
+              ruby_src.push "        string_n += 1 if flag"
+            when Bytecode::Insns::TestRange
+              ruby_src.push "        flag = string_n < string.size && string[string_n] >= #{insn.left.inspect} && string[string_n] <= #{insn.right.inspect}"
+              ruby_src.push "        string_n += 1 if flag"
+            when Bytecode::Insns::TestRangeInvert
+              ruby_src.push "        flag = string_n < string.size && (string[string_n] < #{insn.left.inspect} || string[string_n] > #{insn.right.inspect})"
+              ruby_src.push "        string_n += 1 if flag"
+            when Bytecode::Insns::Branch
+              ruby_src.push "        if flag"
+              ruby_src.push "          block = #{cfg.exit_map[insn.true_target].name.inspect}"
+              ruby_src.push "        else"
+              ruby_src.push "          block = #{cfg.exit_map[insn.false_target].name.inspect}"
               ruby_src.push "        end"
-            when Bytecode::Insns::JumpValue
-              ruby_src.push "        if string_n < string.size && string[string_n] == #{insn.char.inspect}"
-              ruby_src.push "          string_n += 1"
-              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
-              ruby_src.push "          next"
-              ruby_src.push "        end"
-            when Bytecode::Insns::JumpValuesInvert
-              ruby_src.push "        if string_n < string.size && !#{insn.chars.inspect}.include?(string[string_n])"
-              ruby_src.push "          string_n += 1"
-              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
-              ruby_src.push "          next"
-              ruby_src.push "        end"
-            when Bytecode::Insns::JumpRange
-              ruby_src.push "        if string_n < string.size && string[string_n] >= #{insn.left.inspect} && string[string_n] <= #{insn.right.inspect}"
-              ruby_src.push "          string_n += 1"
-              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
-              ruby_src.push "          next"
-              ruby_src.push "        end"
-            when Bytecode::Insns::JumpRangeInvert
-              ruby_src.push "        if string_n < string.size && (string[string_n] < #{insn.left.inspect} || string[string_n] > #{insn.right.inspect})"
-              ruby_src.push "          string_n += 1"
-              ruby_src.push "          block = #{cfg.exit_map[insn.target].name.inspect}"
-              ruby_src.push "          next"
-              ruby_src.push "        end"
+              ruby_src.push "        next"
             when Bytecode::Insns::Jump
               ruby_src.push "        block = #{cfg.exit_map[insn.target].name.inspect}"
               ruby_src.push "        next"
             when Bytecode::Insns::Match
-              ruby_src.push "        return true"
+              ruby_src.push "        return start_n"
             when Bytecode::Insns::Fail
               ruby_src.push "        start_n += 1"
               ruby_src.push "        break"
@@ -92,7 +84,7 @@ module RegularExpression
         ruby_src.push "      end"
         ruby_src.push "    end"
         ruby_src.push "  end"
-        ruby_src.push "  false"
+        ruby_src.push "  nil"
         ruby_src.push "}"
         ruby_src.push ""
 

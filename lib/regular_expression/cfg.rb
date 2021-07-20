@@ -51,16 +51,18 @@ module RegularExpression
 
           # Remember which blocks exit to this target.
           case insn
-          when Bytecode::Insns::PushIndex, Bytecode::Insns::PopIndex
-            insn_n += 1
           when Bytecode::Insns::GuardBegin, Bytecode::Insns::GuardEnd
             block_exits.add(insn.guarded)
             insn_n += 1
-          when Bytecode::Insns::JumpAny, Bytecode::Insns::JumpValuesInvert,
-                Bytecode::Insns::JumpRange, Bytecode::Insns::JumpRangeInvert,
-                Bytecode::Insns::JumpValue
-            block_exits.add(insn.target)
+          when Bytecode::Insns::PushIndex, Bytecode::Insns::PopIndex,
+                Bytecode::Insns::TestAny, Bytecode::Insns::TestValuesInvert,
+                Bytecode::Insns::TestRange, Bytecode::Insns::TestRangeInvert,
+                Bytecode::Insns::TestValue
             insn_n += 1
+          when Bytecode::Insns::Branch
+            block_exits.add(insn.true_target)
+            block_exits.add(insn.false_target)
+            break
           when Bytecode::Insns::Jump
             block_exits.add(insn.target)
             break
