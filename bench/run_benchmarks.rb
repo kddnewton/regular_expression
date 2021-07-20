@@ -9,23 +9,26 @@ require "benchmark"
 require_relative "../lib/regular_expression"
 
 # Individual benchmarks are in the format:
-#     [ pattern, value_to_match, should_match, num_iters ]
+#     [ pattern, value_to_match, should_match, num_iters_per_batch ]
 
 BENCHMARKS = {
   "basics" => [
-    ["ab", "ab", true, 100_000],
-    ["ab", "ac", false, 100_000],
-    ["(ab){2,5}", "ababab", true, 100_000]
+    ["ab", "ab", true, 10_000],
+    ["ab", "ac", false, 10_000],
+    ["(ab){2,5}", "ababab", true, 10_000]
   ]
 }.freeze
 
-def time_all_matches(source, value, should_match: true, iters: 100)
+NUM_BATCHES = 5
+
+def time_all_matches(source, value, should_match: true, iters_per_batch: 100)
   samples = {
     metadata: {
       source: source,
       value: value,
       should_match: should_match,
-      iters: iters
+      iters_per_batch: iters_per_batch,
+      num_batches: NUM_BATCHES
     }
   }
 
@@ -51,8 +54,10 @@ def time_all_matches(source, value, should_match: true, iters: 100)
       raise msg
     end
 
-    samples[samples_name] = Benchmark.realtime do
-      iters.times { match_obj.match?(value) }
+    samples[samples_name] = (0...NUM_BATCHES).map do
+      Benchmark.realtime do
+        iters_per_batch.times { match_obj.match?(value) }
+      end
     end
   end
 
@@ -82,56 +87,74 @@ def format_as_table(header, sample_rows, row_fmt)
   end
 
   # First convert rows to strings with correct significant digits
-  formatted_rows = sample_rows.map { |row| row_fmt.zip(row).map { |fmt, item| fmt % item } }
+  formatted_rows = sample_rows.map { |row| row_fmt.zip(row).map { |fmt, item| item.nil? ? "" : format(fmt, item) } }
 
   # Then space all those rows out according to column widths
   col_widths = (0...header.size).map do |col_num|
     (formatted_rows.map { |row| row[col_num].size } + [header[col_num].size]).max
   end
   row_space_fmt = col_widths.map { |cw| "%#{cw}s" }
-  spaced_rows = formatted_rows.map { |row| row_space_fmt.zip(row).map { |fmt, item| fmt % item }.join("  ") }
+  spaced_rows = formatted_rows.map { |row| row_space_fmt.zip(row).map { |fmt, item| format(fmt, item) }.join("   ") }
 
-  header_str = row_space_fmt.zip(header).map { |fmt, item| fmt % item }.join("  ")
+  header_str = row_space_fmt.zip(header).map { |fmt, item| format(fmt, item) }.join("   ")
 
   ([header_str] + [""] + spaced_rows).join("\n")
 end
 
-category_rows = []
+report_rows = []
 
 BENCHMARKS.each do |category, benchmarks|
-  samples = benchmarks.map do |pattern, value, should_match, iters|
-    time_all_matches(pattern, value, should_match: should_match, iters: iters)
+  category_total_times = [0.0, 0.0, 0.0, 0.0]
+
+  samples = benchmarks.map do |pattern, value, should_match, iters_per_batch|
+    time_all_matches(pattern,
+                     value,
+                     should_match: should_match,
+                     iters_per_batch: iters_per_batch)
   end
 
-  category_total_times = []
-  category_stddev = []
+  (0...benchmarks.size).each do |bench_idx|
+    pattern = benchmarks[bench_idx][0]
+    bench_samples = samples[bench_idx]
 
-  %i[ruby re re_x86 re_ruby].each do |impl|
-    impl_samples = samples.map { |s| s[impl] }
-    samples_sum = impl_samples.sum
-    samples_mean = samples_sum / impl_samples.size
-    samples_stddev = stddev(impl_samples)
-    rel_stddev_pct = 100.0 * samples_stddev / samples_mean
+    bench_pcts = []
+    bench_means = []
+    bench_rsds = []
+    %i[ruby re re_x86 re_ruby].each_with_index do |impl, impl_idx|
+      impl_bench_samples = bench_samples[impl]
+      samples_sum = impl_bench_samples.sum
+      samples_mean = samples_sum / impl_bench_samples.size
+      samples_stddev = stddev(impl_bench_samples)
+      rel_stddev_pct = 100.0 * samples_stddev / samples_mean
 
-    category_total_times.push(impl_samples.sum)
-    category_stddev.push(rel_stddev_pct)
+      bench_means.push samples_mean
+      bench_pcts.push(100.0 * samples_mean / bench_means[0])
+      bench_rsds.push rel_stddev_pct
+
+      category_total_times[impl_idx] += samples_sum
+    end
+
+    bench_label = format("%8s", "re: #{pattern}")[0..7]
+
+    report_rows.push [bench_label] + bench_pcts + bench_rsds + [bench_means[0]]
   end
+
   # For implementations, give their speed as a percentage of Ruby native time
   category_pct = category_total_times.map { |time| 100.0 * category_total_times[0] / time }
-  category_relsttdev = category_stddev
   ruby_total_ms = category_total_times[0] * 1000.0
 
   # The final column is the number of milliseconds taken by the Ruby native regexps
-  category_rows.push [category] + category_pct + category_relsttdev + [ruby_total_ms]
+  report_rows.push [category] + category_pct + [nil] * 4 + [ruby_total_ms]
 end
 
-header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "ruby relstddev (%)", "re relstddev (%)",
-          "re_x86 relstddev (%)", "re_ruby relstddev (%)", "ruby (ms)"]
+header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "ruby RSD", "re RSD",
+          "re_x86 RSD", "re_ruby RSD", "ruby time (ms)"]
 row_f = ["%s"] + ["%.1f"] * 4 + ["%.2f"] * 4 + ["%.2e"]
 
 puts
-puts format_as_table(header, category_rows, row_f)
+puts format_as_table(header, report_rows, row_f)
 puts
 puts "Percentages are percentage of the speed of Ruby native regular expressions. Bigger is faster."
-puts "Relstddev is relative standard deviation (stddev divided by mean) given as a percent. " \
+puts "Times in ms are per batch of samples for benchmarks, and total for all batches for categories."
+puts "RSD is relative standard deviation (stddev divided by mean) given as a percent. " \
      "Smaller is more stable/predictable."
