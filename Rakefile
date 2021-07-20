@@ -20,6 +20,7 @@ task default: :test
 task :preflight do
   system("bundle exec rake test") || raise("Tests didn't pass!")
   system("bundle exec rubocop --parallel") || raise("Rubocop failed!")
+  system("bundle exec rake benchmark") || raise("Benchmarking failed!")
 end
 
 task :benchmark do

@@ -20,6 +20,7 @@ jobs:
       run: |
         bundle exec rake test
         bundle exec rubocop --parallel
+        bundle exec rake benchmark
   automerge:
     name: AutoMerge
     needs: ci
