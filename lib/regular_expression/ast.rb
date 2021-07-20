@@ -144,7 +144,7 @@ module RegularExpression
     end
 
     class CharacterClass
-      attr_reader :value # "\w" | "\W" | "\d" | "\D" | "\h"
+      attr_reader :value # "\w" | "\W" | "\d" | "\D" | "\h" | "\s"
 
       def initialize(value)
         @value = value
@@ -171,6 +171,13 @@ module RegularExpression
           start.add_transition(NFA::Transition::Range.new(finish, "a", "f"))
           start.add_transition(NFA::Transition::Range.new(finish, "A", "F"))
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
+        when %q{\s}
+          start.add_transition(NFA::Transition::Value.new(finish, " "))
+          start.add_transition(NFA::Transition::Value.new(finish, "\t"))
+          start.add_transition(NFA::Transition::Value.new(finish, "\r"))
+          start.add_transition(NFA::Transition::Value.new(finish, "\n"))
+          start.add_transition(NFA::Transition::Value.new(finish, "\f"))
+          start.add_transition(NFA::Transition::Value.new(finish, "\v"))
         else
           raise
         end
