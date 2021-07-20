@@ -32,6 +32,9 @@ Style/IfUnlessModifier:
 Style/PerlBackrefs:
   Enabled: false
 
+Style/RedundantPercentQ:
+  Enabled: false
+
 Style/SpecialGlobalVars:
   Enabled: false
 
