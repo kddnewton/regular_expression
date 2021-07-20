@@ -128,7 +128,7 @@ BENCHMARKS.each do |category, benchmarks|
       rel_stddev_pct = 100.0 * samples_stddev / samples_mean
 
       bench_means.push samples_mean
-      bench_pcts.push(100.0 * samples_mean / bench_means[0])
+      bench_pcts.push(100.0 * bench_means[0] / samples_mean)
       bench_rsds.push rel_stddev_pct
 
       category_total_times[impl_idx] += samples_sum
