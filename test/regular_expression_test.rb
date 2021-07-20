@@ -63,6 +63,12 @@ class RegularExpressionTest < Minitest::Test
     refute_matches(%q{a{2,5}}, "a")
   end
 
+  def test_ranges_maximum
+    assert_matches("ab{,5}c", "ac")
+    assert_matches("ab{,5}c", "abbbbbc")
+    refute_matches("ab{,5}c", "abbbbbbc")
+  end
+
   def test_star
     assert_matches(%q{a*}, "")
     assert_matches(%q{a*}, "a")

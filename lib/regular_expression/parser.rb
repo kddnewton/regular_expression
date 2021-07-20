@@ -8,7 +8,7 @@ require 'racc/parser.rb'
 module RegularExpression
   class Parser < Racc::Parser
 
-module_eval(<<'...end parser.y/module_eval...', 'parser.y', 88)
+module_eval(<<'...end parser.y/module_eval...', 'parser.y', 90)
   
   def parse(str)
     @tokens = RegularExpression::Lexer.new(str).tokens
@@ -23,38 +23,40 @@ module_eval(<<'...end parser.y/module_eval...', 'parser.y', 88)
 
 racc_action_table = [
      3,    16,     9,    10,    26,    12,    18,    13,    14,    15,
-    31,    29,    30,     9,    10,    44,    12,    45,    13,    14,
-    15,     9,    10,    33,    12,    34,    13,    14,    15,     9,
-    10,    36,    12,    38,    13,    14,    15,     9,    10,    42,
-    12,    22,    13,    14,    15,    23,    24,    25,    22,    29,
-    30,    43,    23,    24,    25,    29,    30,    40,    41,    46 ]
+    31,    29,    30,     9,    10,    46,    12,    47,    13,    14,
+    15,     9,    10,    33,    12,    37,    13,    14,    15,     9,
+    10,    39,    12,    43,    13,    14,    15,     9,    10,    44,
+    12,    22,    13,    14,    15,    23,    24,    25,    22,    34,
+    35,    45,    23,    24,    25,    29,    30,    29,    30,    41,
+    42,    48,    49 ]
 
 racc_action_check = [
      0,     1,     0,     0,    12,     0,     5,     0,     0,     0,
-    16,    12,    12,     3,     3,    40,     3,    40,     3,     3,
-     3,     6,     6,    20,     6,    22,     6,     6,     6,    10,
-    10,    27,    10,    30,    10,    10,    10,    18,    18,    35,
-    18,    11,    18,    18,    18,    11,    11,    11,    33,    26,
-    26,    38,    33,    33,    33,    28,    28,    34,    34,    44 ]
+    16,    12,    12,     3,     3,    41,     3,    41,     3,     3,
+     3,     6,     6,    20,     6,    27,     6,     6,     6,    10,
+    10,    30,    10,    35,    10,    10,    10,    18,    18,    36,
+    18,    11,    18,    18,    18,    11,    11,    11,    33,    22,
+    22,    39,    33,    33,    33,    26,    26,    28,    28,    34,
+    34,    43,    46 ]
 
 racc_action_pointer = [
     -2,     1,   nil,     9,   nil,     3,    17,   nil,   nil,   nil,
     25,    28,     2,   nil,   nil,   nil,    10,   nil,    33,   nil,
-    17,   nil,    11,   nil,   nil,   nil,    40,    23,    46,   nil,
-    21,   nil,   nil,    35,    42,    31,   nil,   nil,    41,   nil,
-     1,   nil,   nil,   nil,    43,   nil,   nil ]
+    17,   nil,    35,   nil,   nil,   nil,    46,    17,    48,   nil,
+    19,   nil,   nil,    35,    44,    19,    31,   nil,   nil,    41,
+   nil,     1,   nil,    45,   nil,   nil,    46,   nil,   nil,   nil ]
 
 racc_action_default = [
-    -2,   -32,    -1,   -32,    -4,    -6,    -8,    -9,   -10,   -11,
-   -32,   -15,   -32,   -18,   -19,   -20,   -32,    -3,   -32,    -7,
-   -32,   -14,   -32,   -29,   -30,   -31,   -32,   -32,   -22,   -23,
-   -25,    47,    -5,   -13,   -32,   -32,   -17,   -21,   -32,   -12,
-   -32,   -28,   -16,   -24,   -32,   -27,   -26 ]
+    -2,   -33,    -1,   -33,    -4,    -6,    -8,    -9,   -10,   -11,
+   -33,   -15,   -33,   -18,   -19,   -20,   -33,    -3,   -33,    -7,
+   -33,   -14,   -33,   -30,   -31,   -32,   -33,   -33,   -22,   -23,
+   -25,    50,    -5,   -13,   -33,   -33,   -33,   -17,   -21,   -33,
+   -12,   -33,   -29,   -33,   -16,   -24,   -33,   -27,   -28,   -26 ]
 
 racc_goto_table = [
     21,     4,    27,     1,    17,     2,    19,   nil,   nil,   nil,
-   nil,    20,   nil,   nil,   nil,   nil,    35,   nil,    37,    32,
-   nil,   nil,    39 ]
+   nil,    20,   nil,   nil,   nil,   nil,    36,   nil,    38,    32,
+   nil,   nil,    40 ]
 
 racc_goto_check = [
      8,     3,    10,     1,     3,     2,     4,   nil,   nil,   nil,
@@ -98,14 +100,15 @@ racc_reduce_table = [
   1, 31, :_reduce_25,
   5, 28, :_reduce_26,
   4, 28, :_reduce_27,
-  3, 28, :_reduce_28,
-  1, 28, :_reduce_29,
+  4, 28, :_reduce_28,
+  3, 28, :_reduce_29,
   1, 28, :_reduce_30,
-  1, 28, :_reduce_31 ]
+  1, 28, :_reduce_31,
+  1, 28, :_reduce_32 ]
 
-racc_reduce_n = 32
+racc_reduce_n = 33
 
-racc_shift_n = 47
+racc_shift_n = 50
 
 racc_token_table = {
   false => 0,
@@ -365,27 +368,34 @@ module_eval(<<'.,.,', 'parser.y', 75)
 
 module_eval(<<'.,.,', 'parser.y', 77)
   def _reduce_28(val, _values, result)
-     result = RegularExpression::AST::Quantifier::Exact.new(val[1])
+     result = RegularExpression::AST::Quantifier::Range.new(0, val[2])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 79)
   def _reduce_29(val, _values, result)
-     result = RegularExpression::AST::Quantifier::ZeroOrMore.new
+     result = RegularExpression::AST::Quantifier::Exact.new(val[1])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 81)
   def _reduce_30(val, _values, result)
-     result = RegularExpression::AST::Quantifier::OneOrMore.new
+     result = RegularExpression::AST::Quantifier::ZeroOrMore.new
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 83)
   def _reduce_31(val, _values, result)
+     result = RegularExpression::AST::Quantifier::OneOrMore.new
+    result
+  end
+.,.,
+
+module_eval(<<'.,.,', 'parser.y', 85)
+  def _reduce_32(val, _values, result)
      result = RegularExpression::AST::Quantifier::Optional.new
     result
   end
