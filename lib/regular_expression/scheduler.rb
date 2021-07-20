@@ -17,8 +17,8 @@ module RegularExpression
       # of these options that is available.
       #
       #   1) The most probable successor of the last block to be scheduled,
-      #      adding all other succesor blocks yet to be scheduled to a deferred
-      #      list.
+      #      that is ready to be scheduled, adding all other succesor blocks yet
+      #      to be scheduled to a deferred list.
       #
       #   2) The earliest deferred block that is ready to be scheduled.
       #
