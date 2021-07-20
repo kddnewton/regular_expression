@@ -68,7 +68,7 @@ class RegularExpressionTest < Minitest::Test
     assert_matches(%q{a{2,5}}, "aaa")
     assert_matches(%q{a{2,5}}, "aaaaa")
     refute_matches(%q{a{2,5}}, "a")
-    assert_matches(%q{a{11,15}},  "a" * 11)
+    assert_matches(%q{a{11,15}}, "a" * 11)
   end
 
   def test_ranges_maximum
