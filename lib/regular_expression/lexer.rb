@@ -29,7 +29,7 @@ module RegularExpression
 
       until @scanner.eos?
         case # rubocop:disable Style/EmptyCaseCondition
-        when @scanner.scan(/\\[wWdDhs]/)
+        when @scanner.scan(/\\[wWdDhsS]/)
           result << [:CHAR_CLASS, @scanner.matched]
         when @scanner.scan(/\\[Az]|\$/)
           result << [:ANCHOR, @scanner.matched]
