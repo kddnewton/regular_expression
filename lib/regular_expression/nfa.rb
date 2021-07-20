@@ -87,7 +87,7 @@ module RegularExpression
         end
 
         def label
-          "[^#{values.join}]"
+          %Q{[^#{values.join}]}
         end
       end
 
@@ -104,7 +104,7 @@ module RegularExpression
         end
 
         def label
-          "#{left}-#{right}"
+          %Q{#{left}-#{right}}
         end
       end
 
