@@ -74,6 +74,8 @@ rule
     { result = RegularExpression::AST::Quantifier::Range.new(val[1], val[3]) }
     | LBRACE INTEGER COMMA RBRACE
     { result = RegularExpression::AST::Quantifier::AtLeast.new(val[1]) }
+    | LBRACE COMMA INTEGER RBRACE
+    { result = RegularExpression::AST::Quantifier::Range.new(0, val[2]) }
     | LBRACE INTEGER RBRACE
     { result = RegularExpression::AST::Quantifier::Exact.new(val[1]) }
     | STAR
