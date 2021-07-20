@@ -70,7 +70,7 @@ module RegularExpression
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::Branch
               ruby_src.push "        if flag"
-              true_block = cfg.exit_map[insn.true_target]
+              true_block = cfg.blocks[insn.true_target]
               ruby_src.push "          block = #{true_block.name.inspect}"
               falls_through_to_true = next_block == true_block && next_block.preds == [block]
               if falls_through_to_true
@@ -79,7 +79,7 @@ module RegularExpression
                 ruby_src.push "          next"
               end
               ruby_src.push "        else"
-              false_block = cfg.exit_map[insn.false_target]
+              false_block = cfg.blocks[insn.false_target]
               ruby_src.push "          block = #{false_block.name.inspect}"
               falls_through_to_false = next_block == false_block && next_block.preds == [block]
               if falls_through_to_false
@@ -89,7 +89,7 @@ module RegularExpression
               end
               ruby_src.push "        end"
             when Bytecode::Insns::Jump
-              ruby_src.push "        block = #{cfg.exit_map[insn.target].name.inspect}"
+              ruby_src.push "        block = #{cfg.blocks[insn.target].name.inspect}"
               ruby_src.push "        next"
             when Bytecode::Insns::Match
               ruby_src.push "        return start_n"

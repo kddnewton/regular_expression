@@ -95,7 +95,8 @@ module RegularExpression
         end
       end
 
-      Graph.new(blocks.values, exit_map)
+      start = blocks.values.first
+      Graph.new(start, exit_map.merge({ start.name => start }))
     end
 
     def self.to_dot(cfg)
@@ -118,37 +119,33 @@ module RegularExpression
         @exits = exits
       end
 
-      def dump(exit_map, io: $stdout)
+      def dump(blocks, io: $stdout)
         io.puts("#{name}:")
         preds.each { |pred| io.puts("    <- #{pred}") }
         insns.each { |insn| io.puts("  #{insn}") }
-        exits.each { |exit| io.puts("    #{exit.label} -> #{exit_map[exit.label].name} #{exit.metadata.inspect}") }
+        exits.each { |exit| io.puts("    #{exit.label} -> #{blocks[exit.label].name} #{exit.metadata.inspect}") }
       end
     end
 
     # A graph is a set of EBBs.
     class Graph
-      attr_reader :blocks, :exit_map
+      attr_reader :start, :blocks
 
-      def initialize(blocks, exit_map)
+      def initialize(start, blocks)
+        @start = start
         @blocks = blocks
-        @exit_map = exit_map
-      end
-
-      def start
-        blocks.first
       end
 
       def dump
         output = StringIO.new
-        blocks.each { |block| block.dump(exit_map, io: output) }
+        blocks.each_value { |block| block.dump(blocks, io: output) }
         output.string
       end
 
       def to_dot(graph)
         nodes = {}
 
-        blocks.each do |block|
+        blocks.each_value do |block|
           label = []
 
           label.push("#{block.name}:")
@@ -157,9 +154,9 @@ module RegularExpression
           nodes[block] = graph.add_node(block.object_id, label: label.join($/), labeljust: "l", shape: "box")
         end
 
-        blocks.each do |block|
+        blocks.each_value do |block|
           block.exits.each do |block_exit|
-            successor = nodes[exit_map[block_exit.label]]
+            successor = nodes[blocks[block_exit.label]]
             attributes = {}
             if (kind = block_exit.metadata[:kind])
               attributes["color"] = { true => "green", false => "red" }[kind]
