@@ -29,15 +29,15 @@ module RegularExpression
 
       until @scanner.eos?
         case # rubocop:disable Style/EmptyCaseCondition
-        when @scanner.scan(/\A\\[wWdDhs]/)
+        when @scanner.scan(/\\[wWdDhs]/)
           result << [:CHAR_CLASS, @scanner.matched]
-        when @scanner.scan(/\A(?:\\[Az]|\$)/)
+        when @scanner.scan(/(?:\\[Az]|\$)/)
           result << [:ANCHOR, @scanner.matched]
-        when @scanner.scan(/\A[\^$()\[\]{}|*+?.\-,]/)
+        when @scanner.scan(/[\^$()\[\]{}|*+?.\-,]/)
           result << [SINGLE[@scanner.matched], @scanner.matched]
-        when @scanner.scan(/\A\d+/)
+        when @scanner.scan(/\d+/)
           result << [:INTEGER, @scanner.matched.to_i]
-        when @scanner.scan(/\A(?:\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD])/)
+        when @scanner.scan(/(?:\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD])/)
           result << [:CHAR, @scanner.matched]
         else
           raise SyntaxError, @scanner.rest
