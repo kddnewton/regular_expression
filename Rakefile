@@ -16,3 +16,8 @@ end
 Rake::Task["test"].enhance(["lib/regular_expression/parser.rb"])
 
 task default: :test
+
+task :preflight do
+  system("bundle exec rake test") || raise("Tests didn't pass!")
+  system("bundle exec rubocop --parallel") || raise("Rubocop failed!")
+end
