@@ -39,17 +39,25 @@ module RegularExpression
     end
 
     class StartState < State
+      def label
+        "Start"
+      end
+
       def to_dot(graph, visited)
         super(graph, visited).tap do |node|
-          node.attributes.merge!(label: "Start", shape: "box")
+          node.attributes.merge!(shape: "box")
         end
       end
     end
 
     class FinishState < State
+      def label
+        "Finish"
+      end
+
       def to_dot(graph, visited)
         super(graph, visited).tap do |node|
-          node.attributes.merge!(label: "Finish", shape: "box")
+          node.attributes.merge!(shape: "box")
         end
       end
     end
