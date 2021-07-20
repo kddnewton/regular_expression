@@ -15,59 +15,29 @@ def time_all_matches(source, value, should_match: true, iters: 100)
       value: value,
       should_match: should_match,
       iters: iters
-    },
-
-    # Normal Ruby regexps
-    ruby: nil,
-
-    # Regular_expression gem with various compilers
-    re: nil,
-    re_x86: nil,
-    re_ruby: nil
+    }
   }
 
-  ruby_regexp = Regexp.new(source)
-  if ruby_regexp.match?(value).nil? == should_match
-    msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
-          "match #{value.inspect} with Ruby built-in regexp!"
-    raise msg
-  end
+  # Three RE-gem objects, one basic and two compiled
+  re_basic, re_x86, re_ruby = *(1..3).map { RegularExpression::Pattern.new(source) }
+  re_x86.compile(compiler: RegularExpression::Compiler::X86)
+  re_ruby.compile(compiler: RegularExpression::Compiler::Ruby)
 
-  samples[:ruby] = Benchmark.realtime do
-    iters.times { ruby_regexp.match?(value) }
-  end
+  [
+    [ Regexp.new(source), :ruby, "Ruby built-in regexp" ],
+    [ re_basic, :re, "uncompiled RegularExpression object"],
+    [ re_x86, :re_x86, "RegularExpression x86 compiler"],
+    [ re_ruby, :re_ruby, "RegularExpression Ruby compiler"],
+  ].each do |match_obj, samples_name, matcher_description|
+    if match_obj.match?(value).nil? == should_match
+      msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
+            "match #{value.inspect} with #{matcher_description}!"
+      raise msg
+    end
 
-  pattern = RegularExpression::Pattern.new(source)
-  if pattern.match?(value).nil? == should_match
-    msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
-          "match #{value.inspect} with plain RegularExpression object!"
-    raise msg
-  end
-
-  samples[:re] = Benchmark.realtime do
-    iters.times { pattern.match?(value) }
-  end
-
-  pattern.compile(compiler: RegularExpression::Compiler::X86)
-  if pattern.match?(value).nil? == should_match
-    msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
-          "match #{value.inspect} with RegularExpression x86 compiler!"
-    raise msg
-  end
-
-  samples[:re_x86] = Benchmark.realtime do
-    iters.times { pattern.match?(value) }
-  end
-
-  pattern.compile(compiler: RegularExpression::Compiler::Ruby)
-  if pattern.match?(value).nil? == should_match
-    msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
-          "match #{value.inspect} with RegularExpression Ruby compiler!"
-    raise msg
-  end
-
-  samples[:re_ruby] = Benchmark.realtime do
-    iters.times { pattern.match?(value) }
+    samples[samples_name] = Benchmark.realtime do
+      iters.times { match_obj.match?(value) }
+    end
   end
 
   samples
