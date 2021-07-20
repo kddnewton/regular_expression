@@ -23,6 +23,7 @@ module RegularExpression
         ruby_src.push "-> (string) {"
         ruby_src.push "  start_n = 0"
         ruby_src.push "  stack = []"
+        ruby_src.push "  captures = {}"
         ruby_src.push "  while start_n <= string.size"
         ruby_src.push "    string_n = start_n"
         ruby_src.push "    block = #{cfg.start.name.inspect}"
@@ -50,6 +51,11 @@ module RegularExpression
               ruby_src.push "        flag = start_n == 0"
             when Bytecode::Insns::TestEnd
               ruby_src.push "        flag = string_n == string.size"
+            when Bytecode::Insns::StartCapture
+              ruby_src.push "        captures[#{insn.name.inspect}] ||= {}"
+              ruby_src.push "        captures[#{insn.name.inspect}][:start] = string_n"
+            when Bytecode::Insns::EndCapture
+              ruby_src.push "        captures[#{insn.name.inspect}][:end] = string_n"
             when Bytecode::Insns::TestAny
               ruby_src.push "        flag = string_n < string.size"
               ruby_src.push "        string_n += 1 if flag"
@@ -71,30 +77,46 @@ module RegularExpression
             when Bytecode::Insns::TestPositiveLookahead
               ruby_src.push "        flag = string[string_n..].start_with?(#{insn.value.inspect})"
             when Bytecode::Insns::Branch
-              ruby_src.push "        if flag"
               true_block = cfg.blocks[insn.true_target]
-              ruby_src.push "          block = #{true_block.name.inspect}"
-              falls_through_to_true = next_block == true_block && next_block.preds == [block]
-              if falls_through_to_true
-                ruby_src.push "          # falls through"
-              else
-                ruby_src.push "          next"
-              end
-              ruby_src.push "        else"
               false_block = cfg.blocks[insn.false_target]
-              ruby_src.push "          block = #{false_block.name.inspect}"
-              falls_through_to_false = next_block == false_block && next_block.preds == [block]
-              if falls_through_to_false
+
+              ruby_src.push "        if flag"
+
+              # If the next block is the target of our true branch, then we can
+              # just fall through to the next instruction. Otherwise we have to
+              # jump directly to it.
+              if next_block == true_block && next_block.preds == [block]
                 ruby_src.push "          # falls through"
               else
+                ruby_src.push "          block = #{true_block.name.inspect}"
                 ruby_src.push "          next"
               end
+
+              ruby_src.push "        else"
+
+              # If the next block is the target of our false branch, then we can
+              # just fall through to the next instruction. Otherwise we have to
+              # jump directly to it.
+              if next_block == false_block && next_block.preds == [block]
+                ruby_src.push "          # falls through"
+              else
+                ruby_src.push "          block = #{false_block.name.inspect}"
+                ruby_src.push "          next"
+              end
+
               ruby_src.push "        end"
             when Bytecode::Insns::Jump
-              ruby_src.push "        block = #{cfg.blocks[insn.target].name.inspect}"
-              ruby_src.push "        next"
+              # If the next block is the target of our jump, then we can just
+              # fall through to the next instruction. Otherwise we have to jump
+              # directly to it.
+              if next_block == cfg.blocks[insn.target] && next_block.preds == [block]
+                ruby_src.push "        # falls through"
+              else
+                ruby_src.push "        block = #{cfg.blocks[insn.target].name.inspect}"
+                ruby_src.push "        next"
+              end
             when Bytecode::Insns::Match
-              ruby_src.push "        return start_n"
+              ruby_src.push "        return captures"
             when Bytecode::Insns::Fail
               ruby_src.push "        start_n += 1"
               ruby_src.push "        break"
@@ -104,6 +126,8 @@ module RegularExpression
           end
         end
 
+        ruby_src.push "      else"
+        ruby_src.push "        raise \"Encountered unknown block: \#{block}\""
         ruby_src.push "      end"
         ruby_src.push "    end"
         ruby_src.push "  end"

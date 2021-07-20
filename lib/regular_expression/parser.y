@@ -34,8 +34,12 @@ rule
 
   group:
     LPAREN expression RPAREN quantifier
-    { result = AST::Group.new(val[1], quantifier: val[3]) }
+    { result = AST::CaptureGroup.new(val[1], quantifier: val[3]) }
     | LPAREN expression RPAREN
+    { result = AST::CaptureGroup.new(val[1]) }
+    | NO_CAPTURE expression RPAREN quantifier
+    { result = AST::Group.new(val[1], quantifier: val[3]) }
+    | NO_CAPTURE expression RPAREN
     { result = AST::Group.new(val[1]) }
 
   match:

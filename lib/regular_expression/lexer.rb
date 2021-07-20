@@ -32,6 +32,8 @@ module RegularExpression
           result << [:CHAR, "\\"]
         when @scanner.scan(/\(\?=/)
           result << [:PLA, @scanner.matched]
+        when @scanner.scan(/\(\?:/)
+          result << [:NO_CAPTURE, @scanner.matched]
         when @scanner.scan(/\\[wWdDhHsS]/)
           result << [:CHAR_CLASS, @scanner.matched]
         when @scanner.scan(/\[\[:(?<type>alnum|alpha|lower|upper):\]\]/)

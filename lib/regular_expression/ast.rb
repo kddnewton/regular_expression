@@ -28,26 +28,32 @@ module RegularExpression
       end
 
       def to_nfa
-        start = NFA::StartState.new
-        current = start
+        start_state = NFA::StartState.new
+        match_start = NFA::State.new
+        start_state.add_transition(NFA::Transition::StartCapture.new(match_start, "$0"))
+
+        finish_state = NFA::FinishState.new
+        match_finish = NFA::State.new
+        match_finish.add_transition(NFA::Transition::EndCapture.new(finish_state, "$0"))
+
+        current = match_start
         labels = ("1"..).each
 
         if at_start
           current = NFA::State.new(labels.next)
-          start.add_transition(NFA::Transition::BeginAnchor.new(current))
+          match_start.add_transition(NFA::Transition::BeginAnchor.new(current))
         end
 
-        finish = NFA::FinishState.new
         expressions.each do |expression|
-          expression.to_nfa(current, finish, labels)
+          expression.to_nfa(current, match_finish, labels)
         end
 
-        start
+        start_state
       end
     end
 
     class Expression
-      attr_reader :items # Group | Match | Anchor
+      attr_reader :items # Group | CaptureGroup | Match | Anchor
 
       def initialize(items)
         @items = items
@@ -88,6 +94,37 @@ module RegularExpression
       def to_nfa(start, finish, labels)
         quantifier.quantify(start, finish, labels) do |qstart, qfinish|
           expressions.each { |expression| expression.to_nfa(qstart, qfinish, labels) }
+        end
+      end
+    end
+
+    class CaptureGroup
+      attr_reader :expressions # Array[Expression]
+      attr_reader :quantifier # Quantifier
+      attr_reader :name # untyped
+
+      def initialize(expressions, quantifier: Quantifier::Once.new, name: nil)
+        @expressions = expressions
+        @quantifier = quantifier
+        @name = name || object_id
+      end
+
+      def to_dot(parent)
+        node = parent.add_node(object_id, label: "CaptureGroup")
+
+        expressions.each { |expression| expression.to_dot(node) }
+        quantifier.to_dot(node)
+      end
+
+      def to_nfa(start, finish, labels)
+        quantifier.quantify(start, finish, labels) do |quantified_start, quantified_finish|
+          capture_start = NFA::State.new
+          quantified_start.add_transition(NFA::Transition::StartCapture.new(capture_start, name))
+
+          capture_finish = NFA::State.new
+          capture_finish.add_transition(NFA::Transition::EndCapture.new(quantified_finish, name))
+
+          expressions.each { |expression| expression.to_nfa(capture_start, capture_finish, labels) }
         end
       end
     end

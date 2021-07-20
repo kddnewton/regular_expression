@@ -67,6 +67,18 @@ module RegularExpression
         end
       end
 
+      class StartCapture < Struct.new(:state, :name)
+        def label
+          "Start capture #{name}"
+        end
+      end
+
+      class EndCapture < Struct.new(:state, :name)
+        def label
+          "End capture #{name}"
+        end
+      end
+
       class Any < Struct.new(:state)
         def label
           %q{.}

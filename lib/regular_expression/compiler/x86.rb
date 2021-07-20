@@ -145,6 +145,10 @@ module RegularExpression
                 make_label over_label
                 mov flag, imm32(1)
                 make_label end_label
+              when Bytecode::Insns::StartCapture
+                # raise NotImplementedError
+              when Bytecode::Insns::EndCapture
+                # raise NotImplementedError
               when Bytecode::Insns::TestAny
                 no_match_label = :"no_match_#{insn.object_id}"
                 end_label = :"end_#{insn.object_id}"
@@ -370,20 +374,23 @@ module RegularExpression
                 if next_block == true_block
                   # Falls through to the true blocks - jump for false.
                   cmp r9, imm32(0)
-                  je label(cfg.blocks[insn.false_target].name)
+                  je label(false_block.name)
                 elsif next_block == false_block
                   # Falls through for the false block - jump for true.
                   cmp r9, imm32(1)
-                  je label(cfg.blocks[insn.true_target].name)
+                  je label(true_block.name)
                 else
                   # Doesn't fall through to either block - have to jump for
                   # both.
                   cmp r9, imm32(1)
-                  je label(cfg.blocks[insn.true_target].name)
-                  jmp label(cfg.blocks[insn.false_target].name)
+                  je label(true_block.name)
+                  jmp label(false_block.name)
                 end
               when Bytecode::Insns::Jump
-                jmp label(cfg.blocks[insn.target].name)
+                target_block = cfg.blocks[insn.target]
+
+                # Fall through if the next branch is not the target block
+                jmp label(target_block.name) if next_block != target_block
               when Bytecode::Insns::Match
                 # If we reach this instruction, then we've successfully matched
                 # against the input string, so we're going to return the integer
