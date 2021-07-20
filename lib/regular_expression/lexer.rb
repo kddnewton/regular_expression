@@ -29,7 +29,7 @@ module RegularExpression
 
       until @source.empty?
         case @source
-        when /\A\\[wWdD]/
+        when /\A\\[wWdDh]/
           result << [:CHAR_CLASS, $&]
         when /\A(?:\\[Az]|\$)/
           result << [:ANCHOR, $&]
