@@ -4,7 +4,6 @@ module RegularExpression
   class Lexer
     SINGLE = {
       "^" => :CARET,
-      "$" => :ENDING,
       "(" => :LPAREN,
       ")" => :RPAREN,
       "[" => :LBRACKET,
