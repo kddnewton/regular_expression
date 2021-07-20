@@ -46,6 +46,15 @@ module RegularExpression
       assert_tokens(",", [[:COMMA, ","]])
     end
 
+    def test_escape_backslashes
+      assert_tokens("\\\\s", [[:CHAR, "\\"], [:CHAR, "s"]])
+      assert_tokens("\\\\z", [[:CHAR, "\\"], [:CHAR, "z"]])
+    end
+
+    def test_escape_special_characters
+      assert_tokens("1\\+", [[:INTEGER, 1], [:CHAR, "+"]])
+    end
+
     private
 
     def assert_tokens(string, expected)

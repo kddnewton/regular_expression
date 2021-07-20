@@ -174,6 +174,16 @@ class RegularExpressionTest < Minitest::Test
     refute_matches(%q{a(b|c){2}}, "ab")
   end
 
+  def test_escaped_backslash
+    assert_matches(%q{\\\\s}, "\\\\s")
+    refute_matches(%q{\\\\s}, " ")
+  end
+
+  def test_escaped_plus
+    assert_matches(%q{a\\+}, "a+")
+    refute_matches(%q{a\\+}, "a")
+  end
+
   def test_raises_syntax_errors
     assert_raises(SyntaxError) do
       RegularExpression::Parser.new.parse("\u0000")
