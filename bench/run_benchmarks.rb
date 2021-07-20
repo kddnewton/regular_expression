@@ -16,7 +16,7 @@ BENCHMARKS = {
     ["ab", "ab", true, 100_000],
     ["ab", "ac", false, 100_000],
     ["(ab){2,5}", "ababab", true, 100_000]
-  ],
+  ]
 }.freeze
 
 def time_all_matches(source, value, should_match: true, iters: 100)
@@ -60,16 +60,16 @@ def time_all_matches(source, value, should_match: true, iters: 100)
 end
 
 def mean(values)
-  return values.sum(0.0) / values.size
+  values.sum(0.0) / values.size
 end
 
 def stddev(values)
   xbar = mean(values)
-  diff_sqrs = values.map { |v| (v-xbar)*(v-xbar) }
+  diff_sqrs = values.map { |v| (v - xbar) * (v - xbar) }
   # Bessel's correction requires dividing by length - 1, not just length:
   # https://en.wikipedia.org/wiki/Standard_deviation#Corrected_sample_standard_deviation
   variance = diff_sqrs.sum(0.0) / (values.length - 1)
-  return Math.sqrt(variance)
+  Math.sqrt(variance)
 end
 
 def format_as_table(header, sample_rows, row_fmt)
@@ -125,11 +125,13 @@ BENCHMARKS.each do |category, benchmarks|
   category_rows.push [category] + category_pct + category_relsttdev + [ruby_total_ms]
 end
 
-header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "ruby relstddev (%)", "re relstddev (%)", "re_x86 relstddev (%)", "re_ruby relstddev (%)", "ruby (ms)"]
+header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "ruby relstddev (%)", "re relstddev (%)",
+          "re_x86 relstddev (%)", "re_ruby relstddev (%)", "ruby (ms)"]
 row_f = ["%s"] + ["%.1f"] * 4 + ["%.2f"] * 4 + ["%.2e"]
 
 puts
 puts format_as_table(header, category_rows, row_f)
 puts
-puts "Percentages are percentage of the speed of Ruby native regular expressions. Bigger is better."
-puts "Relstddev is relative standard deviation (stddev divided by mean) given as a percent. Smaller is more stable/predictable."
+puts "Percentages are percentage of the speed of Ruby native regular expressions. Bigger is faster."
+puts "Relstddev is relative standard deviation (stddev divided by mean) given as a percent. " \
+     "Smaller is more stable/predictable."
