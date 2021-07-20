@@ -28,7 +28,9 @@ def time_all_matches(source, value, should_match: true, iters: 100)
 
   ruby_regexp = Regexp.new(source)
   if ruby_regexp.match?(value).nil? == should_match
-    raise "Pattern #{source.inspect} should#{should_match ? '' : "n't"} match #{value.inspect} with Ruby built-in regexp!"
+    msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
+          "match #{value.inspect} with Ruby built-in regexp!"
+    raise msg
   end
 
   samples[:ruby] = Benchmark.realtime do
@@ -37,7 +39,9 @@ def time_all_matches(source, value, should_match: true, iters: 100)
 
   pattern = RegularExpression::Pattern.new(source)
   if pattern.match?(value).nil? == should_match
-    raise "Pattern #{source.inspect} should#{should_match ? '' : "n't"} match #{value.inspect} with plain RegularExpression object!"
+    msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
+          "match #{value.inspect} with plain RegularExpression object!"
+    raise msg
   end
 
   samples[:re] = Benchmark.realtime do
@@ -46,7 +50,9 @@ def time_all_matches(source, value, should_match: true, iters: 100)
 
   pattern.compile(compiler: RegularExpression::Compiler::X86)
   if pattern.match?(value).nil? == should_match
-    raise "Pattern #{source.inspect} should#{should_match ? '' : "n't"} match #{value.inspect} with RegularExpression x86 compiler!"
+    msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
+          "match #{value.inspect} with RegularExpression x86 compiler!"
+    raise msg
   end
 
   samples[:re_x86] = Benchmark.realtime do
@@ -55,7 +61,9 @@ def time_all_matches(source, value, should_match: true, iters: 100)
 
   pattern.compile(compiler: RegularExpression::Compiler::Ruby)
   if pattern.match?(value).nil? == should_match
-    raise "Pattern #{source.inspect} should#{should_match ? '' : "n't"} match #{value.inspect} with RegularExpression Ruby compiler!"
+    msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
+          "match #{value.inspect} with RegularExpression Ruby compiler!"
+    raise msg
   end
 
   samples[:re_ruby] = Benchmark.realtime do
