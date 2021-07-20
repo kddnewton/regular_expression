@@ -150,7 +150,7 @@ class RegularExpressionTest < Minitest::Test
   end
 
   def test_debug
-    source = "^\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\d\D\w\W|.)\z$"
+    source = "^\\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\\d\\D\\w\\W|.)\\z$"
 
     ast = RegularExpression::Parser.new.parse(source)
     nfa = ast.to_nfa
