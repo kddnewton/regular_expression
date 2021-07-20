@@ -31,13 +31,13 @@ module RegularExpression
         case # rubocop:disable Style/EmptyCaseCondition
         when @scanner.scan(/\\[wWdDhs]/)
           result << [:CHAR_CLASS, @scanner.matched]
-        when @scanner.scan(/(?:\\[Az]|\$)/)
+        when @scanner.scan(/\\[Az]|\$/)
           result << [:ANCHOR, @scanner.matched]
         when @scanner.scan(/[\^$()\[\]{}|*+?.\-,]/)
           result << [SINGLE[@scanner.matched], @scanner.matched]
         when @scanner.scan(/\d+/)
           result << [:INTEGER, @scanner.matched.to_i]
-        when @scanner.scan(/(?:\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD])/)
+        when @scanner.scan(/\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD]/)
           result << [:CHAR, @scanner.matched]
         else
           raise SyntaxError, @scanner.rest
