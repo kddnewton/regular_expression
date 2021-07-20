@@ -19,13 +19,12 @@ module RegularExpression
 
         # Result is a hash that points from a set of states in the NFA to the
         # new state in the DFA.
-        result = {}
+        result = {
+          start_key => NFA::State.new(start_key.map(&:label).join(","))
+        }
 
         until worklist.empty?
           states = worklist.pop
-
-          result[states] ||= NFA::State.new(states.map(&:label).join(","))
-
           transitions = {}
 
           # First, we're going to build up a list of transitions that exit out
