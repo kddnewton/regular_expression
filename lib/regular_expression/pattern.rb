@@ -11,9 +11,10 @@ module RegularExpression
 
     def compile(compiler: Compiler::X86)
       cfg = CFG.build(bytecode)
+      schedule = Scheduler.schedule(cfg)
 
       singleton_class.undef_method(:match?)
-      define_singleton_method(:match?, &compiler.compile(cfg))
+      define_singleton_method(:match?, &compiler.compile(cfg, schedule))
     end
 
     def match?(string)

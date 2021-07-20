@@ -39,7 +39,7 @@ module RegularExpression
       # Generate native code for a CFG. This looks just like the Ruby generator
       # but abstracted one level, or just like the interpreter but abstracted
       # two levels!
-      def self.compile(cfg)
+      def self.compile(cfg, schedule)
         fisk = Fisk.new
         buffer = Fisk::Helpers.jitbuffer(1024)
 
@@ -101,7 +101,9 @@ module RegularExpression
           # each loop at the current match index
           mov string_index, match_index
 
-          cfg.blocks.each do |block|
+          schedule.each_with_index do |block, n|
+            next_block = schedule[n + 1]
+
             # Label the start of each block so that we can jump between them
             make_label block.name
 
@@ -111,13 +113,26 @@ module RegularExpression
                 push string_index
               when Bytecode::Insns::PopIndex
                 pop string_index
-              when Bytecode::Insns::GuardBegin
+              when Bytecode::Insns::TestBegin
+                over_label = :"over_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
                 cmp string_index, imm8(0)
-                jne label(:exit)
-                jmp label(cfg.exit_map[insn.guarded].name)
-              when Bytecode::Insns::GuardEnd
+                je label(over_label)
+                mov flag, imm32(0)
+                jmp label(end_label)
+                make_label over_label
+                mov flag, imm32(1)
+                make_label end_label
+              when Bytecode::Insns::TestEnd
+                over_label = :"over_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
                 cmp string_index, string_length
-                je label(cfg.exit_map[insn.guarded].name)
+                je label(over_label)
+                mov flag, imm32(0)
+                jmp label(end_label)
+                make_label over_label
+                mov flag, imm32(1)
+                make_label end_label
               when Bytecode::Insns::TestAny
                 no_match_label = :"no_match_#{insn.object_id}"
                 end_label = :"end_#{insn.object_id}"
@@ -268,9 +283,24 @@ module RegularExpression
 
                 make_label end_label
               when Bytecode::Insns::Branch
-                cmp r9, imm32(1)
-                je label(cfg.exit_map[insn.true_target].name)
-                jmp label(cfg.exit_map[insn.false_target].name)
+                true_block = cfg.exit_map[insn.true_target]
+                false_block = cfg.exit_map[insn.false_target]
+
+                if next_block == true_block
+                  # Falls through to the true blocks - jump for false.
+                  cmp r9, imm32(0)
+                  je label(cfg.exit_map[insn.false_target].name)
+                elsif next_block == false_block
+                  # Falls through for the false block - jump for true.
+                  cmp r9, imm32(1)
+                  je label(cfg.exit_map[insn.true_target].name)
+                else
+                  # Doesn't fall through to either block - have to jump for
+                  # both.
+                  cmp r9, imm32(1)
+                  je label(cfg.exit_map[insn.true_target].name)
+                  jmp label(cfg.exit_map[insn.false_target].name)
+                end
               when Bytecode::Insns::Jump
                 jmp label(cfg.exit_map[insn.target].name)
               when Bytecode::Insns::Match
