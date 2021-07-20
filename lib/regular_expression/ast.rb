@@ -167,6 +167,10 @@ module RegularExpression
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
         when %q{\D}
           start.add_transition(NFA::Transition::Range.new(finish, "0", "9", invert: true))
+        when %q{\h}
+          start.add_transition(NFA::Transition::Range.new(finish, "a", "f"))
+          start.add_transition(NFA::Transition::Range.new(finish, "A", "F"))
+          start.add_transition(NFA::Transition::Range.new(finish, "0", "9"))
         else
           raise
         end
