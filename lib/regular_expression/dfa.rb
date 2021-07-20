@@ -25,7 +25,7 @@ module RegularExpression
           states = worklist.pop
 
           next if result.key?(states)
-          result[states] = NFA::State.new
+          result[states] = NFA::State.new(states.map(&:label).join(","))
 
           transitions = {}
 
@@ -55,7 +55,7 @@ module RegularExpression
             # to, we're going to create a transition in our DFA that represents
             # this transition.
             next_key = next_states_for(next_states)
-            new_state = (result[next_key] ||= NFA::State.new)
+            new_state = (result[next_key] ||= NFA::State.new(next_key.map(&:label).join(",")))
             result[states].add_transition(transition.copy(new_state))
 
             # Make sure we check the next states.
