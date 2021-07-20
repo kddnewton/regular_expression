@@ -27,7 +27,7 @@ module RegularExpression
         expressions.each { |expression| expression.to_dot(node) }
       end
 
-      def to_nfa
+      def to_nfa(processors)
         start = NFA::StartState.new
         current = start
         labels = ("1"..).each
@@ -39,7 +39,7 @@ module RegularExpression
 
         finish = NFA::FinishState.new
         expressions.each do |expression|
-          expression.to_nfa(current, finish, labels)
+          expression.to_nfa(current, finish, labels, processors)
         end
 
         start
@@ -59,12 +59,12 @@ module RegularExpression
         items.each { |item| item.to_dot(node) }
       end
 
-      def to_nfa(start, finish, labels)
+      def to_nfa(start, finish, labels, processors)
         inner = Array.new(items.length - 1) { NFA::State.new(labels.next) }
         states = [start, *inner, finish]
 
         items.each_with_index do |item, index|
-          item.to_nfa(states[index], states[index + 1], labels)
+          item.to_nfa(states[index], states[index + 1], labels, processors)
         end
       end
     end
@@ -85,9 +85,9 @@ module RegularExpression
         quantifier.to_dot(node)
       end
 
-      def to_nfa(start, finish, labels)
+      def to_nfa(start, finish, labels, processors)
         quantifier.quantify(start, finish, labels) do |qstart, qfinish|
-          expressions.each { |expression| expression.to_nfa(qstart, qfinish, labels) }
+          expressions.each { |expression| expression.to_nfa(qstart, qfinish, labels, processors) }
         end
       end
     end
@@ -108,9 +108,9 @@ module RegularExpression
         quantifier.to_dot(node)
       end
 
-      def to_nfa(start, finish, labels)
+      def to_nfa(start, finish, labels, processors)
         quantifier.quantify(start, finish, labels) do |qstart, qfinish|
-          item.to_nfa(qstart, qfinish, labels)
+          item.to_nfa(qstart, qfinish, labels, processors)
         end
       end
     end
@@ -132,13 +132,13 @@ module RegularExpression
         items.each { |item| item.to_dot(node) }
       end
 
-      def to_nfa(start, finish, labels)
+      def to_nfa(start, finish, labels, processors)
         if invert
           transition = NFA::Transition::Invert.new(finish, items.flat_map(&:to_nfa_values).sort)
           start.add_transition(transition)
         else
           items.each do |item|
-            item.to_nfa(start, finish, labels)
+            item.to_nfa(start, finish, labels, processors)
           end
         end
       end
@@ -155,7 +155,7 @@ module RegularExpression
         parent.add_node(object_id, label: value, shape: "box")
       end
 
-      def to_nfa(start, finish, _labels)
+      def to_nfa(start, finish, _labels, processors)
         case value
         when %q{\w}
           start.add_transition(NFA::Transition::Range.new(finish, "a", "z"))
@@ -200,7 +200,7 @@ module RegularExpression
         parent.add_node(object_id, label: "[[:#{value}:]]", shape: "box")
       end
 
-      def to_nfa(start, finish, _labels)
+      def to_nfa(start, finish, _labels, processors)
         start.add_transition(NFA::Transition::Type.new(finish, value))
       end
     end
@@ -220,8 +220,12 @@ module RegularExpression
         [value]
       end
 
-      def to_nfa(start, finish, _labels)
-        start.add_transition(NFA::Transition::Value.new(finish, value))
+      def to_nfa(start, finish, _labels, processors)
+        transition = NFA::Transition::Value.new(finish, value)
+        start.add_transition(transition)
+        processors.each do |processor|
+          processor.call(start, transition)
+        end
       end
     end
 
@@ -230,7 +234,7 @@ module RegularExpression
         parent.add_node(object_id, label: ".", shape: "box")
       end
 
-      def to_nfa(start, finish, _labels)
+      def to_nfa(start, finish, _labels, processors)
         transition = NFA::Transition::Any.new(finish)
         start.add_transition(transition)
       end
@@ -252,7 +256,7 @@ module RegularExpression
         (left..right).to_a
       end
 
-      def to_nfa(start, finish, _labels)
+      def to_nfa(start, finish, _labels, processors)
         transition = NFA::Transition::Range.new(finish, left, right)
         start.add_transition(transition)
       end
@@ -269,7 +273,7 @@ module RegularExpression
         parent.add_node(object_id, label: value, shape: "box")
       end
 
-      def to_nfa(start, finish, _labels)
+      def to_nfa(start, finish, _labels, processors)
         transition =
           case value
           when %q{\A}

@@ -14,7 +14,7 @@ end
 # Pass the source through the various parsing phases
 source = ARGV.shift
 ast = RegularExpression::Parser.new.parse(source)
-nfa = ast.to_nfa
+nfa = ast.to_nfa([RegularExpression::Pattern::Iflag.new])
 bytecode = RegularExpression::Bytecode.compile(nfa)
 
 # Compile the graph into various outputs
