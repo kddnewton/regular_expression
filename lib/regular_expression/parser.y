@@ -83,20 +83,29 @@ rule
     { result = AST::Character.new(val[0].to_s) }
 
   quantifier:
-    LBRACE INTEGER COMMA INTEGER RBRACE
-    { result = AST::Quantifier::Range.new(val[1], val[3]) }
-    | LBRACE INTEGER COMMA RBRACE
-    { result = AST::Quantifier::AtLeast.new(val[1]) }
-    | LBRACE COMMA INTEGER RBRACE
-    { result = AST::Quantifier::Range.new(0, val[2]) }
-    | LBRACE INTEGER RBRACE
-    { result = AST::Quantifier::Exact.new(val[1]) }
+    LBRACE multiple_integer COMMA multiple_integer RBRACE
+    { result = AST::Quantifier::Range.new(val[1].to_i, val[3].to_i) }
+    | LBRACE multiple_integer COMMA RBRACE
+    { result = AST::Quantifier::AtLeast.new(val[1].to_i) }
+    | LBRACE COMMA multiple_integer RBRACE
+    { result = AST::Quantifier::Range.new(0, val[2].to_i) }
+    | LBRACE multiple_integer RBRACE
+    { result = AST::Quantifier::Exact.new(val[1].to_i) }
     | STAR
     { result = AST::Quantifier::ZeroOrMore.new }
     | PLUS
     { result = AST::Quantifier::OneOrMore.new }
     | QMARK
     { result = AST::Quantifier::Optional.new }
+
+  multiple_integer:
+    single_integer multiple_integer
+    { result = val[0] + val[1] }
+    | single_integer
+    { result = val[0] }
+
+  single_integer:
+    INTEGER
 end
 
 ---- inner
