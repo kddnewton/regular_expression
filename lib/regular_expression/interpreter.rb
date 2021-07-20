@@ -48,6 +48,10 @@ module RegularExpression
             flag = string_n < string.size && string[string_n] == insn.char
             string_n += 1 if flag
             insn_n += 1
+          when Bytecode::Insns::TestType
+            flag = string_n < string.size && insn.type.match?(string[string_n])
+            string_n += 1 if flag
+            insn_n += 1
           when Bytecode::Insns::TestValuesInvert
             flag = string_n < string.size && !insn.chars.include?(string[string_n])
             string_n += 1 if flag

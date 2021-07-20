@@ -156,6 +156,30 @@ class RegularExpressionTest < Minitest::Test
     refute_matches(%q{[^a-ce]}, "a")
   end
 
+  def test_character_type_alnum
+    assert_matches(%q{[[:alnum:]]}, "a")
+    assert_matches(%q{[[:alnum:]]}, "0")
+    refute_matches(%q{[[:alnum:]]}, "!")
+  end
+
+  def test_character_type_alpha
+    assert_matches(%q{[[:alpha:]]}, "a")
+    assert_matches(%q{[[:alpha:]]}, "z")
+    refute_matches(%q{[[:alpha:]]}, "0")
+  end
+
+  def test_character_type_lower
+    assert_matches(%q{[[:lower:]]}, "a")
+    assert_matches(%q{[[:lower:]]}, "z")
+    refute_matches(%q{[[:lower:]]}, "A")
+  end
+
+  def test_character_type_upper
+    assert_matches(%q{[[:upper:]]}, "A")
+    assert_matches(%q{[[:upper:]]}, "Z")
+    refute_matches(%q{[[:upper:]]}, "a")
+  end
+
   def test_period
     assert_matches(%q{.}, "a")
     assert_matches(%q{.}, "z")

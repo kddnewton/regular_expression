@@ -43,8 +43,9 @@ module RegularExpression
 
           case transition
           when NFA::Transition::BeginAnchor, NFA::Transition::EndAnchor,
-              NFA::Transition::Any, NFA::Transition::Value,
-              NFA::Transition::Invert, NFA::Transition::Range
+               NFA::Transition::Any, NFA::Transition::Value,
+               NFA::Transition::Invert, NFA::Transition::Range,
+               NFA::Transition::Type
             case transition
             when NFA::Transition::BeginAnchor
               builder.push(Insns::TestBegin.new)
@@ -62,6 +63,8 @@ module RegularExpression
               else
                 builder.push(Insns::TestRange.new(transition.left, transition.right))
               end
+            when NFA::Transition::Type
+              builder.push(Insns::TestType.new(CharacterType.new(transition.type)))
             end
 
             true_target = label[transition.state]
@@ -147,6 +150,11 @@ module RegularExpression
       # If it's possible to read a character off the input and that character
       # matches the char value, then do so and set the flag, otherwise clear it.
       TestValue = Struct.new(:char)
+
+      # If it's possible to read a character off the input and that character is
+      # included in the POSIX character type class defined by the type variable,
+      # then do so a set the flag, otherwise clear it.
+      TestType = Struct.new(:type)
 
       # If it's possible to read a character off the input and that character is
       # not contained within the list of values, then do so and set the flag,

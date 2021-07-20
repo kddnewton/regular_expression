@@ -78,7 +78,15 @@ module RegularExpression
           # character value from the string
           character_buffer = r8
 
+          # r9 is a scratch register that we're using to store the flag that is
+          # the last comparison to the current character buffer - this could
+          # likely take advantage of ZF or some other flag but that's for a
+          # future optimization
           flag = r9
+
+          # r10 is a scratch register that we're using to store a pointer to a
+          # comparison function (e.g., isalnum) for a POSIX character type
+          character_type = r10
 
           # First we're going to do some initialization of the frame pointer and
           # stack pointer so we can clear the stack when we're done with this
@@ -168,6 +176,43 @@ module RegularExpression
                 # continue on to the next instruction if it's not equal
                 cmp character_buffer, imm8(insn.char.ord)
                 jne label(no_match_label)
+
+                # Move the string index forward and jump to the target
+                # instruction
+                inc string_index
+                mov flag, imm32(1)
+                jmp label(end_label)
+
+                make_label no_match_label
+                mov flag, imm32(0)
+
+                make_label end_label
+              when Bytecode::Insns::TestType
+                no_match_label = :"no_match_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
+
+                # Ensure we have a character we can read
+                cmp string_index, string_length
+                je label(no_match_label)
+
+                # Read the character into the character buffer
+                mov character_buffer, string_pointer
+                add character_buffer, string_index
+                mov character_buffer, m64(character_buffer)
+
+                # Call out to the character type checker function. We have to
+                # push/pop rdi since that's the first argument register to the
+                # function
+                push rdi
+                mov rdi, character_buffer
+                mov character_type, imm64(insn.type.handle)
+                call character_type
+                pop rdi
+
+                # Compare the return value of the function call to zero to check
+                # if the value is within the character type
+                test return_value, return_value
+                jz label(no_match_label)
 
                 # Move the string index forward and jump to the target
                 # instruction
