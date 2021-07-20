@@ -51,6 +51,8 @@ rule
     { result = RegularExpression::AST::CharacterGroup.new(val[1]) }
     | CHAR_CLASS
     { result = RegularExpression::AST::CharacterClass.new(val[0]) }
+    | CHAR_TYPE
+    { result = RegularExpression::AST::CharacterType.new(val[0]) }
     | CHAR
     { result = RegularExpression::AST::Character.new(val[0]) }
     | PERIOD

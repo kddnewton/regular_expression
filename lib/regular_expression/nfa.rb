@@ -79,6 +79,12 @@ module RegularExpression
         end
       end
 
+      class Type < Struct.new(:state, :type)
+        def label
+          "[[:#{type}:]]"
+        end
+      end
+
       class Invert
         attr_reader :state # State
         attr_reader :values # Array[String]

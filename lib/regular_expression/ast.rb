@@ -189,6 +189,22 @@ module RegularExpression
       end
     end
 
+    class CharacterType
+      attr_reader :value # "alnum" | "alpha" | "lower" | "upper"
+
+      def initialize(value)
+        @value = value
+      end
+
+      def to_dot(parent)
+        parent.add_node(object_id, label: "[[:#{value}:]]", shape: "box")
+      end
+
+      def to_nfa(start, finish, _labels)
+        start.add_transition(NFA::Transition::Type.new(finish, value))
+      end
+    end
+
     class Character
       attr_reader :value # String
 

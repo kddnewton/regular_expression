@@ -56,6 +56,9 @@ module RegularExpression
             when Bytecode::Insns::TestValue
               ruby_src.push "        flag = string_n < string.size && string[string_n] == #{insn.char.inspect}"
               ruby_src.push "        string_n += 1 if flag"
+            when Bytecode::Insns::TestType
+              ruby_src.push "        flag = string_n < string.size && ::RegularExpression::CharacterType.new(#{insn.type.type.inspect}).match?(string[string_n])"
+              ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestValuesInvert
               ruby_src.push "        flag = string_n < string.size && !#{insn.chars.inspect}.include?(string[string_n])"
               ruby_src.push "        string_n += 1 if flag"
