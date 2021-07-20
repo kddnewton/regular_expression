@@ -116,6 +116,12 @@ module RegularExpression
         end
       end
 
+      class PositiveLookahead < Struct.new(:state, :value)
+        def label
+          "(?=#{value})"
+        end
+      end
+
       class Epsilon < Struct.new(:state)
         def label
           "ε"

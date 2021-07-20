@@ -64,6 +64,9 @@ module RegularExpression
             flag = string_n < string.size && (string[string_n] < insn.left || string[string_n] > insn.right)
             string_n += 1 if flag
             insn_n += 1
+          when Bytecode::Insns::TestPositiveLookahead
+            flag = string[string_n..].start_with?(insn.value)
+            insn_n += 1
           when Bytecode::Insns::Branch
             insn_n = if flag
                        bytecode.labels[insn.true_target]
