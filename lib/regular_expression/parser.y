@@ -59,7 +59,7 @@ rule
     { result = AST::Character.new(val[0]) }
     | DASH
     { result = AST::Character.new(val[0]) }
-    | INTEGER
+    | DIGIT
     { result = AST::Character.new(val[0].to_s) }
     | PERIOD
     { result = AST::Period.new }
@@ -83,14 +83,14 @@ rule
     { result = AST::Character.new(val[0].to_s) }
 
   quantifier:
-    LBRACE multiple_integer COMMA multiple_integer RBRACE
-    { result = AST::Quantifier::Range.new(val[1].to_i, val[3].to_i) }
-    | LBRACE multiple_integer COMMA RBRACE
-    { result = AST::Quantifier::AtLeast.new(val[1].to_i) }
-    | LBRACE COMMA multiple_integer RBRACE
-    { result = AST::Quantifier::Range.new(0, val[2].to_i) }
-    | LBRACE multiple_integer RBRACE
-    { result = AST::Quantifier::Exact.new(val[1].to_i) }
+    LBRACE integer COMMA integer RBRACE
+    { result = AST::Quantifier::Range.new(val[1], val[3]) }
+    | LBRACE integer COMMA RBRACE
+    { result = AST::Quantifier::AtLeast.new(val[1]) }
+    | LBRACE COMMA integer RBRACE
+    { result = AST::Quantifier::Range.new(0, val[2]) }
+    | LBRACE integer RBRACE
+    { result = AST::Quantifier::Exact.new(val[1]) }
     | STAR
     { result = AST::Quantifier::ZeroOrMore.new }
     | PLUS
@@ -98,14 +98,16 @@ rule
     | QMARK
     { result = AST::Quantifier::Optional.new }
 
-  multiple_integer:
-    single_integer multiple_integer
+  integer:
+    digits
+    { result = val[0].to_i }
+
+  digits:
+    DIGIT digits
     { result = val[0] + val[1] }
-    | single_integer
+    | DIGIT
     { result = val[0] }
 
-  single_integer:
-    INTEGER
 end
 
 ---- inner
