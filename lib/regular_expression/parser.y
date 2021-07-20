@@ -59,6 +59,8 @@ rule
     { result = AST::Character.new(val[0]) }
     | DASH
     { result = AST::Character.new(val[0]) }
+    | INTEGER
+    { result = AST::Character.new(val[0].to_s) }
     | PERIOD
     { result = AST::Period.new }
 
@@ -77,6 +79,8 @@ rule
     { result = AST::Character.new(val[0]) }
     | COMMA
     { result = AST::Character.new(val[0]) }
+    | INTEGER
+    { result = AST::Character.new(val[0].to_s) }
 
   quantifier:
     LBRACE INTEGER COMMA INTEGER RBRACE

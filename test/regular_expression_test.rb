@@ -10,6 +10,11 @@ class RegularExpressionTest < Minitest::Test
     assert_matches(%q{-},   "-")
   end
 
+  def test_basic_numbers
+    assert_matches(%q{100}, "100")
+    assert_matches(%q{1+},  "11")
+  end
+
   def test_optional
     assert_matches(%q{abc?}, "ab")
     assert_matches(%q{abc?}, "abc")
