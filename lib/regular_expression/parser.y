@@ -60,7 +60,7 @@ rule
     | DASH
     { result = AST::Character.new(val[0]) }
     | DIGIT
-    { result = AST::Character.new(val[0].to_s) }
+    { result = AST::Character.new(val[0]) }
     | PERIOD
     { result = AST::Period.new }
 

@@ -361,7 +361,7 @@ module_eval(<<'.,.,', 'parser.y', 60)
 
 module_eval(<<'.,.,', 'parser.y', 62)
   def _reduce_23(val, _values, result)
-     result = AST::Character.new(val[0].to_s)
+     result = AST::Character.new(val[0])
     result
   end
 .,.,
