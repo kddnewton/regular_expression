@@ -11,7 +11,7 @@ module RegularExpression
 module_eval(<<'...end parser.y/module_eval...', 'parser.y', 92)
   
   def parse(str)
-    @tokens = RegularExpression::Lexer.new(str).tokens
+    @tokens = Lexer.new(str).tokens
     do_parse
   end
 
@@ -213,28 +213,28 @@ module_eval(<<'.,.,', 'parser.y', 8)
 
 module_eval(<<'.,.,', 'parser.y', 12)
   def _reduce_3(val, _values, result)
-     result = RegularExpression::AST::Root.new(val[1], at_start: true)
+     result = AST::Root.new(val[1], at_start: true)
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 14)
   def _reduce_4(val, _values, result)
-     result = RegularExpression::AST::Root.new(val[0])
+     result = AST::Root.new(val[0])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 18)
   def _reduce_5(val, _values, result)
-     result = [RegularExpression::AST::Expression.new(val[0])] + val[2]
+     result = [AST::Expression.new(val[0])] + val[2]
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 20)
   def _reduce_6(val, _values, result)
-     result = [RegularExpression::AST::Expression.new(val[0])]
+     result = [AST::Expression.new(val[0])]
     result
   end
 .,.,
@@ -259,77 +259,77 @@ module_eval(<<'.,.,', 'parser.y', 26)
 
 module_eval(<<'.,.,', 'parser.y', 32)
   def _reduce_11(val, _values, result)
-     result = RegularExpression::AST::Anchor.new(val[0])
+     result = AST::Anchor.new(val[0])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 36)
   def _reduce_12(val, _values, result)
-     result = RegularExpression::AST::Group.new(val[1], quantifier: val[3])
+     result = AST::Group.new(val[1], quantifier: val[3])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 38)
   def _reduce_13(val, _values, result)
-     result = RegularExpression::AST::Group.new(val[1])
+     result = AST::Group.new(val[1])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 42)
   def _reduce_14(val, _values, result)
-     result = RegularExpression::AST::Match.new(val[0], quantifier: val[1])
+     result = AST::Match.new(val[0], quantifier: val[1])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 44)
   def _reduce_15(val, _values, result)
-     result = RegularExpression::AST::Match.new(val[0])
+     result = AST::Match.new(val[0])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 48)
   def _reduce_16(val, _values, result)
-     result = RegularExpression::AST::CharacterGroup.new(val[2], invert: true)
+     result = AST::CharacterGroup.new(val[2], invert: true)
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 50)
   def _reduce_17(val, _values, result)
-     result = RegularExpression::AST::CharacterGroup.new(val[1])
+     result = AST::CharacterGroup.new(val[1])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 52)
   def _reduce_18(val, _values, result)
-     result = RegularExpression::AST::CharacterClass.new(val[0])
+     result = AST::CharacterClass.new(val[0])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 54)
   def _reduce_19(val, _values, result)
-     result = RegularExpression::AST::CharacterType.new(val[0])
+     result = AST::CharacterType.new(val[0])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 56)
   def _reduce_20(val, _values, result)
-     result = RegularExpression::AST::Character.new(val[0])
+     result = AST::Character.new(val[0])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 58)
   def _reduce_21(val, _values, result)
-     result = RegularExpression::AST::Period.new
+     result = AST::Period.new
     result
   end
 .,.,
@@ -352,63 +352,63 @@ module_eval(<<'.,.,', 'parser.y', 64)
 
 module_eval(<<'.,.,', 'parser.y', 69)
   def _reduce_25(val, _values, result)
-     result = RegularExpression::AST::CharacterRange.new(val[0], val[2])
+     result = AST::CharacterRange.new(val[0], val[2])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 71)
   def _reduce_26(val, _values, result)
-     result = RegularExpression::AST::Character.new(val[0])
+     result = AST::Character.new(val[0])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 75)
   def _reduce_27(val, _values, result)
-     result = RegularExpression::AST::Quantifier::Range.new(val[1], val[3])
+     result = AST::Quantifier::Range.new(val[1], val[3])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 77)
   def _reduce_28(val, _values, result)
-     result = RegularExpression::AST::Quantifier::AtLeast.new(val[1])
+     result = AST::Quantifier::AtLeast.new(val[1])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 79)
   def _reduce_29(val, _values, result)
-     result = RegularExpression::AST::Quantifier::Range.new(0, val[2])
+     result = AST::Quantifier::Range.new(0, val[2])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 81)
   def _reduce_30(val, _values, result)
-     result = RegularExpression::AST::Quantifier::Exact.new(val[1])
+     result = AST::Quantifier::Exact.new(val[1])
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 83)
   def _reduce_31(val, _values, result)
-     result = RegularExpression::AST::Quantifier::ZeroOrMore.new
+     result = AST::Quantifier::ZeroOrMore.new
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 85)
   def _reduce_32(val, _values, result)
-     result = RegularExpression::AST::Quantifier::OneOrMore.new
+     result = AST::Quantifier::OneOrMore.new
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'parser.y', 87)
   def _reduce_33(val, _values, result)
-     result = RegularExpression::AST::Quantifier::Optional.new
+     result = AST::Quantifier::Optional.new
     result
   end
 .,.,
