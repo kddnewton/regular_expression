@@ -21,6 +21,8 @@ Or install it yourself as:
 
     $ gem install regular_expression
 
+To generate Dotfile output (to_dot) or run the tests, you'll need Graphviz installed. On a Mac you can "brew install graphviz", or on Ubuntu you can "sudo apt-get install graphviz". For other platforms, Googling "install graphviz" can tell you how.
+
 ## Usage
 
 To create a regular expression pattern, use:
@@ -38,6 +40,8 @@ pattern.match?("ab") # => false
 ```
 
 ## Development
+
+To run the tests, you'll need Graphviz installed. On a Mac you can "brew install graphviz", or on Ubuntu you can "sudo apt-get install graphviz". For other platforms, Googling "install graphviz" can tell you how.
 
 After checking out the repo, run `bundle install` to install dependencies. Then, run `bundle exec rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
