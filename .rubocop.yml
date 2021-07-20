@@ -35,6 +35,7 @@ Style/IfUnlessModifier:
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:
     '%q': '{}'
+    '%Q': '{}'
 
 Style/PerlBackrefs:
   Enabled: false
