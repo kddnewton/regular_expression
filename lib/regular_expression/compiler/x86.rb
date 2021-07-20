@@ -328,26 +328,26 @@ module RegularExpression
 
                 make_label end_label
               when Bytecode::Insns::Branch
-                true_block = cfg.exit_map[insn.true_target]
-                false_block = cfg.exit_map[insn.false_target]
+                true_block = cfg.blocks[insn.true_target]
+                false_block = cfg.blocks[insn.false_target]
 
                 if next_block == true_block
                   # Falls through to the true blocks - jump for false.
                   cmp r9, imm32(0)
-                  je label(cfg.exit_map[insn.false_target].name)
+                  je label(cfg.blocks[insn.false_target].name)
                 elsif next_block == false_block
                   # Falls through for the false block - jump for true.
                   cmp r9, imm32(1)
-                  je label(cfg.exit_map[insn.true_target].name)
+                  je label(cfg.blocks[insn.true_target].name)
                 else
                   # Doesn't fall through to either block - have to jump for
                   # both.
                   cmp r9, imm32(1)
-                  je label(cfg.exit_map[insn.true_target].name)
-                  jmp label(cfg.exit_map[insn.false_target].name)
+                  je label(cfg.blocks[insn.true_target].name)
+                  jmp label(cfg.blocks[insn.false_target].name)
                 end
               when Bytecode::Insns::Jump
-                jmp label(cfg.exit_map[insn.target].name)
+                jmp label(cfg.blocks[insn.target].name)
               when Bytecode::Insns::Match
                 # If we reach this instruction, then we've successfully matched
                 # against the input string, so we're going to return the integer
