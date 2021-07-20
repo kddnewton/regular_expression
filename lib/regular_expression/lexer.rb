@@ -21,29 +21,27 @@ module RegularExpression
     }.freeze
 
     def initialize(source)
-      @source = source.dup
+      @scanner = StringScanner.new(source)
     end
 
     def tokens
       result = []
 
-      until @source.empty?
-        case @source
-        when /\A\\[wWdDhs]/
-          result << [:CHAR_CLASS, $&]
-        when /\A(?:\\[Az]|\$)/
-          result << [:ANCHOR, $&]
-        when /\A[\^$()\[\]{}|*+?.\-,]/
-          result << [SINGLE[$&], $&]
-        when /\A\d+/
-          result << [:INTEGER, $&.to_i]
-        when /\A(?:\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD])/
-          result << [:CHAR, $&]
+      until @scanner.eos?
+        case # rubocop:disable Style/EmptyCaseCondition
+        when @scanner.scan(/\A\\[wWdDhs]/)
+          result << [:CHAR_CLASS, @scanner.matched]
+        when @scanner.scan(/\A(?:\\[Az]|\$)/)
+          result << [:ANCHOR, @scanner.matched]
+        when @scanner.scan(/\A[\^$()\[\]{}|*+?.\-,]/)
+          result << [SINGLE[@scanner.matched], @scanner.matched]
+        when @scanner.scan(/\A\d+/)
+          result << [:INTEGER, @scanner.matched.to_i]
+        when @scanner.scan(/\A(?:\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD])/)
+          result << [:CHAR, @scanner.matched]
         else
-          raise SyntaxError, @source
+          raise SyntaxError, @scanner.rest
         end
-
-        @source = $'
       end
 
       result << [false, "end"]
