@@ -55,11 +55,14 @@ module RegularExpression
             # to, we're going to create a transition in our DFA that represents
             # this transition.
             next_key = next_states_for(next_states)
+
+            unless result.key?(next_key)
+              # Make sure we check the next states.
+              worklist << next_key
+            end
+
             new_state = (result[next_key] ||= NFA::State.new(next_key.map(&:label).join(",")))
             result[states].add_transition(transition.copy(new_state))
-
-            # Make sure we check the next states.
-            worklist << next_key
           end
         end
 
