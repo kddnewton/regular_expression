@@ -144,7 +144,7 @@ module RegularExpression
     end
 
     class CharacterClass
-      attr_reader :value # "\w" | "\W" | "\d" | "\D"
+      attr_reader :value # "\w" | "\W" | "\d" | "\D" | "\h"
 
       def initialize(value)
         @value = value
