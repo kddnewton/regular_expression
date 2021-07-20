@@ -113,6 +113,22 @@ class RegularExpressionTest < Minitest::Test
     refute_matches(%q{\W}, "a")
   end
 
+  def test_character_class_h
+    assert_matches(%q{\h}, "0")
+    assert_matches(%q{\h}, "a")
+    refute_matches(%q{\h}, "!")
+  end
+
+  def test_character_class_s
+    assert_matches(%q{\s}, " ")
+    assert_matches(%q{\s}, "\n")
+    assert_matches(%q{\s}, "\t")
+    assert_matches(%q{\s}, "\f")
+    assert_matches(%q{\s}, "\r")
+    assert_matches(%q{\s}, "\v")
+    refute_matches(%q{\s}, "!")
+  end
+
   def test_character_group
     assert_matches(%q{[a-ce]}, "b")
     assert_matches(%q{[a-ce]}, "e")
@@ -156,7 +172,7 @@ class RegularExpressionTest < Minitest::Test
   end
 
   def test_debug
-    source = %q{^\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\d\D\w\W|.)\z$}
+    source = %q{^\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\d\D\w\W\h\s|.)\z$}
 
     ast = RegularExpression::Parser.new.parse(source)
     nfa = ast.to_nfa
