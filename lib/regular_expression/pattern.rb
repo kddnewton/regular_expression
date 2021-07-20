@@ -9,7 +9,7 @@ module RegularExpression
       @bytecode = Bytecode.compile(ast.to_nfa)
     end
 
-    def compile(compiler: Generator::X86)
+    def compile(compiler: Compiler::X86)
       cfg = CFG.build(bytecode)
 
       singleton_class.undef_method(:match?)

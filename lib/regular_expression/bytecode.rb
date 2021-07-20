@@ -13,7 +13,7 @@ module RegularExpression
       label = ->(state, index = 0) { :"state_#{state.object_id}_#{index}" }
 
       visited = Set.new
-      worklist = [[nfa, [Insns::Jump.new(:fail)]]]
+      worklist = [[nfa, [:jump_to_fail]]]
 
       # For each state in the NFA.
       until worklist.empty?
@@ -29,6 +29,9 @@ module RegularExpression
           next
         end
 
+        needs_final_transition = false
+        needs_epsilon = false
+
         # Other states have transitions out of them. Go through each
         # transition.
         state.transitions.each_with_index do |transition, index|
@@ -43,20 +46,51 @@ module RegularExpression
             builder.push(Insns::GuardBegin.new(label[transition.state]))
           when NFA::Transition::EndAnchor
             builder.push(Insns::GuardEnd.new(label[transition.state]))
-          when NFA::Transition::Any
-            builder.push(Insns::JumpAny.new(label[transition.state]))
-          when NFA::Transition::Value
-            builder.push(Insns::JumpValue.new(transition.value, label[transition.state]))
-          when NFA::Transition::Invert
-            builder.push(Insns::JumpValuesInvert.new(transition.values, label[transition.state]))
-          when NFA::Transition::Range
-            if transition.invert
-              builder.push(Insns::JumpRangeInvert.new(transition.left, transition.right, label[transition.state]))
-            else
-              builder.push(Insns::JumpRange.new(transition.left, transition.right, label[transition.state]))
+          when NFA::Transition::Any, NFA::Transition::Value,
+              NFA::Transition::Invert, NFA::Transition::Range
+            case transition
+            when NFA::Transition::Any
+              builder.push(Insns::TestAny.new)
+            when NFA::Transition::Value
+              builder.push(Insns::TestValue.new(transition.value))
+            when NFA::Transition::Invert
+              builder.push(Insns::TestValuesInvert.new(transition.values))
+            when NFA::Transition::Range
+              if transition.invert
+                builder.push(Insns::TestRangeInvert.new(transition.left, transition.right))
+              else
+                builder.push(Insns::TestRange.new(transition.left, transition.right))
+              end
             end
+
+            true_target = label[transition.state]
+
+            # Some practical shortcuts to avoid jumping to instructions that
+            # just jump to another instruction.
+            final_transition = index + 1 == state.transitions.length
+            if final_transition && fallback == [:jump_to_fail]
+              # If this is the final transition, and the fallback is to jump
+              # to fail, just jump to fail.
+              false_target = :fail
+            elsif state.transitions[index + 1].is_a?(NFA::Transition::Epsilon)
+              # If the next transition is epsilon, just jump to where it jumps
+              # to.
+              false_target = label[state.transitions[index + 1].state]
+              needs_epsilon = false
+            else
+              # It's none of these and we really do need the final transition
+              # and to jump to whatever it does.
+              needs_final_transition = true if final_transition
+              false_target = label[state, index + 1]
+            end
+
+            builder.push(Insns::Branch.new(true_target, false_target))
           when NFA::Transition::Epsilon
-            builder.push(Insns::Jump.new(label[transition.state]))
+            if needs_epsilon
+              builder.push(Insns::Jump.new(label[transition.state]))
+            else
+              needs_epsilon = true
+            end
           else
             raise
           end
@@ -71,9 +105,12 @@ module RegularExpression
           worklist.push([transition.state, next_fallback])
         end
 
+        builder.mark_label(label[state, state.transitions.size]) if needs_final_transition
+
         # If we don't have one of the transitions that always executes, then we
         # need to add the fallback to the output for this state.
         if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) || t.is_a?(NFA::Transition::Epsilon) }
+          fallback = [Insns::Jump.new(:fail)] if fallback == [:jump_to_fail]
           builder.push(*fallback)
         end
       end
@@ -102,28 +139,32 @@ module RegularExpression
       # Otherwise fail the match at the current index.
       GuardEnd = Struct.new(:guarded)
 
-      # If it's possible to read a character off the input, then do so and jump
-      # to the target instruction.
-      JumpAny = Struct.new(:target)
+      # If it's possible to read a character off the input, then do so and set
+      # the flag, otherwise clear it.
+      TestAny = Class.new
 
       # If it's possible to read a character off the input and that character
-      # matches the char value, then do so and jump to the target instruction.
-      JumpValue = Struct.new(:char, :target)
+      # matches the char value, then do so and set the flag, otherwise clear it.
+      TestValue = Struct.new(:char)
 
       # If it's possible to read a character off the input and that character is
-      # not contained within the list of values, then do so and jump to the
-      # target instruction.
-      JumpValuesInvert = Struct.new(:chars, :target)
+      # not contained within the list of values, then do so and set the flag,
+      # otherwise clear it
+      TestValuesInvert = Struct.new(:chars)
 
       # If it's possible to read a character off the input and that character is
-      # within the range of possible values, then do so and jump to the target
-      # instruction.
-      JumpRange = Struct.new(:left, :right, :target)
+      # within the range of possible values, then do so set the flag, otherwise
+      # clear it
+      TestRange = Struct.new(:left, :right)
 
       # If it's possible to read a character off the input and that character is
-      # not within the range of possible values, then do so and jump to the
-      # target instruction.
-      JumpRangeInvert = Struct.new(:left, :right, :target)
+      # not within the range of possible values, then do so and set the flag,
+      # otherwise clear it
+      TestRangeInvert = Struct.new(:left, :right)
+
+      # If the flag has been set, jump to the true target, otherwise if it's
+      # been cleared jump to the false target.
+      Branch = Struct.new(:true_target, :false_target)
 
       # Jump directly to the target instruction.
       Jump = Struct.new(:target)

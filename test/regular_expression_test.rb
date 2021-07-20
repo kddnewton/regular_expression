@@ -119,6 +119,12 @@ class RegularExpressionTest < Minitest::Test
     refute_matches(%q{\h}, "!")
   end
 
+  def test_character_class_h_invert
+    assert_matches(%q{\H}, "!")
+    assert_matches(%q{\H}, "^")
+    refute_matches(%q{\H}, "a")
+  end
+
   def test_character_class_s
     assert_matches(%q{\s}, " ")
     assert_matches(%q{\s}, "\n")
@@ -127,6 +133,15 @@ class RegularExpressionTest < Minitest::Test
     assert_matches(%q{\s}, "\r")
     assert_matches(%q{\s}, "\v")
     refute_matches(%q{\s}, "!")
+  end
+
+  def test_character_class_s_invert
+    refute_matches(%q{\S}, " ")
+    refute_matches(%q{\S}, "\t")
+    refute_matches(%q{\S}, "\n")
+    refute_matches(%q{\S}, "\f")
+    refute_matches(%q{\S}, "\v")
+    assert_matches(%q{\S}, "a")
   end
 
   def test_character_group

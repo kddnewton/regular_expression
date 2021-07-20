@@ -11,9 +11,11 @@ module RegularExpression
     end
 
     class State
+      attr_reader :label # String
       attr_reader :transitions # Array[Transition]
 
-      def initialize
+      def initialize(label = "")
+        @label = label
         @transitions = []
       end
 
@@ -24,7 +26,7 @@ module RegularExpression
       def to_dot(graph, visited)
         return visited[self] if visited.include?(self)
 
-        source = graph.add_node(object_id, label: "")
+        source = graph.add_node(object_id, label: label)
         visited[self] = source
 
         transitions.each do |transition|
