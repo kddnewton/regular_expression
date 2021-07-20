@@ -6,6 +6,8 @@ class RegularExpressionTest < Minitest::Test
   def test_basic
     assert_matches(%q{abc}, "abc")
     assert_matches(%q{abc}, "!abc")
+    assert_matches(%q{,},   ",")
+    assert_matches(%q{-},   "-")
   end
 
   def test_optional
@@ -90,6 +92,8 @@ class RegularExpressionTest < Minitest::Test
   def test_character_set
     assert_matches(%q{[abc]}, "a")
     assert_matches(%q{[abc]}, "c")
+    assert_matches(%q{[a,c]}, ",")
+    assert_matches(%q{[\w]}, "a")
     refute_matches(%q{[abc]}, "d")
   end
 

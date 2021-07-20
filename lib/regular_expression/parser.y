@@ -55,6 +55,10 @@ rule
     { result = AST::CharacterType.new(val[0]) }
     | CHAR
     { result = AST::Character.new(val[0]) }
+    | COMMA
+    { result = AST::Character.new(val[0]) }
+    | DASH
+    { result = AST::Character.new(val[0]) }
     | PERIOD
     { result = AST::Period.new }
 
@@ -66,9 +70,12 @@ rule
 
   character_group_item:
     CHAR_CLASS
+    { result = AST::CharacterClass.new(val[0]) }
     | CHAR DASH CHAR
     { result = AST::CharacterRange.new(val[0], val[2]) }
     | CHAR
+    { result = AST::Character.new(val[0]) }
+    | COMMA
     { result = AST::Character.new(val[0]) }
 
   quantifier:
@@ -89,7 +96,7 @@ rule
 end
 
 ---- inner
-  
+
   def parse(str)
     @tokens = Lexer.new(str).tokens
     do_parse
