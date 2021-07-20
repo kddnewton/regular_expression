@@ -17,6 +17,9 @@ Metrics:
 Style/AccessorGrouping:
   Enabled: false
 
+Style/BarePercentLiterals:
+  EnforcedStyle: percent_q
+
 Style/CombinableLoops:
   Enabled: false
 
