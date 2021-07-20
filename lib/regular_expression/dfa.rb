@@ -24,8 +24,7 @@ module RegularExpression
         until worklist.empty?
           states = worklist.pop
 
-          next if result.key?(states)
-          result[states] = NFA::State.new(states.map(&:label).join(","))
+          result[states] ||= NFA::State.new(states.map(&:label).join(","))
 
           transitions = {}
 
