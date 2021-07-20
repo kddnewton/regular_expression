@@ -6,7 +6,8 @@ require "regular_expression"
 require "crabstone"
 require "graphviz"
 unless `which dot`.chomp.end_with?("dot")
-  STDERR.puts "YOU HAVE NOT INSTALLED GRAPHVIZ. We found no 'dot' in your path. Please install Graphviz if you want dotfile visual output to work."
+  $stderr.puts "YOU HAVE NOT INSTALLED GRAPHVIZ. We found no 'dot' in your path.\n" +
+    " Please install Graphviz if you want dotfile visual output to work."
 end
 
 # Pass the source through the various parsing phases
