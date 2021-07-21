@@ -88,7 +88,13 @@ module RegularExpression
           break
         else
           # The scheduler is broken.
-          raise
+          blocks = cfg.blocks.values
+          remaining = blocks - schedule
+          ready = remaining.select { |b| ready?(schedule, b) }
+          warn "[warning(regexp)] scheduling failed with #{blocks.size} blocks, " \
+               "#{schedule.size} scheduled, #{remaining.size} remaining, " \
+               "#{ready.size} ready, #{deferred.size} deferred - using fallback scheduler to recover"
+          return blocks
         end
       end
 
