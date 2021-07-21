@@ -3,9 +3,9 @@
 source "https://rubygems.org"
 
 gem "graphviz"
+gem "puma"
 gem "regular_expression", path: "../"
 gem "sinatra"
-gem "puma"
 
 group :test, :development do
   gem "minitest"
