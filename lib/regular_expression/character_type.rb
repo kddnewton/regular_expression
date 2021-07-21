@@ -16,11 +16,27 @@ module RegularExpression
     attr_reader :handle # Integer
     attr_reader :function # (Integer) -> bool
 
+    KNOWN = %w[
+      Alnum
+      Alpha
+      ASCII
+      Blank
+      Cntrl
+      Digit
+      Graph
+      Lower
+      Print
+      Punct
+      Space
+      Upper
+      XDigit
+    ].freeze
+
     def initialize(type)
       @type = type
 
       # Validate that we know what this kind of character type is
-      raise unless %w[alnum alpha lower upper].include?(type)
+      raise if KNOWN.none? { |known| known.casecmp(type).zero? }
 
       @handle = Fiddle::Handle::DEFAULT["is#{type}"]
 
