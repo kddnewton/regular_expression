@@ -4,6 +4,8 @@ require "test_helper"
 
 module RegularExpression
   class MatchingTest < Minitest::Test
+    THRESHOLD = 10
+
     attr_accessor :compiler
 
     # Test with the interpreter, x86 compiled, and ruby compiled
@@ -20,6 +22,11 @@ module RegularExpression
 
       define_method(:"test_#{name}_ruby") do
         @compiler = :ruby
+        instance_eval(&block)
+      end
+
+      define_method(:"test_#{name}_profile_x86") do
+        @compiler = :profile_x86
         instance_eval(&block)
       end
     end
@@ -318,6 +325,8 @@ module RegularExpression
         pattern.compile(compiler: Compiler::X86)
       when :ruby
         pattern.compile(compiler: Compiler::Ruby)
+      when :profile_x86
+        pattern.profile(compiler: Compiler::Ruby, threshold: THRESHOLD)
       end
 
       pattern
@@ -325,12 +334,20 @@ module RegularExpression
 
     def assert_matches(source, value)
       message = "Expected /#{source}/ to match #{value.inspect} (#{compiler})"
-      assert_operator assertion_pattern(source), :match?, value, message
+      pattern = assertion_pattern(source)
+      (THRESHOLD * 2).times do
+        pattern.match?(value)
+      end
+      assert_operator pattern, :match?, value, message
     end
 
     def refute_matches(source, value)
       message = "Expected /#{source}/ to not match #{value.inspect} (#{compiler})"
-      refute_operator assertion_pattern(source), :match?, value, message
+      pattern = assertion_pattern(source)
+      (THRESHOLD * 2).times do
+        pattern.match?(value)
+      end
+      refute_operator pattern, :match?, value, message
     end
   end
 end
