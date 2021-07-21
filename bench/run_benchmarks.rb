@@ -33,9 +33,13 @@ def time_all_matches(source, value, should_match: true, iters_per_batch: 100)
   }
 
   # Three RE-gem objects, one basic and two compiled
-  re_basic, re_x86, re_ruby = *(1..3).map { RegularExpression::Pattern.new(source) }
-  re_x86.compile(compiler: RegularExpression::Compiler::X86)
-  re_ruby.compile(compiler: RegularExpression::Compiler::Ruby)
+  begin
+    re_basic, re_x86, re_ruby = *(1..3).map { RegularExpression::Pattern.new(source) }
+    re_x86.compile(compiler: RegularExpression::Compiler::X86)
+    re_ruby.compile(compiler: RegularExpression::Compiler::Ruby)
+  rescue
+    STDERR.puts "Exception when building RE objects for regexp (#{source.inspect} / #{value.inspect})"
+  end
 
   [
     [Regexp.new(source), :ruby, "Ruby built-in regexp"],
