@@ -53,12 +53,6 @@ After [installing the dependencies](#dependencies) checking out the repo, run `b
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
-## Benchmarking
-
-To benchmark the current performance on your current version of Ruby, run:
-
-    $ bundle exec rake benchmark
-
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/kddnewton/regular_expression. For information about how to contribute to the development of this gem, see the [CONTRIBUTING.md](CONTRIBUTING.md) document.
