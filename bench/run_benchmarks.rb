@@ -138,7 +138,7 @@ BENCHMARKS.each do |category, benchmarks|
       category_total_times[impl_idx] += samples_sum
     end
 
-    bench_label = format("%8s", "re: #{pattern}")[0..7]
+    bench_label = format("%16s", "re: #{pattern}")[0..15]
 
     report_rows.push [bench_label] + bench_pcts + bench_rsds + [bench_means[0]]
   end
