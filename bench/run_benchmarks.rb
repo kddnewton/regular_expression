@@ -14,7 +14,7 @@ require_relative "../lib/regular_expression"
 BENCHMARKS = {
   "basics" => [
     ["ab", "ab", true, 10_000],
-    ["ab", "ac", false, 10_000],
+    ["ab", "ac", false, 10_000]
   ]
 }.freeze
 
@@ -36,8 +36,9 @@ def time_all_matches(source, value, should_match: true, iters_per_batch: 100)
     re_basic, re_x86, re_ruby = *(1..3).map { RegularExpression::Pattern.new(source) }
     re_x86.compile(compiler: RegularExpression::Compiler::X86)
     re_ruby.compile(compiler: RegularExpression::Compiler::Ruby)
-  rescue
-    STDERR.puts "Exception when building RE objects for regexp (#{source.inspect} / #{value.inspect})"
+  rescue StandardError
+    warn "Exception when building RE objects for regexp (#{source.inspect} / #{value.inspect})"
+    raise
   end
 
   [
