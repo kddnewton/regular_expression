@@ -36,6 +36,8 @@ module RegularExpression
           result << [:CHAR_CLASS, @scanner.matched]
         when @scanner.scan(/\[\[:(?<type>alnum|alpha|lower|upper):\]\]/)
           result << [:CHAR_TYPE, @scanner[:type]]
+        when @scanner.scan(/\\p\{(?<type>Alnum|Alpha|Lower|Upper)\}/)
+          result << [:CHAR_TYPE, @scanner[:type].downcase]
         when @scanner.scan(/\\[Az]|\$/)
           result << [:ANCHOR, @scanner.matched]
         when @scanner.scan(/\\./)
