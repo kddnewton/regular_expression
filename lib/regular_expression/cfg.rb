@@ -65,8 +65,9 @@ module RegularExpression
             insn_n += 1
           when Bytecode::Insns::Branch
             true_probability = 0.9 # A default 'likely' probability for true.
-            block_exits.add(BlockExit.new(insn.true_target, { kind: true, probability: true_probability }))
-            block_exits.add(BlockExit.new(insn.false_target, { kind: false, probability: 1.0 - true_probability }))
+            block_exits.add(BlockExit.new(insn.true_target, { kind: :true_edge, probability: true_probability }))
+            block_exits.add(BlockExit.new(insn.false_target,
+                                          { kind: :false_edge, probability: 1.0 - true_probability }))
             break
           when Bytecode::Insns::Jump
             block_exits.add(BlockExit.new(insn.target, {}))
@@ -160,7 +161,7 @@ module RegularExpression
             successor = nodes[blocks[block_exit.label]]
             attributes = {}
             if (kind = block_exit.metadata[:kind])
-              attributes["color"] = { true => "green", false => "red" }[kind]
+              attributes["color"] = { true_edge: "green", false_edge: "red" }[kind]
             end
             if (probability = block_exit.metadata[:probability])
               attributes["penwidth"] = 1 + probability * 4
