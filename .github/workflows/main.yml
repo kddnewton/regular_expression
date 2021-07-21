@@ -19,6 +19,7 @@ jobs:
       run: |
         bundle exec rake test
         bundle exec rubocop --parallel
+        bundle exec rake benchmark
 
   demo:
     name: Demo
