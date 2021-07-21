@@ -4,6 +4,9 @@ module RegularExpression
   module Compiler
     module X86
       class Compiled
+
+        RETURN_FAILED = 0xffffffffffffffff
+
         attr_reader :buffer
 
         def initialize(buffer)
@@ -31,7 +34,12 @@ module RegularExpression
 
           lambda do |string|
             value = function.call(string, string.length)
-            value if value != string.length + 1
+            case value
+            when RETURN_FAILED
+              nil
+            else
+              value
+            end
           end
         end
       end
@@ -444,8 +452,7 @@ module RegularExpression
           # possible index in the string, so we're going to return the length
           # of the string + 1 so that the caller knows that this match failed
           make_label :exit
-          mov return_value, string_length
-          inc return_value
+          mov return_value, imm64(RegularExpression::Compiler::X86::Compiled::RETURN_FAILED)
 
           # Here we make sure to clean up after ourselves by returning the frame
           # pointer to its former position
