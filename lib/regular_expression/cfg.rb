@@ -62,6 +62,7 @@ module RegularExpression
                 Bytecode::Insns::TestRange, Bytecode::Insns::TestRangeInvert,
                 Bytecode::Insns::TestValue, Bytecode::Insns::TestType,
                 Bytecode::Insns::TestPositiveLookahead,
+                Bytecode::Insns::TestNegativeLookahead,
                 Bytecode::Insns::StartCapture, Bytecode::Insns::EndCapture
             insn_n += 1
           when Bytecode::Insns::Branch

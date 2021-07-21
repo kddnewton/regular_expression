@@ -342,20 +342,21 @@ module RegularExpression
                 # Ensure we have enough characters to assert against
                 mov scratch, string_length
                 sub scratch, string_index
-                cmp scratch, imm64(insn.value.length)
+                cmp scratch, imm8(insn.value.length)
                 jl label(no_match_label)
-
-                # Move the current character we're checking into the buffer
-                mov character_buffer, string_pointer
-                add character_buffer, string_index
-                add character_buffer, scratch
 
                 # Check each character against the input string, jump to the
                 # failure case if any of them don't match
-                insn.value.each_char do |char|
-                  cmp character_buffer, imm64(char.ord)
-                  jne no_match_label
-                  inc character_buffer
+                insn.value.each_char.with_index do |char, index|
+                  # Move the correct character into the buffer
+                  mov character_buffer, string_pointer
+                  add character_buffer, string_index
+                  add character_buffer, imm8(index) if index != 0
+                  mov character_buffer, m64(character_buffer)
+
+                  # Compare against the character
+                  cmp character_buffer, imm8(char.ord)
+                  jne label(no_match_label)
                 end
 
                 # Set the flag to be true since we're in the success case
@@ -367,22 +368,53 @@ module RegularExpression
                 mov flag, imm32(0)
 
                 make_label end_label
+              when Bytecode::Insns::TestNegativeLookahead
+                match_label = :"match_#{insn.object_id}"
+
+                # Assume we're going to be successful
+                mov flag, imm32(1)
+
+                # Ensure we have enough characters to assert against. If we
+                # don't, then we're successful.
+                mov scratch, string_length
+                sub scratch, string_index
+                cmp scratch, imm8(insn.value.length)
+                jl label(match_label)
+
+                # Check each character against the input string, jump to the
+                # failure case if any of them don't match
+                insn.value.each_char.with_index do |char, index|
+                  # Move the correct character into the buffer
+                  mov character_buffer, string_pointer
+                  add character_buffer, string_index
+                  add character_buffer, imm8(index) if index != 0
+                  mov character_buffer, m64(character_buffer)
+
+                  # Compare against the character
+                  cmp character_buffer, imm8(char.ord)
+                  jne label(match_label)
+                end
+
+                # Set the flag to false since we're in the failure case
+                mov flag, imm32(0)
+
+                make_label match_label
               when Bytecode::Insns::Branch
                 true_block = cfg.blocks[insn.true_target]
                 false_block = cfg.blocks[insn.false_target]
 
                 if next_block == true_block
                   # Falls through to the true blocks - jump for false.
-                  cmp r9, imm32(0)
+                  cmp flag, imm32(0)
                   je label(false_block.name)
                 elsif next_block == false_block
                   # Falls through for the false block - jump for true.
-                  cmp r9, imm32(1)
+                  cmp flag, imm32(1)
                   je label(true_block.name)
                 else
                   # Doesn't fall through to either block - have to jump for
                   # both.
-                  cmp r9, imm32(1)
+                  cmp flag, imm32(1)
                   je label(true_block.name)
                   jmp label(false_block.name)
                 end
