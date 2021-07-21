@@ -5,6 +5,7 @@ AllCops:
   SuggestExtensions: false
   TargetRubyVersion: 3.0
   Exclude:
+  - "coverage/**/*"
   - "lib/regular_expression/parser.rb"
   - "vendor/**/*"
 

@@ -15,16 +15,33 @@ jobs:
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
-    - name: Debug information
-      run: |
-        locale
     - name: Lint and test
       run: |
         bundle exec rake test
         bundle exec rubocop --parallel
+
+  demo:
+    name: Demo
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+    - uses: actions/checkout@master
+    - uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        ruby-version: 3.0
+        working-directory: demo
+    - name: Test
+      working-directory: demo
+      run: |
+        bundle exec rake test
+
   automerge:
     name: AutoMerge
-    needs: ci
+    needs:
+    - ci
+    - demo
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
     steps:
