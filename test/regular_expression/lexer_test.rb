@@ -25,8 +25,8 @@ module RegularExpression
       assert_tokens("$", [[:ANCHOR, "$"]])
     end
 
-    def test_integer
-      assert_tokens("0", [[:INTEGER, 0]])
+    def test_digit
+      assert_tokens("0", [[:DIGIT, "0"]])
     end
 
     def test_symbols
@@ -52,7 +52,7 @@ module RegularExpression
     end
 
     def test_escape_special_characters
-      assert_tokens("1\\+", [[:INTEGER, 1], [:CHAR, "+"]])
+      assert_tokens("1\\+", [[:DIGIT, "1"], [:CHAR, "+"]])
     end
 
     private
@@ -60,6 +60,7 @@ module RegularExpression
     def assert_tokens(string, expected)
       actual = Lexer.new(string).tokens
       assert_equal([false, "end"], actual.last, "Tokens must end with #{[false, 'end'].inspect}")
+
       actual.pop
       assert_equal(expected, actual)
     end

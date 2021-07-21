@@ -68,6 +68,8 @@ module RegularExpression
             when Bytecode::Insns::TestRangeInvert
               ruby_src.push "        flag = string_n < string.size && (string[string_n] < #{insn.left.inspect} || string[string_n] > #{insn.right.inspect})"
               ruby_src.push "        string_n += 1 if flag"
+            when Bytecode::Insns::TestPositiveLookahead
+              ruby_src.push "        flag = string[string_n..].start_with?(#{insn.value.inspect})"
             when Bytecode::Insns::Branch
               ruby_src.push "        if flag"
               true_block = cfg.blocks[insn.true_target]

@@ -60,7 +60,8 @@ module RegularExpression
                 Bytecode::Insns::TestBegin, Bytecode::Insns::TestEnd,
                 Bytecode::Insns::TestAny, Bytecode::Insns::TestValuesInvert,
                 Bytecode::Insns::TestRange, Bytecode::Insns::TestRangeInvert,
-                Bytecode::Insns::TestValue, Bytecode::Insns::TestType
+                Bytecode::Insns::TestValue, Bytecode::Insns::TestType,
+                Bytecode::Insns::TestPositiveLookahead
             insn_n += 1
           when Bytecode::Insns::Branch
             true_probability = 0.9 # A default 'likely' probability for true.

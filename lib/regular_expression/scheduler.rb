@@ -42,12 +42,7 @@ module RegularExpression
         succs_to_schedule = just_scheduled.exits.reject { |e| schedule.include?(cfg.blocks[e.label]) }
 
         # Successors of the last scheduled block that are ready to be scheduled.
-        sucss_ready = succs_to_schedule.select do |e|
-          e_block = cfg.blocks[e.label]
-          (e_block.preds - [e_block]).all? do |e_pred|
-            schedule.include?(e_pred)
-          end
-        end
+        sucss_ready = succs_to_schedule.select { |e| ready?(schedule, cfg.blocks[e.label]) }
 
         # Are any successors of the last block that was scheduled themselves
         # ready to be scheduled?
@@ -76,7 +71,7 @@ module RegularExpression
 
           # Get the earliest deferred block that is ready to be scheduled
           # (rule 2).
-          first_ready_deferred = deferred.find { |block| block.preds.all? { |pred| schedule.include?(pred) } }
+          first_ready_deferred = deferred.find { |block| ready?(schedule, block) }
 
           # If we didn't find one ready to be scheduled, just take the first
           # one (rule 3).
@@ -93,18 +88,30 @@ module RegularExpression
           break
         else
           # The scheduler is broken.
-          raise
+          blocks = cfg.blocks.values
+          remaining = blocks - schedule
+          ready = remaining.select { |b| ready?(schedule, b) }
+          warn "[warning(regexp)] scheduling failed with #{blocks.size} blocks, " \
+               "#{schedule.size} scheduled, #{remaining.size} remaining, " \
+               "#{ready.size} ready, #{deferred.size} deferred - using fallback scheduler to recover"
+          return blocks
         end
       end
 
       schedule
     end
 
+    # A block that has yet to be scheduled and where all the predecessors
+    # except itself have already been scheduled.
+    def self.ready?(schedule, block)
+      (block.preds - [block]).all? { |pred| schedule.include?(pred) }
+    end
+
     def self.dump(cfg, schedule)
       io = StringIO.new
       schedule.each do |block|
         io.puts("#{block.name}:")
-        block.exits.each { |exit| io.puts("    -> #{cfg.blocks[exit.label].name} #{exit.metadata.inspect}") }
+        block.exits.each { |e| io.puts("    -> #{cfg.blocks[e.label].name} #{e.metadata.inspect}") }
       end
       io.string
     end

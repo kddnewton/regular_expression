@@ -45,7 +45,7 @@ module RegularExpression
           when NFA::Transition::BeginAnchor, NFA::Transition::EndAnchor,
                NFA::Transition::Any, NFA::Transition::Value,
                NFA::Transition::Invert, NFA::Transition::Range,
-               NFA::Transition::Type
+               NFA::Transition::Type, NFA::Transition::PositiveLookahead
             case transition
             when NFA::Transition::BeginAnchor
               builder.push(Insns::TestBegin.new)
@@ -65,6 +65,8 @@ module RegularExpression
               end
             when NFA::Transition::Type
               builder.push(Insns::TestType.new(CharacterType.new(transition.type)))
+            when NFA::Transition::PositiveLookahead
+              builder.push(Insns::TestPositiveLookahead.new(transition.value))
             end
 
             true_target = label[transition.state]
@@ -170,6 +172,10 @@ module RegularExpression
       # not within the range of possible values, then do so and set the flag,
       # otherwise clear it
       TestRangeInvert = Struct.new(:left, :right)
+
+      # If the next characters in the input string match the value of this
+      # transition, then set the flag, otherwise clear it
+      TestPositiveLookahead = Struct.new(:value)
 
       # If the flag has been set, jump to the true target, otherwise if it's
       # been cleared jump to the false target.

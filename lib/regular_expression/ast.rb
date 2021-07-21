@@ -93,7 +93,7 @@ module RegularExpression
     end
 
     class Match
-      attr_reader :item # CharacterGroup | CharacterClass | Character | Period
+      attr_reader :item # CharacterGroup | CharacterClass | Character | Period | PositiveLookahead
       attr_reader :quantifier # Quantifier
 
       def initialize(item, quantifier: Quantifier::Once.new)
@@ -233,6 +233,26 @@ module RegularExpression
       def to_nfa(start, finish, _labels)
         transition = NFA::Transition::Any.new(finish)
         start.add_transition(transition)
+      end
+    end
+
+    class PositiveLookahead
+      attr_reader :values # Array[Character]
+
+      def initialize(values)
+        @values = values
+      end
+
+      def value
+        values.map(&:value).join
+      end
+
+      def to_dot(parent)
+        parent.add_node(object_id, label: "(?=#{value})", shape: "box")
+      end
+
+      def to_nfa(start, finish, _labels)
+        start.add_transition(NFA::Transition::PositiveLookahead.new(finish, value))
       end
     end
 
