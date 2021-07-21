@@ -208,6 +208,11 @@ class RegularExpressionTest < Minitest::Test
     refute_matches(%q{a\\+}, "a")
   end
 
+  def test_case_insensitive_flag
+    assert_matches(%q{a}, "A", flags: "i")
+  end
+
+
   def test_raises_syntax_errors
     assert_raises(SyntaxError) do
       RegularExpression::Parser.new.parse("\u0000")
@@ -224,7 +229,7 @@ class RegularExpressionTest < Minitest::Test
     source = %q{^\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\d\D\w\W\h\s|.)\z$}
 
     ast = RegularExpression::Parser.new.parse(source)
-    nfa = ast.to_nfa
+    nfa = ast.to_nfa([RegularExpression::Flags::Base.new])
     bytecode = RegularExpression::Bytecode.compile(nfa)
     cfg = RegularExpression::CFG.build(bytecode)
 
@@ -241,10 +246,10 @@ class RegularExpressionTest < Minitest::Test
 
   private
 
-  def assert_matches(source, value)
+  def assert_matches(source, value, flags: "")
     message = "Expected /#{source}/ to match #{value.inspect}"
 
-    pattern = RegularExpression::Pattern.new(source)
+    pattern = RegularExpression::Pattern.new(source, flags)
     assert_operator pattern, :match?, value, message
 
     pattern.compile(compiler: RegularExpression::Compiler::X86)
