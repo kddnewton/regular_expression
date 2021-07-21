@@ -13,12 +13,18 @@ module RegularExpression
       cfg = CFG.build(bytecode)
       schedule = Scheduler.schedule(cfg)
 
-      singleton_class.undef_method(:match?)
-      define_singleton_method(:match?, &compiler.compile(cfg, schedule))
+      redefine_match(&compiler.compile(cfg, schedule))
     end
 
     def match?(string)
       Interpreter.new(bytecode).match?(string)
+    end
+
+    private
+
+    def redefine_match(&block)
+      singleton_class.undef_method(:match?)
+      define_singleton_method(:match?, &block)
     end
   end
 end
