@@ -38,9 +38,9 @@ module RegularExpression
           result << [:NO_CAPTURE, @scanner.matched]
         when @scanner.scan(/\\[wWdDhHsS]/)
           result << [:CHAR_CLASS, @scanner.matched]
-        when @scanner.scan(/\[\[:(?<type>alnum|alpha|lower|upper):\]\]/)
+        when @scanner.scan(/\[\[:(?<type>#{CharacterType::KNOWN.map(&:downcase).join("|")}):\]\]/)
           result << [:CHAR_TYPE, @scanner[:type]]
-        when @scanner.scan(/\\p\{(?<type>Alnum|Alpha|Lower|Upper)\}/)
+        when @scanner.scan(/\\p\{(?<type>#{CharacterType::KNOWN.join("|")})\}/)
           result << [:CHAR_TYPE, @scanner[:type].downcase]
         when @scanner.scan(/\\[Az]|\$/)
           result << [:ANCHOR, @scanner.matched]
