@@ -59,7 +59,16 @@ module RegularExpression
               worklist << next_key
             end
 
-            new_state = (result[next_key] ||= NFA::State.new(next_key.map(&:label).join(",")))
+            # If any of the NFA states is a finish state, the DFA state
+            # should be too.
+            state_class =
+              if next_key.any? { |state| state.is_a?(NFA::FinishState) }
+                NFA::FinishState
+              else
+                NFA::State
+              end
+
+            new_state = (result[next_key] ||= state_class.new(next_key.map(&:label).join(",")))
             result[states].add_transition(transition.copy(new_state))
           end
         end
