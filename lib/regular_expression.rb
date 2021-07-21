@@ -8,6 +8,7 @@ require "stringio"
 require "strscan"
 
 require_relative "./regular_expression/ast"
+require_relative "./regular_expression/ast/to_nfa"
 require_relative "./regular_expression/bytecode"
 require_relative "./regular_expression/cfg"
 require_relative "./regular_expression/character_type"
