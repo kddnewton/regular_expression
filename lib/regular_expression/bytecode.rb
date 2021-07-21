@@ -239,12 +239,13 @@ module RegularExpression
         # at its address, we need to store the address to the name as well.
         reverse_labels = {}
         labels.each do |label, n|
-          reverse_labels[n] = label
+          (reverse_labels[n] ||= []).push label
         end
 
         insns.each_with_index do |insn, n|
-          label = reverse_labels[n]
-          output.puts("#{label}:") if label
+          (reverse_labels[n] || []).each do |label|
+            output.puts("#{label}:")
+          end
           output.puts("  #{insn}")
         end
 
