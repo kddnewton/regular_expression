@@ -20,7 +20,7 @@ module RegularExpression
         # Result is a hash that points from a set of states in the NFA to the
         # new state in the DFA.
         result = {
-          start_key => NFA::State.new(start_key.map(&:label).join(","))
+          start_key => NFA::StartState.new(start_key.map(&:label).join(","))
         }
 
         until worklist.empty?
