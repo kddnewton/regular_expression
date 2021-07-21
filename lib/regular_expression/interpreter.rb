@@ -4,6 +4,8 @@ module RegularExpression
   # An interpreter for our compiled bytecode. Maybe we could make this possible
   # to enter at a given state and deoptimise to it from the compiled code?
   class Interpreter
+    ProfileEntry = Struct.new(:total_hits, :true_hits)
+
     attr_reader :bytecode
 
     def initialize(bytecode)
@@ -17,6 +19,14 @@ module RegularExpression
     end
 
     def match?(string)
+      interpret(string, nil)
+    end
+
+    def self.empty_profiling_data
+      Hash.new { |h, k| h[k] = ProfileEntry.new(0, 0) }
+    end
+
+    def interpret(string, profiling_data)
       stack = []
       captures = {}
 
@@ -79,6 +89,11 @@ module RegularExpression
             flag = !string[string_n..].start_with?(insn.value)
             insn_n += 1
           when Bytecode::Insns::Branch
+            if profiling_data
+              entry = profiling_data[insn]
+              entry.total_hits += 1
+              entry.true_hits += 1 if flag
+            end
             insn_n = if flag
                        bytecode.labels[insn.true_target]
                      else
