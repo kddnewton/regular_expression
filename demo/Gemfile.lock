@@ -9,10 +9,22 @@ GEM
   remote: https://rubygems.org/
   specs:
     docile (1.4.0)
+    ffi (1.15.3)
     fisk (2.0.0)
+    graphviz (1.2.1)
+      process-pipeline
     minitest (5.14.4)
     mustermann (1.1.1)
       ruby2_keywords (~> 0.0.1)
+    nio4r (2.5.7)
+    process-group (1.2.3)
+      process-terminal (~> 0.2.0)
+    process-pipeline (1.0.2)
+      process-group
+    process-terminal (0.2.0)
+      ffi
+    puma (5.3.2)
+      nio4r (~> 2.0)
     racc (1.5.2)
     rack (2.2.3)
     rack-protection (2.1.0)
@@ -35,12 +47,12 @@ GEM
     tilt (2.0.10)
 
 PLATFORMS
-  universal-darwin-20
-  x86_64-darwin-19
-  x86_64-linux
+  x86_64-darwin-20
 
 DEPENDENCIES
+  graphviz
   minitest
+  puma
   rack-test
   rake
   regular_expression!

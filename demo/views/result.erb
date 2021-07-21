@@ -1,0 +1,8 @@
+<div class="ui massive <%= @ui.color %> label">
+  <i class="<%= @ui.icon %> icon"></i>
+  <%= @ui.text %>
+</div>
+<% if @ui.graph %>
+<div class="ui hidden divider"></div>
+<%= @ui.graph %>
+<% end %>
