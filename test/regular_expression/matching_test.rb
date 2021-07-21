@@ -173,10 +173,22 @@ module RegularExpression
       refute_matches(%q{[[:alnum:]]}, "!")
     end
 
+    def test_character_property_alnum
+      assert_matches(%q{\p{Alnum}}, "a")
+      assert_matches(%q{\p{Alnum}}, "0")
+      refute_matches(%q{\p{Alnum}}, "!")
+    end
+
     def test_character_type_alpha
       assert_matches(%q{[[:alpha:]]}, "a")
       assert_matches(%q{[[:alpha:]]}, "z")
       refute_matches(%q{[[:alpha:]]}, "0")
+    end
+
+    def test_character_property_alpha
+      assert_matches(%q{\p{Alpha}}, "a")
+      assert_matches(%q{\p{Alpha}}, "z")
+      refute_matches(%q{\p{Alpha}}, "0")
     end
 
     def test_character_type_lower
@@ -185,10 +197,22 @@ module RegularExpression
       refute_matches(%q{[[:lower:]]}, "A")
     end
 
+    def test_character_property_lower
+      assert_matches(%q{\p{Lower}}, "a")
+      assert_matches(%q{\p{Lower}}, "z")
+      refute_matches(%q{\p{Lower}}, "A")
+    end
+
     def test_character_type_upper
       assert_matches(%q{[[:upper:]]}, "A")
       assert_matches(%q{[[:upper:]]}, "Z")
       refute_matches(%q{[[:upper:]]}, "a")
+    end
+
+    def test_character_property_upper
+      assert_matches(%q{\p{Upper}}, "A")
+      assert_matches(%q{\p{Upper}}, "Z")
+      refute_matches(%q{\p{Upper}}, "a")
     end
 
     def test_period
