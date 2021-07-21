@@ -329,7 +329,7 @@ module RegularExpression
     end
 
     def refute_matches(source, value)
-      message = "Expected /#{source}/ to match #{value.inspect} (#{compiler})"
+      message = "Expected /#{source}/ to not match #{value.inspect} (#{compiler})"
       refute_operator assertion_pattern(source), :match?, value, message
     end
   end
