@@ -6,6 +6,13 @@ class RegularExpressionTest < Minitest::Test
   def test_basic
     assert_matches(%q{abc}, "abc")
     assert_matches(%q{abc}, "!abc")
+    assert_matches(%q{,},   ",")
+    assert_matches(%q{-},   "-")
+  end
+
+  def test_basic_numbers
+    assert_matches(%q{100}, "100")
+    assert_matches(%q{1+},  "11")
   end
 
   def test_optional
@@ -61,6 +68,7 @@ class RegularExpressionTest < Minitest::Test
     assert_matches(%q{a{2,5}}, "aaa")
     assert_matches(%q{a{2,5}}, "aaaaa")
     refute_matches(%q{a{2,5}}, "a")
+    assert_matches(%q{a{11,15}}, "a" * 11)
   end
 
   def test_ranges_maximum
@@ -90,6 +98,8 @@ class RegularExpressionTest < Minitest::Test
   def test_character_set
     assert_matches(%q{[abc]}, "a")
     assert_matches(%q{[abc]}, "c")
+    assert_matches(%q{[a,c]}, ",")
+    assert_matches(%q{[\w]}, "a")
     refute_matches(%q{[abc]}, "d")
   end
 

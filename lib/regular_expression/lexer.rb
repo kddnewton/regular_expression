@@ -40,8 +40,8 @@ module RegularExpression
           result << [:CHAR, @scanner.matched[-1]]
         when @scanner.scan(/[()\[\]{}^$|*+?.,-]/)
           result << [SINGLE[@scanner.matched], @scanner.matched]
-        when @scanner.scan(/\d+/)
-          result << [:INTEGER, @scanner.matched.to_i]
+        when @scanner.scan(/\d/)
+          result << [:DIGIT, @scanner.matched]
         when @scanner.scan(/\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD]/)
           result << [:CHAR, @scanner.matched]
         else

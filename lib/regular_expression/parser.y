@@ -55,6 +55,12 @@ rule
     { result = AST::CharacterType.new(val[0]) }
     | CHAR
     { result = AST::Character.new(val[0]) }
+    | COMMA
+    { result = AST::Character.new(val[0]) }
+    | DASH
+    { result = AST::Character.new(val[0]) }
+    | DIGIT
+    { result = AST::Character.new(val[0]) }
     | PERIOD
     { result = AST::Period.new }
 
@@ -66,19 +72,24 @@ rule
 
   character_group_item:
     CHAR_CLASS
+    { result = AST::CharacterClass.new(val[0]) }
     | CHAR DASH CHAR
     { result = AST::CharacterRange.new(val[0], val[2]) }
     | CHAR
     { result = AST::Character.new(val[0]) }
+    | COMMA
+    { result = AST::Character.new(val[0]) }
+    | INTEGER
+    { result = AST::Character.new(val[0].to_s) }
 
   quantifier:
-    LBRACE INTEGER COMMA INTEGER RBRACE
+    LBRACE integer COMMA integer RBRACE
     { result = AST::Quantifier::Range.new(val[1], val[3]) }
-    | LBRACE INTEGER COMMA RBRACE
+    | LBRACE integer COMMA RBRACE
     { result = AST::Quantifier::AtLeast.new(val[1]) }
-    | LBRACE COMMA INTEGER RBRACE
+    | LBRACE COMMA integer RBRACE
     { result = AST::Quantifier::Range.new(0, val[2]) }
-    | LBRACE INTEGER RBRACE
+    | LBRACE integer RBRACE
     { result = AST::Quantifier::Exact.new(val[1]) }
     | STAR
     { result = AST::Quantifier::ZeroOrMore.new }
@@ -86,10 +97,21 @@ rule
     { result = AST::Quantifier::OneOrMore.new }
     | QMARK
     { result = AST::Quantifier::Optional.new }
+
+  integer:
+    digits
+    { result = val[0].to_i }
+
+  digits:
+    DIGIT digits
+    { result = val[0] + val[1] }
+    | DIGIT
+    { result = val[0] }
+
 end
 
 ---- inner
-  
+
   def parse(str)
     @tokens = Lexer.new(str).tokens
     do_parse
