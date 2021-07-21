@@ -39,7 +39,7 @@ module RegularExpression
       # Generate native code for a CFG. This looks just like the Ruby generator
       # but abstracted one level, or just like the interpreter but abstracted
       # two levels!
-      def self.compile(cfg)
+      def self.compile(cfg, schedule)
         fisk = Fisk.new
         buffer = Fisk::Helpers.jitbuffer(1024)
 
@@ -78,7 +78,15 @@ module RegularExpression
           # character value from the string
           character_buffer = r8
 
+          # r9 is a scratch register that we're using to store the flag that is
+          # the last comparison to the current character buffer - this could
+          # likely take advantage of ZF or some other flag but that's for a
+          # future optimization
           flag = r9
+
+          # r10 is a scratch register that we're using to store a pointer to a
+          # comparison function (e.g., isalnum) for a POSIX character type
+          character_type = r10
 
           # First we're going to do some initialization of the frame pointer and
           # stack pointer so we can clear the stack when we're done with this
@@ -101,7 +109,9 @@ module RegularExpression
           # each loop at the current match index
           mov string_index, match_index
 
-          cfg.blocks.each do |block|
+          schedule.each_with_index do |block, n|
+            next_block = schedule[n + 1]
+
             # Label the start of each block so that we can jump between them
             make_label block.name
 
@@ -111,13 +121,26 @@ module RegularExpression
                 push string_index
               when Bytecode::Insns::PopIndex
                 pop string_index
-              when Bytecode::Insns::GuardBegin
+              when Bytecode::Insns::TestBegin
+                over_label = :"over_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
                 cmp string_index, imm8(0)
-                jne label(:exit)
-                jmp label(cfg.exit_map[insn.guarded].name)
-              when Bytecode::Insns::GuardEnd
+                je label(over_label)
+                mov flag, imm32(0)
+                jmp label(end_label)
+                make_label over_label
+                mov flag, imm32(1)
+                make_label end_label
+              when Bytecode::Insns::TestEnd
+                over_label = :"over_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
                 cmp string_index, string_length
-                je label(cfg.exit_map[insn.guarded].name)
+                je label(over_label)
+                mov flag, imm32(0)
+                jmp label(end_label)
+                make_label over_label
+                mov flag, imm32(1)
+                make_label end_label
               when Bytecode::Insns::TestAny
                 no_match_label = :"no_match_#{insn.object_id}"
                 end_label = :"end_#{insn.object_id}"
@@ -153,6 +176,43 @@ module RegularExpression
                 # continue on to the next instruction if it's not equal
                 cmp character_buffer, imm8(insn.char.ord)
                 jne label(no_match_label)
+
+                # Move the string index forward and jump to the target
+                # instruction
+                inc string_index
+                mov flag, imm32(1)
+                jmp label(end_label)
+
+                make_label no_match_label
+                mov flag, imm32(0)
+
+                make_label end_label
+              when Bytecode::Insns::TestType
+                no_match_label = :"no_match_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
+
+                # Ensure we have a character we can read
+                cmp string_index, string_length
+                je label(no_match_label)
+
+                # Read the character into the character buffer
+                mov character_buffer, string_pointer
+                add character_buffer, string_index
+                mov character_buffer, m64(character_buffer)
+
+                # Call out to the character type checker function. We have to
+                # push/pop rdi since that's the first argument register to the
+                # function
+                push rdi
+                mov rdi, character_buffer
+                mov character_type, imm64(insn.type.handle)
+                call character_type
+                pop rdi
+
+                # Compare the return value of the function call to zero to check
+                # if the value is within the character type
+                test return_value, return_value
+                jz label(no_match_label)
 
                 # Move the string index forward and jump to the target
                 # instruction
@@ -268,11 +328,26 @@ module RegularExpression
 
                 make_label end_label
               when Bytecode::Insns::Branch
-                cmp r9, imm32(1)
-                je label(cfg.exit_map[insn.true_target].name)
-                jmp label(cfg.exit_map[insn.false_target].name)
+                true_block = cfg.blocks[insn.true_target]
+                false_block = cfg.blocks[insn.false_target]
+
+                if next_block == true_block
+                  # Falls through to the true blocks - jump for false.
+                  cmp r9, imm32(0)
+                  je label(cfg.blocks[insn.false_target].name)
+                elsif next_block == false_block
+                  # Falls through for the false block - jump for true.
+                  cmp r9, imm32(1)
+                  je label(cfg.blocks[insn.true_target].name)
+                else
+                  # Doesn't fall through to either block - have to jump for
+                  # both.
+                  cmp r9, imm32(1)
+                  je label(cfg.blocks[insn.true_target].name)
+                  jmp label(cfg.blocks[insn.false_target].name)
+                end
               when Bytecode::Insns::Jump
-                jmp label(cfg.exit_map[insn.target].name)
+                jmp label(cfg.blocks[insn.target].name)
               when Bytecode::Insns::Match
                 # If we reach this instruction, then we've successfully matched
                 # against the input string, so we're going to return the integer

@@ -18,7 +18,7 @@ module RegularExpression
       # Generate Ruby code for a CFG. This looks just like the intepreter, but
       # abstracted in time one level!
       # rubocop:disable Layout/LineLength
-      def self.compile(cfg)
+      def self.compile(cfg, schedule)
         ruby_src = []
         ruby_src.push "-> (string) {"
         ruby_src.push "  start_n = 0"
@@ -29,8 +29,16 @@ module RegularExpression
         ruby_src.push "    loop do"
         ruby_src.push "      case block"
 
-        cfg.blocks.each do |block|
-          ruby_src.push "      when #{block.name.inspect}"
+        schedule.each_with_index do |block, n|
+          prev_block = schedule[n - 1]
+          next_block = schedule[n + 1]
+          falls_through_from_prev = block.preds == [prev_block]
+
+          if falls_through_from_prev
+            ruby_src.push "      # #{block.name}:"
+          else
+            ruby_src.push "      when #{block.name.inspect}"
+          end
 
           block.insns.each do |insn|
             case insn
@@ -38,18 +46,18 @@ module RegularExpression
               ruby_src.push "        stack << string_n"
             when Bytecode::Insns::PopIndex
               ruby_src.push "        string_n = stack.pop"
-            when Bytecode::Insns::GuardBegin
-              ruby_src.push "        return false if start_n != 0"
-            when Bytecode::Insns::GuardEnd
-              ruby_src.push "        if string_n == string.size"
-              ruby_src.push "          block = #{cfg.exit_map[insn.guarded].name.inspect}"
-              ruby_src.push "          next"
-              ruby_src.push "        end"
+            when Bytecode::Insns::TestBegin
+              ruby_src.push "        flag = start_n == 0"
+            when Bytecode::Insns::TestEnd
+              ruby_src.push "        flag = string_n == string.size"
             when Bytecode::Insns::TestAny
               ruby_src.push "        flag = string_n < string.size"
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestValue
               ruby_src.push "        flag = string_n < string.size && string[string_n] == #{insn.char.inspect}"
+              ruby_src.push "        string_n += 1 if flag"
+            when Bytecode::Insns::TestType
+              ruby_src.push "        flag = string_n < string.size && ::RegularExpression::CharacterType.new(#{insn.type.type.inspect}).match?(string[string_n])"
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestValuesInvert
               ruby_src.push "        flag = string_n < string.size && !#{insn.chars.inspect}.include?(string[string_n])"
@@ -62,13 +70,26 @@ module RegularExpression
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::Branch
               ruby_src.push "        if flag"
-              ruby_src.push "          block = #{cfg.exit_map[insn.true_target].name.inspect}"
+              true_block = cfg.blocks[insn.true_target]
+              ruby_src.push "          block = #{true_block.name.inspect}"
+              falls_through_to_true = next_block == true_block && next_block.preds == [block]
+              if falls_through_to_true
+                ruby_src.push "          # falls through"
+              else
+                ruby_src.push "          next"
+              end
               ruby_src.push "        else"
-              ruby_src.push "          block = #{cfg.exit_map[insn.false_target].name.inspect}"
+              false_block = cfg.blocks[insn.false_target]
+              ruby_src.push "          block = #{false_block.name.inspect}"
+              falls_through_to_false = next_block == false_block && next_block.preds == [block]
+              if falls_through_to_false
+                ruby_src.push "          # falls through"
+              else
+                ruby_src.push "          next"
+              end
               ruby_src.push "        end"
-              ruby_src.push "        next"
             when Bytecode::Insns::Jump
-              ruby_src.push "        block = #{cfg.exit_map[insn.target].name.inspect}"
+              ruby_src.push "        block = #{cfg.blocks[insn.target].name.inspect}"
               ruby_src.push "        next"
             when Bytecode::Insns::Match
               ruby_src.push "        return start_n"

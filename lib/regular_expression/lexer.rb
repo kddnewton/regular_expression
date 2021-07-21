@@ -4,7 +4,6 @@ module RegularExpression
   class Lexer
     SINGLE = {
       "^" => :CARET,
-      "$" => :ENDING,
       "(" => :LPAREN,
       ")" => :RPAREN,
       "[" => :LBRACKET,
@@ -29,10 +28,16 @@ module RegularExpression
 
       until @scanner.eos?
         case # rubocop:disable Style/EmptyCaseCondition
+        when @scanner.scan(/\\\\/)
+          result << [:CHAR, "\\"]
         when @scanner.scan(/\\[wWdDhHsS]/)
           result << [:CHAR_CLASS, @scanner.matched]
+        when @scanner.scan(/\[\[:(?<type>alnum|alpha|lower|upper):\]\]/)
+          result << [:CHAR_TYPE, @scanner[:type]]
         when @scanner.scan(/\\[Az]|\$/)
           result << [:ANCHOR, @scanner.matched]
+        when @scanner.scan(/\\./)
+          result << [:CHAR, @scanner.matched[-1]]
         when @scanner.scan(/[()\[\]{}^$|*+?.,-]/)
           result << [SINGLE[@scanner.matched], @scanner.matched]
         when @scanner.scan(/\d+/)
