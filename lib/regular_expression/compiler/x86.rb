@@ -84,9 +84,13 @@ module RegularExpression
           # future optimization
           flag = r9
 
-          # r10 is a scratch register that we're using to store a pointer to a
-          # comparison function (e.g., isalnum) for a POSIX character type
-          character_type = r10
+          # r10 is a scratch register that we're using for a couple of things:
+          #
+          # - store a pointer to a comparison function (e.g., isalnum) for a
+          #   POSIX character type
+          # - store the size of a lookahead assertion so that we can do the
+          #   subtraction
+          scratch = r10
 
           # First we're going to do some initialization of the frame pointer and
           # stack pointer so we can clear the stack when we're done with this
@@ -205,8 +209,8 @@ module RegularExpression
                 # function
                 push rdi
                 mov rdi, character_buffer
-                mov character_type, imm64(insn.type.handle)
-                call character_type
+                mov scratch, imm64(insn.type.handle)
+                call scratch
                 pop rdi
 
                 # Compare the return value of the function call to zero to check
@@ -323,6 +327,38 @@ module RegularExpression
                 mov flag, imm32(1)
                 jmp label(end_label)
 
+                make_label no_match_label
+                mov flag, imm32(0)
+
+                make_label end_label
+              when Bytecode::Insns::TestPositiveLookahead
+                no_match_label = :"no_match_#{insn.object_id}"
+                end_label = :"end_#{insn.object_id}"
+
+                # Ensure we have enough characters to assert against
+                mov scratch, string_length
+                sub scratch, string_index
+                cmp scratch, imm64(insn.value.length)
+                jl label(no_match_label)
+
+                # Move the current character we're checking into the buffer
+                mov character_buffer, string_pointer
+                add character_buffer, string_index
+                add character_buffer, scratch
+
+                # Check each character against the input string, jump to the
+                # failure case if any of them don't match
+                insn.value.each_char do |char|
+                  cmp character_buffer, imm64(char.ord)
+                  jne no_match_label
+                  inc character_buffer
+                end
+
+                # Set the flag to be true since we're in the success case
+                mov flag, imm32(1)
+                jmp label(end_label)
+
+                # Set up the non-matching label to set the flag to 0
                 make_label no_match_label
                 mov flag, imm32(0)
 

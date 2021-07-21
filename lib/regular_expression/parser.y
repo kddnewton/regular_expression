@@ -63,6 +63,8 @@ rule
     { result = AST::Character.new(val[0]) }
     | PERIOD
     { result = AST::Period.new }
+    | PLA assertion_items RPAREN
+    { result = AST::PositiveLookahead.new(val[1]) }
 
   character_group_items:
     character_group_item character_group_items
@@ -75,11 +77,20 @@ rule
     { result = AST::CharacterClass.new(val[0]) }
     | CHAR DASH CHAR
     { result = AST::CharacterRange.new(val[0], val[2]) }
-    | CHAR
-    { result = AST::Character.new(val[0]) }
     | COMMA
     { result = AST::Character.new(val[0]) }
     | DIGIT
+    { result = AST::Character.new(val[0]) }
+    | character
+
+  assertion_items:
+    character assertion_items
+    { result = [val[0]] + val[1] }
+    | character
+    { result = [val[0]] }
+
+  character:
+    CHAR
     { result = AST::Character.new(val[0]) }
 
   quantifier:
