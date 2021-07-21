@@ -294,12 +294,14 @@ module RegularExpression
       nfa = ast.to_nfa
       bytecode = Bytecode.compile(nfa)
       cfg = CFG.build(bytecode)
+      schedule = Scheduler.schedule(cfg)
 
       interpreter = Interpreter.new(bytecode)
       assert_kind_of(Proc, interpreter.to_proc)
 
       assert_kind_of(String, bytecode.dump)
       assert_kind_of(String, cfg.dump)
+      assert_kind_of(String, Scheduler.dump(cfg, schedule))
 
       assert_kind_of(String, AST.to_dot(ast))
       assert_kind_of(String, NFA.to_dot(nfa))
