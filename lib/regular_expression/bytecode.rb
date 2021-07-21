@@ -41,16 +41,22 @@ module RegularExpression
             builder.push(Insns::PushIndex.new)
           end
 
-          case transition
-          when NFA::Transition::BeginAnchor, NFA::Transition::EndAnchor,
-               NFA::Transition::Any, NFA::Transition::Value,
-               NFA::Transition::Invert, NFA::Transition::Range,
-               NFA::Transition::Type, NFA::Transition::PositiveLookahead
+          if !transition.is_a?(NFA::Transition::Epsilon)
             case transition
             when NFA::Transition::BeginAnchor
               builder.push(Insns::TestBegin.new)
             when NFA::Transition::EndAnchor
               builder.push(Insns::TestEnd.new)
+            when NFA::Transition::StartCapture
+              builder.push(
+                Insns::StartCapture.new(transition.name),
+                Insns::Jump.new(label[transition.state])
+              )
+            when NFA::Transition::EndCapture
+              builder.push(
+                Insns::EndCapture.new(transition.name),
+                Insns::Jump.new(label[transition.state])
+              )
             when NFA::Transition::Any
               builder.push(Insns::TestAny.new)
             when NFA::Transition::Value
@@ -67,6 +73,8 @@ module RegularExpression
               builder.push(Insns::TestType.new(CharacterType.new(transition.type)))
             when NFA::Transition::PositiveLookahead
               builder.push(Insns::TestPositiveLookahead.new(transition.value))
+            else
+              raise
             end
 
             true_target = label[transition.state]
@@ -91,14 +99,10 @@ module RegularExpression
             end
 
             builder.push(Insns::Branch.new(true_target, false_target))
-          when NFA::Transition::Epsilon
-            if needs_epsilon
-              builder.push(Insns::Jump.new(label[transition.state]))
-            else
-              needs_epsilon = true
-            end
+          elsif needs_epsilon
+            builder.push(Insns::Jump.new(label[transition.state]))
           else
-            raise
+            needs_epsilon = true
           end
 
           next_fallback =
@@ -144,6 +148,9 @@ module RegularExpression
       # If we're at the end of the string, then jump to the then instruction,
       # otherwise clear it.
       TestEnd = Class.new
+
+      StartCapture = Struct.new(:name)
+      EndCapture = Struct.new(:name)
 
       # If it's possible to read a character off the input, then do so and set
       # the flag, otherwise clear it.

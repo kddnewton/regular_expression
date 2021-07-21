@@ -18,6 +18,7 @@ module RegularExpression
 
     def match?(string)
       stack = []
+      captures = {}
 
       (0..string.size).each do |start_n|
         string_n = start_n
@@ -39,6 +40,13 @@ module RegularExpression
             insn_n += 1
           when Bytecode::Insns::TestEnd
             flag = string_n == string.size
+            insn_n += 1
+          when Bytecode::Insns::StartCapture
+            captures[insn.name] ||= {}
+            captures[insn.name][:start] = string_n
+            insn_n += 1
+          when Bytecode::Insns::EndCapture
+            captures[insn.name][:end] = string_n
             insn_n += 1
           when Bytecode::Insns::TestAny
             flag = string_n < string.size
@@ -76,7 +84,7 @@ module RegularExpression
           when Bytecode::Insns::Jump
             insn_n = bytecode.labels[insn.target]
           when Bytecode::Insns::Match
-            return start_n
+            return captures
           when Bytecode::Insns::Fail
             break
           else
