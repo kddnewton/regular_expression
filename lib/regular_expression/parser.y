@@ -67,8 +67,10 @@ rule
     { result = AST::Character.new(val[0]) }
     | PERIOD
     { result = AST::Period.new }
-    | PLA assertion_items RPAREN
+    | POSITIVE_LOOKAHEAD assertion_items RPAREN
     { result = AST::PositiveLookahead.new(val[1]) }
+    | NEGATIVE_LOOKAHEAD assertion_items RPAREN
+    { result = AST::NegativeLookahead.new(val[1]) }
 
   character_group_items:
     character_group_item character_group_items

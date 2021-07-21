@@ -75,6 +75,9 @@ module RegularExpression
           when Bytecode::Insns::TestPositiveLookahead
             flag = string[string_n..].start_with?(insn.value)
             insn_n += 1
+          when Bytecode::Insns::TestNegativeLookahead
+            flag = !string[string_n..].start_with?(insn.value)
+            insn_n += 1
           when Bytecode::Insns::Branch
             insn_n = if flag
                        bytecode.labels[insn.true_target]

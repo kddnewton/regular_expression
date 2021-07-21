@@ -73,6 +73,8 @@ module RegularExpression
               builder.push(Insns::TestType.new(CharacterType.new(transition.type)))
             when NFA::Transition::PositiveLookahead
               builder.push(Insns::TestPositiveLookahead.new(transition.value))
+            when NFA::Transition::NegativeLookahead
+              builder.push(Insns::TestNegativeLookahead.new(transition.value))
             else
               raise
             end
@@ -183,6 +185,7 @@ module RegularExpression
       # If the next characters in the input string match the value of this
       # transition, then set the flag, otherwise clear it
       TestPositiveLookahead = Struct.new(:value)
+      TestNegativeLookahead = Struct.new(:value)
 
       # If the flag has been set, jump to the true target, otherwise if it's
       # been cleared jump to the false target.

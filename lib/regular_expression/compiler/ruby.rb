@@ -76,6 +76,8 @@ module RegularExpression
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestPositiveLookahead
               ruby_src.push "        flag = string[string_n..].start_with?(#{insn.value.inspect})"
+            when Bytecode::Insns::TestNegativeLookahead
+              ruby_src.push "        flag = !string[string_n..].start_with?(#{insn.value.inspect})"
             when Bytecode::Insns::Branch
               true_block = cfg.blocks[insn.true_target]
               false_block = cfg.blocks[insn.false_target]

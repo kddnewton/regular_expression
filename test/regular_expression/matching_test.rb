@@ -243,6 +243,18 @@ module RegularExpression
       refute_matches(%q{a\\+}, "a")
     end
 
+    def test_positive_lookahead
+      assert_matches("a(?=b)", "ab")
+      assert_matches("a(?=b)", "aab")
+      refute_matches("a(?=b)", "aa")
+    end
+
+    def test_negative_lookahead
+      assert_matches("a(?!b)", "aa")
+      assert_matches("a(?!b)", "ba")
+      refute_matches("a(?!b)", "ab")
+    end
+
     def test_raises_syntax_errors
       assert_raises(SyntaxError) do
         Parser.new.parse("\u0000")

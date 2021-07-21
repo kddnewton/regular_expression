@@ -31,7 +31,9 @@ module RegularExpression
         when @scanner.scan(/\\\\/)
           result << [:CHAR, "\\"]
         when @scanner.scan(/\(\?=/)
-          result << [:PLA, @scanner.matched]
+          result << [:POSITIVE_LOOKAHEAD, @scanner.matched]
+        when @scanner.scan(/\(\?!/)
+          result << [:NEGATIVE_LOOKAHEAD, @scanner.matched]
         when @scanner.scan(/\(\?:/)
           result << [:NO_CAPTURE, @scanner.matched]
         when @scanner.scan(/\\[wWdDhHsS]/)
