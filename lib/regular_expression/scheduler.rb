@@ -56,7 +56,7 @@ module RegularExpression
             # (rule 1).
             most_probable_ready_succ = sucss_ready.max_by { |e| e.metadata[:probability] || 0.0 }
             most_probable_ready_succ_block = cfg.label_map[most_probable_ready_succ.label]
-            raise if schedule.include?(most_probable_ready_succ_block)
+            raise "most probably ready successor is scheduled" if schedule.include?(most_probable_ready_succ_block)
 
             # Schedule it
             schedule.push most_probable_ready_succ_block
@@ -80,7 +80,7 @@ module RegularExpression
             first_ready_deferred ||= deferred.first
 
             deferred.delete first_ready_deferred
-            raise if schedule.include?(first_ready_deferred)
+            raise "first ready was deferred" if schedule.include?(first_ready_deferred)
 
             schedule.push first_ready_deferred
           elsif (cfg.blocks - schedule).all? { |a| a.preds.empty? }
@@ -96,8 +96,8 @@ module RegularExpression
         end
 
         schedule
-      rescue StandardError
-        fallback_schedule(cfg, schedule, deferred)
+      rescue StandardError => e
+        fallback_schedule(cfg, schedule, deferred, e.message)
       end
     end
 
@@ -107,11 +107,11 @@ module RegularExpression
       (block.preds - [block]).all? { |pred| schedule.include?(pred) }
     end
 
-    def self.fallback_schedule(cfg, schedule, deferred)
+    def self.fallback_schedule(cfg, schedule, deferred, where)
       blocks = cfg.blocks
       remaining = blocks - schedule
       ready = remaining.select { |b| ready?(schedule, b) }
-      warn "[warning(regexp)] scheduling failed with #{blocks.size} blocks, " \
+      warn "[warning(regexp)] scheduling failed #{where} with #{blocks.size} blocks, " \
            "#{schedule.size} scheduled, #{remaining.size} remaining, " \
            "#{ready.size} ready, #{deferred.size} deferred - using fallback scheduler to recover"
       blocks

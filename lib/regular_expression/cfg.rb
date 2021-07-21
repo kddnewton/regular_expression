@@ -11,7 +11,7 @@ module RegularExpression
     # a true or false condition, and what the probability of it being taken is.
     BlockExit = Struct.new(:label, :metadata)
 
-    def self.build(compiled)
+    def self.build(compiled, profiling_data = nil)
       # Each label in the compiled bytecode starts a block, as does the first
       # instruction
       all_blocks = { start: 0 }.merge(compiled.labels)
@@ -66,10 +66,24 @@ module RegularExpression
                 Bytecode::Insns::StartCapture, Bytecode::Insns::EndCapture
             insn_n += 1
           when Bytecode::Insns::Branch
-            true_probability = 0.9 # A default 'likely' probability for true.
+            if profiling_data
+              profile_entry = profiling_data[insn]
+              if profile_entry.total_hits.zero?
+                # Probability of both branches doesn't have to be 1.0!
+                true_probability = 0
+                false_probability = 0
+              else
+                true_probability = profile_entry.true_hits / profile_entry.total_hits.to_f
+                false_probability = 1.0 - true_probability
+              end
+            else
+              # A default 'likely' probability for true seems to make sense for regular expressions.
+              true_probability = 0.9
+              false_probability = 0.1
+            end
+
             block_exits.add(BlockExit.new(insn.true_target, { kind: :true_edge, probability: true_probability }))
-            block_exits.add(BlockExit.new(insn.false_target,
-                                          { kind: :false_edge, probability: 1.0 - true_probability }))
+            block_exits.add(BlockExit.new(insn.false_target, { kind: :false_edge, probability: false_probability }))
             break
           when Bytecode::Insns::Jump
             block_exits.add(BlockExit.new(insn.target, {}))
