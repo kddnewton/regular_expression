@@ -30,7 +30,7 @@ module RegularExpression
         ruby_src.push "      case block"
 
         schedule.each_with_index do |block, n|
-          prev_block = schedule[n - 1]
+          prev_block = n != 0 && schedule[n - 1]
           next_block = schedule[n + 1]
           falls_through_from_prev = block.preds == [prev_block]
 
