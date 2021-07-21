@@ -2,6 +2,10 @@
 
 module RegularExpression
   class Pattern
+
+    class Deoptimized < Exception
+    end
+
     attr_reader :bytecode
 
     def initialize(source, flags = nil)
@@ -22,17 +26,26 @@ module RegularExpression
       iteration = threshold
 
       # Replace with a profiling interpreter version of match?
-      redefine_match do |string|
+      profiling_impl = ->(string) do
         if (iteration -= 1).negative?
           cfg = CFG.build(bytecode, profiling_data)
           schedule = Scheduler.schedule(cfg)
+          compiled = compiler.compile(cfg, schedule).to_proc
 
           # Replace with a compiled version of match?
-          redefine_match(&compiler.compile(cfg, schedule))
+          redefine_match do |string|
+            compiled.call(string)
+          rescue Deoptimized
+            iteration = threshold
+            redefine_match(&profiling_impl)
+            profiling_impl.call(string)
+          end
         end
 
         interpreter.interpret(string, profiling_data)
       end
+
+      redefine_match(&profiling_impl)
     end
 
     def match?(string)

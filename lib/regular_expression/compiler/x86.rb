@@ -6,6 +6,7 @@ module RegularExpression
       class Compiled
 
         RETURN_FAILED = 0xffffffffffffffff
+        RETURN_DEOPT = RETURN_FAILED - 1
 
         attr_reader :buffer
 
@@ -37,6 +38,8 @@ module RegularExpression
             case value
             when RETURN_FAILED
               nil
+            when RETURN_DEOPT
+              raise Deoptimized
             else
               value
             end
