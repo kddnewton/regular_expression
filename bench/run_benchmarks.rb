@@ -15,7 +15,6 @@ BENCHMARKS = {
   "basics" => [
     ["ab", "ab", true, 10_000],
     ["ab", "ac", false, 10_000],
-    ["(ab){2,5}", "ababab", true, 10_000]
   ]
 }.freeze
 
