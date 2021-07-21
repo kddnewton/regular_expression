@@ -57,25 +57,25 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 At the moment we support most basic features, but there is a lot of ground left to cover. Some of them are written out in issues, while others are just documented here. Here is the current list as it stands:
 
-| Syntax                                                                                                             | Status        | Issue                                                            |
-| ------------------------------------------------------------------------------------------------------------------ | ------------- | ---------------------------------------------------------------- |
-| [Character classes](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Character+Classes)              | In progress   | [#6](https://github.com/kddnewton/regular_expression/issues/6)   |
-| [Repetition](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Repetition)                            | Supported     |                                                                  |
-| [Non-greedy repetition](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Repetition)                 | Not supported |                                                                  |
-| [Capturing](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Capturing)                              | In progress   | [#3](https://github.com/kddnewton/regular_expression/issues/3)   |
-| Named captures                                                                                                     | Not supported |                                                                  |
-| [Grouping](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Grouping)                                | Supported     |                                                                  |
-| [Atomic grouping](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Atomic+Grouping)                  | Not supported |                                                                  |
-| [Subexpression calls](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Subexpression+Calls)          | Not supported |                                                                  |
-| [Alternation](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Alternation)                          | Supported     |                                                                  |
-| [Character properties](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Character+Properties)        | In progress   | [#8](https://github.com/kddnewton/regular_expression/issues/8)   |
-| [Anchors](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Anchors)                                  | In progress   | [#9](https://github.com/kddnewton/regular_expression/issues/9)   |
-| [Assertions](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Anchors)                               | In progress   | [#10](https://github.com/kddnewton/regular_expression/issues/10) |
-| [Case-insensitive mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Options)                    | In progress   | [#4](https://github.com/kddnewton/regular_expression/issues/4)   |
-| [Multi-line mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Options)                          | Not supported | [#5](https://github.com/kddnewton/regular_expression/issues/5)   |
-| [Free-spacing mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Free-Spacing+Mode+and+Comments) | Not supported | [#11](https://github.com/kddnewton/regular_expression/issues/11) |
-| [Encoding support](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Encoding)                        | Not supported | [#12](https://github.com/kddnewton/regular_expression/issues/12) |
-| Backreferences                                                                                                     | Not supported |                                                                  |
+| Syntax                                                                                                             | Status | Issue                                                            |
+| ------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------- |
+| [Character classes](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Character+Classes)              | 🛠      | [#6](https://github.com/kddnewton/regular_expression/issues/6)   |
+| [Repetition](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Repetition)                            | ✅     |                                                                  |
+| [Non-greedy repetition](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Repetition)                 | ❌     |                                                                  |
+| [Capturing](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Capturing)                              | 🛠      | [#3](https://github.com/kddnewton/regular_expression/issues/3)   |
+| Named captures                                                                                                     | ❌     |                                                                  |
+| [Grouping](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Grouping)                                | ✅     |                                                                  |
+| [Atomic grouping](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Atomic+Grouping)                  | ❌     |                                                                  |
+| [Subexpression calls](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Subexpression+Calls)          | ❌     |                                                                  |
+| [Alternation](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Alternation)                          | ✅     |                                                                  |
+| [Character properties](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Character+Properties)        | 🛠      | [#8](https://github.com/kddnewton/regular_expression/issues/8)   |
+| [Anchors](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Anchors)                                  | 🛠      | [#9](https://github.com/kddnewton/regular_expression/issues/9)   |
+| [Assertions](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Anchors)                               | 🛠      | [#10](https://github.com/kddnewton/regular_expression/issues/10) |
+| [Case-insensitive mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Options)                    | 🛠      | [#4](https://github.com/kddnewton/regular_expression/issues/4)   |
+| [Multi-line mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Options)                          | ❌     | [#5](https://github.com/kddnewton/regular_expression/issues/5)   |
+| [Free-spacing mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Free-Spacing+Mode+and+Comments) | ❌     | [#11](https://github.com/kddnewton/regular_expression/issues/11) |
+| [Encoding support](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Encoding)                        | ❌     | [#12](https://github.com/kddnewton/regular_expression/issues/12) |
+| Backreferences                                                                                                     | ❌     |                                                                  |
 
 ## Benchmarking
 
