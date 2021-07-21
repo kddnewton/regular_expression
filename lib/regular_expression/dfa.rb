@@ -69,7 +69,9 @@ module RegularExpression
               end
 
             new_state = (result[next_key] ||= state_class.new(next_key.map(&:label).join(",")))
-            result[states].add_transition(transition.copy(new_state))
+            unless result[states].transitions.any? { |t| t.matches?(transition) }
+              result[states].add_transition(transition.copy(new_state))
+            end
           end
         end
 
