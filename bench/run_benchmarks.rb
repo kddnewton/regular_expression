@@ -14,8 +14,15 @@ require_relative "../lib/regular_expression"
 BENCHMARKS = {
   "basics" => [
     ["ab", "ab", true, 10_000],
-    ["ab", "ac", false, 10_000]
-  ]
+    ["ab", "ac", false, 10_000],
+    ["ab{2,5}", "ababab", false, 10_000],
+  ],
+  #"large string" => [
+  #  ["a" * 150 + "b", "a" * 150 + "b", true, 1_000], # issue: https://github.com/kddnewton/regular_expression/issues/74
+  #],
+  #"tricky" => [
+  #  ["a?" * 50 + "a" * 50, "a" * 53, true, 10_000]
+  #]
 }.freeze
 
 NUM_BATCHES = 5
