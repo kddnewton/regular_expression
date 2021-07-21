@@ -22,10 +22,11 @@ module RegularExpression
       #
       #   2) The earliest deferred block that is ready to be scheduled.
       #
-      #   3) The earliest deferred block (which allows for loops.)
+      #   3) The earliest deferred block or just any block (which allows for loops.)
       #
       # We stop scheduling when all blocks that have yet to be scheduled have
-      # no predecessors (which allows for orphan blocks.)
+      # no predecessors (which allows for orphan blocks - but we really should just
+      # avoid generating those.)
 
       # Schedule the starting block.
       starting_block = cfg.start
@@ -34,16 +35,16 @@ module RegularExpression
       deferred = []
 
       begin
-        until schedule.size == cfg.blocks.values.size
+        until schedule.size == cfg.blocks
           # The last scheduled block.
           just_scheduled = schedule.last
 
           # Successors of the last scheduled block that still need to be
           # scheduled.
-          succs_to_schedule = just_scheduled.exits.reject { |e| schedule.include?(cfg.blocks[e.label]) }
+          succs_to_schedule = just_scheduled.exits.reject { |e| schedule.include?(cfg.label_map[e.label]) }
 
           # Successors of the last scheduled block that are ready to be scheduled.
-          sucss_ready = succs_to_schedule.select { |e| ready?(schedule, cfg.blocks[e.label]) }
+          sucss_ready = succs_to_schedule.select { |e| ready?(schedule, cfg.label_map[e.label]) }
 
           # Are any successors of the last block that was scheduled themselves
           # ready to be scheduled?
@@ -54,7 +55,7 @@ module RegularExpression
             # Find the most probbale successor that is ready to be scheduled
             # (rule 1).
             most_probable_ready_succ = sucss_ready.max_by { |e| e.metadata[:probability] || 0.0 }
-            most_probable_ready_succ_block = cfg.blocks[most_probable_ready_succ.label]
+            most_probable_ready_succ_block = cfg.label_map[most_probable_ready_succ.label]
             raise if schedule.include?(most_probable_ready_succ_block)
 
             # Schedule it
@@ -65,7 +66,7 @@ module RegularExpression
 
             # Defer other successors that still need to be scheduled, less the
             # one that we just scheduled.
-            deferred.push(*((succs_to_schedule - [most_probable_ready_succ]).map { |e| cfg.blocks[e.label] }))
+            deferred.push(*(succs_to_schedule.map { |s| cfg.label_map[s.label] } - [most_probable_ready_succ_block]))
           elsif deferred.any?
             # No - none of the successors of the last block are ready to be
             # scheduled. We do have deferred blocks.
@@ -82,14 +83,15 @@ module RegularExpression
             raise if schedule.include?(first_ready_deferred)
 
             schedule.push first_ready_deferred
-          elsif (cfg.blocks.values - schedule).all? { |a| a.preds.empty? }
+          elsif (cfg.blocks - schedule).all? { |a| a.preds.empty? }
             # No - none of the successors of the last block are ready to be
             # scheduled. We don't have deferred blocks. But it's ok because all
             # remaining blocks are orphans - so we can finish scheduling.
             break
           else
-            # The scheduler is broken.
-            raise
+            # If we didn't find one ready to be scheduled, just take any (rule 3.)
+            remaining = cfg.blocks - schedule
+            schedule.push remaining.first
           end
         end
 
@@ -106,7 +108,7 @@ module RegularExpression
     end
 
     def self.fallback_schedule(cfg, schedule, deferred)
-      blocks = cfg.blocks.values
+      blocks = cfg.blocks
       remaining = blocks - schedule
       ready = remaining.select { |b| ready?(schedule, b) }
       warn "[warning(regexp)] scheduling failed with #{blocks.size} blocks, " \
@@ -119,7 +121,7 @@ module RegularExpression
       io = StringIO.new
       schedule.each do |block|
         io.puts("#{block.name}:")
-        block.exits.each { |e| io.puts("    -> #{cfg.blocks[e.label].name} #{e.metadata.inspect}") }
+        block.exits.each { |e| io.puts("    -> #{cfg.label_map[e.label].name} #{e.metadata.inspect}") }
       end
       io.string
     end

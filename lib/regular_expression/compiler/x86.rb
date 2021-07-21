@@ -400,8 +400,8 @@ module RegularExpression
 
                 make_label match_label
               when Bytecode::Insns::Branch
-                true_block = cfg.blocks[insn.true_target]
-                false_block = cfg.blocks[insn.false_target]
+                true_block = cfg.label_map[insn.true_target]
+                false_block = cfg.label_map[insn.false_target]
 
                 if next_block == true_block
                   # Falls through to the true blocks - jump for false.
@@ -419,7 +419,7 @@ module RegularExpression
                   jmp label(false_block.name)
                 end
               when Bytecode::Insns::Jump
-                target_block = cfg.blocks[insn.target]
+                target_block = cfg.label_map[insn.target]
 
                 # Fall through if the next branch is not the target block
                 jmp label(target_block.name) if next_block != target_block
