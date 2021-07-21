@@ -79,8 +79,8 @@ module RegularExpression
             when Bytecode::Insns::TestNegativeLookahead
               ruby_src.push "        flag = !string[string_n..].start_with?(#{insn.value.inspect})"
             when Bytecode::Insns::Branch
-              true_block = cfg.blocks[insn.true_target]
-              false_block = cfg.blocks[insn.false_target]
+              true_block = cfg.label_map[insn.true_target]
+              false_block = cfg.label_map[insn.false_target]
 
               ruby_src.push "        if flag"
 
@@ -111,10 +111,10 @@ module RegularExpression
               # If the next block is the target of our jump, then we can just
               # fall through to the next instruction. Otherwise we have to jump
               # directly to it.
-              if next_block == cfg.blocks[insn.target] && next_block.preds == [block]
+              if next_block == cfg.label_map[insn.target] && next_block.preds == [block]
                 ruby_src.push "        # falls through"
               else
-                ruby_src.push "        block = #{cfg.blocks[insn.target].name.inspect}"
+                ruby_src.push "        block = #{cfg.label_map[insn.target].name.inspect}"
                 ruby_src.push "        next"
               end
             when Bytecode::Insns::Match

@@ -125,31 +125,32 @@ module RegularExpression
 
       def dump(blocks, io: $stdout)
         io.puts("#{name}:")
-        preds.each { |pred| io.puts("    <- #{pred}") }
-        insns.each { |insn| io.puts("  #{insn}") }
-        exits.each { |exit| io.puts("    #{exit.label} -> #{blocks[exit.label].name} #{exit.metadata.inspect}") }
+        preds.each { |p| io.puts("    <- #{p.name}") }
+        insns.each { |i| io.puts("  #{i}") }
+        exits.each { |e| io.puts("    #{e.label} -> #{blocks[e.label].name} #{e.metadata.inspect}") }
       end
     end
 
     # A graph is a set of EBBs.
     class Graph
-      attr_reader :start, :blocks
+      attr_reader :start, :blocks, :label_map
 
-      def initialize(start, blocks)
+      def initialize(start, label_map)
         @start = start
-        @blocks = blocks
+        @blocks = label_map.values.uniq
+        @label_map = label_map
       end
 
       def dump
         output = StringIO.new
-        blocks.each_value { |block| block.dump(blocks, io: output) }
+        blocks.each { |block| block.dump(label_map, io: output) }
         output.string
       end
 
       def to_dot(graph)
         nodes = {}
 
-        blocks.each_value do |block|
+        blocks.each do |block|
           label = []
 
           label.push("#{block.name}:")
@@ -158,9 +159,9 @@ module RegularExpression
           nodes[block] = graph.add_node(block.object_id, label: label.join($/), labeljust: "l", shape: "box")
         end
 
-        blocks.each_value do |block|
+        blocks.each do |block|
           block.exits.each do |block_exit|
-            successor = nodes[blocks[block_exit.label]]
+            successor = nodes[label_map[block_exit.label]]
             attributes = {}
             if (kind = block_exit.metadata[:kind])
               attributes["color"] = { true_edge: "green", false_edge: "red" }[kind]
