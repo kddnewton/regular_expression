@@ -121,7 +121,7 @@ module RegularExpression
 
         # If we don't have one of the transitions that always executes, then we
         # need to add the fallback to the output for this state.
-        if state.transitions.none? { |t| t.is_a?(NFA::Transition::BeginAnchor) || t.is_a?(NFA::Transition::Epsilon) }
+        if state.transitions.none? { |t| t.is_a?(NFA::Transition::Epsilon) }
           fallback = [Insns::Jump.new(:fail)] if fallback == [:jump_to_fail]
           builder.push(*fallback)
         end
