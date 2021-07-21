@@ -39,8 +39,8 @@ module RegularExpression
     end
 
     class StartState < State
-      def label
-        "Start"
+      def initialize(label = "Start")
+        super
       end
 
       def to_dot(graph, visited)
@@ -51,8 +51,8 @@ module RegularExpression
     end
 
     class FinishState < State
-      def label
-        "Finish"
+      def initialize(label = "Finish")
+        super
       end
 
       def to_dot(graph, visited)
