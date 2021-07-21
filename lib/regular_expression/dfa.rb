@@ -68,8 +68,15 @@ module RegularExpression
                 NFA::State
               end
 
+            # Skip duplicate value transitions.
+            is_duplicate =
+              transition.is_a?(NFA::Transition::Value) &&
+              result[states].transitions.any? do |t|
+                t.is_a?(NFA::Transition::Value) && t.matches?(transition)
+              end
+
             new_state = (result[next_key] ||= state_class.new(next_key.map(&:label).join(",")))
-            result[states].add_transition(transition.copy(new_state))
+            result[states].add_transition(transition.copy(new_state)) unless is_duplicate
           end
         end
 
