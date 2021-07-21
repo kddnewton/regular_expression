@@ -79,8 +79,8 @@ rule
     { result = AST::Character.new(val[0]) }
     | COMMA
     { result = AST::Character.new(val[0]) }
-    | INTEGER
-    { result = AST::Character.new(val[0].to_s) }
+    | DIGIT
+    { result = AST::Character.new(val[0]) }
 
   quantifier:
     LBRACE integer COMMA integer RBRACE

@@ -60,6 +60,7 @@ module RegularExpression
     def assert_tokens(string, expected)
       actual = Lexer.new(string).tokens
       assert_equal([false, "end"], actual.last, "Tokens must end with #{[false, 'end'].inspect}")
+
       actual.pop
       assert_equal(expected, actual)
     end

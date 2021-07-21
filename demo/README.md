@@ -10,5 +10,5 @@ $ bundle exec rackup
 ## Tests
 
 ```console
-$ bundle exec rspec app_test.rb
+$ bundle exec rake
 ```

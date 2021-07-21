@@ -6,7 +6,8 @@ gem "regular_expression", path: "../"
 gem "sinatra"
 
 group :test, :development do
+  gem "minitest"
   gem "rack-test"
-  gem "rspec-core"
-  gem "rspec-expectations"
+  gem "rake"
+  gem "simplecov"
 end

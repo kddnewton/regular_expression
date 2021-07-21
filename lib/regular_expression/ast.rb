@@ -237,7 +237,7 @@ module RegularExpression
     end
 
     class CharacterRange
-      attr_reader :left, :right # Integer
+      attr_reader :left, :right # String
 
       def initialize(left, right)
         @left = left
