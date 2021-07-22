@@ -44,18 +44,18 @@ module RegularExpression
           # the states in our current set to determine where we could end up
           # for any of the transitions.
           transitions.each do |transition|
-            next_states = []
+            next_nfa_states = []
 
             current_nfa_states.each do |current_state|
               current_state.transitions.each do |current_transition|
-                next_states << current_transition.state if transition.matches?(current_transition)
+                next_nfa_states << current_transition.state if transition.matches?(current_transition)
               end
             end
 
             # Now that we have a full set of states that this transition goes
             # to, we're going to create a transition in our DFA that represents
             # this transition.
-            next_nfa_states = next_states_for(next_states)
+            next_nfa_states = next_states_for(next_nfa_states)
 
             unless dfa_states.key?(next_nfa_states)
               # Make sure we check the next states.
