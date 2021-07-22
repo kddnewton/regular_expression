@@ -13,8 +13,8 @@ module RegularExpression
       # for any given state and input you deterministically know which state the
       # machine should transition to. In effect, this means we're removing all
       # epsilon transitions.
-      def build(nfa)
-        start_key = next_states_for([nfa])
+      def build(nfa_start_state)
+        start_key = next_states_for([nfa_start_state])
         worklist = [start_key]
 
         # dfa_states is a hash that points from a set of states in the NFA to the
