@@ -24,14 +24,15 @@ module RegularExpression
         }
 
         until worklist.empty?
-          states = worklist.pop
+          current_nfa_states = worklist.pop
+
           transitions = []
 
           # First, we're going to build up a list of transitions that exit out
           # of the current set of states that we're looking at. We'll initialize
           # them to an empty array which is going to eventually represent the
           # set of states that that transition transitions to.
-          states.flat_map(&:transitions).each do |transition|
+          current_nfa_states.flat_map(&:transitions).each do |transition|
             unless transition.is_a?(NFA::Transition::Epsilon)
               transitions << transition
             end
@@ -43,7 +44,7 @@ module RegularExpression
           transitions.each do |transition|
             next_states = []
 
-            states.flat_map(&:transitions).each do |current_transition|
+            current_nfa_states.flat_map(&:transitions).each do |current_transition|
               next_states << current_transition.state if transition.matches?(current_transition)
             end
 
@@ -67,8 +68,8 @@ module RegularExpression
               end
 
             new_state = (result[next_nfa_states] ||= state_class.new(next_nfa_states.map(&:label).join(",")))
-            unless result[states].transitions.any? { |t| t.matches?(transition) }
-              result[states].add_transition(transition.copy(new_state))
+            unless result[current_nfa_states].transitions.any? { |t| t.matches?(transition) }
+              result[current_nfa_states].add_transition(transition.copy(new_state))
             end
           end
         end
