@@ -87,11 +87,27 @@ module RegularExpression
         def label
           "Start capture #{name}"
         end
+
+        def matches?(other)
+          other.is_a?(StartCapture) && name == other.name
+        end
+
+        def copy(new_state)
+          StartCapture.new(new_state, name)
+        end
       end
 
       class EndCapture < Struct.new(:state, :name)
         def label
           "End capture #{name}"
+        end
+
+        def matches?(other)
+          other.is_a?(EndCapture) && name == other.name
+        end
+
+        def copy(new_state)
+          EndCapture.new(new_state, name)
         end
       end
 
@@ -144,6 +160,14 @@ module RegularExpression
       class Type < Struct.new(:state, :type)
         def label
           "[[:#{type}:]]"
+        end
+
+        def matches?(other)
+          other.is_a?(Type) && type == other.type
+        end
+
+        def copy(new_state)
+          Type.new(new_state, type)
         end
       end
 
@@ -222,11 +246,27 @@ module RegularExpression
         def label
           "(?=#{value})"
         end
+
+        def matches?(other)
+          other.is_a?(PositiveLookahead) && value == other.value
+        end
+
+        def copy(new_state)
+          PositiveLookahead.new(new_state, value)
+        end
       end
 
       class NegativeLookahead < Struct.new(:state, :value)
         def label
           "(?!#{value})"
+        end
+
+        def matches?(other)
+          other.is_a?(NegativeLookahead) && value == other.value
+        end
+
+        def copy(new_state)
+          NegativeLookahead.new(new_state, value)
         end
       end
 
