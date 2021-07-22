@@ -33,6 +33,15 @@ Style/HashEachMethods:
 Style/IfUnlessModifier:
   Enabled: false
 
+Style/TrailingCommaInHashLiteral:
+  Enabled: false
+
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/TrailingCommaInArguments:
+  Enabled: false
+
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:
     '%q': '{}'

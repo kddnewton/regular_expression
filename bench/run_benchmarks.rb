@@ -16,22 +16,17 @@ BENCHMARKS = {
     ["ab", "ab", true, 10_000],
     ["ab", "ac", false, 10_000],
     ["ab{2,5}", "ababab", false, 10_000],
-    []
   ],
   "large string" => [
     ["#{'a' * 50}b", "#{'a' * 50}b", true, 1_000], # issue: https://github.com/kddnewton/regular_expression/issues/74
     ["a{25,50}", "a" * 37, true, 1_000],
     ["a{25,50}b", "#{'a' * 37}b", true, 1_000],
     ["a{25,50}b", "#{'a' * 37}c", false, 1_000],
-    []
   ],
   # "tricky" => [
   #   ["(a?){10}a{10}", "a" * 15, true, 1_000]
   #   ["a?" * 10 + "a" * 10, "a" * 15, true, 1_000]
   # ]
-  "final" => [
-    ["rubocop hates trailing commas", "and I hate messing with inactive lines", false, 1]
-  ]
 }.freeze
 
 NUM_BATCHES = 5
@@ -127,8 +122,6 @@ BENCHMARKS.each do |category, benchmarks|
   category_total_times = [0.0, 0.0, 0.0, 0.0]
 
   samples = benchmarks.map do |pattern, value, should_match, iters_per_batch|
-    next if pattern.nil? # Empty braces so Rubocop will shut up
-
     time_all_matches(pattern,
                      value,
                      should_match: should_match,
@@ -138,7 +131,6 @@ BENCHMARKS.each do |category, benchmarks|
   (0...benchmarks.size).each do |bench_idx|
     bench_samples = samples[bench_idx]
     pattern = benchmarks[bench_idx][0]
-    next if pattern.nil?
 
     bench_pcts = []
     bench_means = []
