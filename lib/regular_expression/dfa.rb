@@ -24,14 +24,15 @@ module RegularExpression
         }
 
         until worklist.empty?
-          states = worklist.pop
+          current_nfa_states = worklist.pop
+
           transitions = []
 
           # First, we're going to build up a list of transitions that exit out
           # of the current set of states that we're looking at. We'll initialize
           # them to an empty array which is going to eventually represent the
           # set of states that that transition transitions to.
-          states.each do |state|
+          current_nfa_states.each do |state|
             state.transitions.each do |transition|
               unless transition.is_a?(NFA::Transition::Epsilon)
                 transitions << transition
@@ -45,7 +46,7 @@ module RegularExpression
           transitions.each do |transition|
             next_states = []
 
-            states.each do |current_state|
+            current_nfa_states.each do |current_state|
               current_state.transitions.each do |current_transition|
                 next_states << current_transition.state if transition.matches?(current_transition)
               end
@@ -73,12 +74,12 @@ module RegularExpression
             # Skip duplicate value transitions.
             is_duplicate =
               transition.is_a?(NFA::Transition::Value) &&
-              result[states].transitions.any? do |t|
+              result[current_nfa_states].transitions.any? do |t|
                 t.is_a?(NFA::Transition::Value) && t.matches?(transition)
               end
 
             new_state = (result[next_nfa_states] ||= state_class.new(next_nfa_states.map(&:label).join(",")))
-            result[states].add_transition(transition.copy(new_state)) unless is_duplicate
+            result[current_nfa_states].add_transition(transition.copy(new_state)) unless is_duplicate
           end
         end
 
