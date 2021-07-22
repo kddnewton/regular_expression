@@ -73,7 +73,7 @@ At the moment we support most basic features, but there is a lot of ground left 
 | [Assertions](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Anchors)                               | 🛠      | [#10](https://github.com/kddnewton/regular_expression/issues/10) |
 | [Case-insensitive mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Options)                    | 🛠      | [#4](https://github.com/kddnewton/regular_expression/issues/4)   |
 | [Multi-line mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Options)                          | ❌     | [#5](https://github.com/kddnewton/regular_expression/issues/5)   |
-| [Free-spacing mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Free-Spacing+Mode+and+Comments) | ❌     | [#11](https://github.com/kddnewton/regular_expression/issues/11) |
+| [Free-spacing mode](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Free-Spacing+Mode+and+Comments) | ✅     | [#11](https://github.com/kddnewton/regular_expression/issues/11) |
 | [Encoding support](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Encoding)                        | ❌     | [#12](https://github.com/kddnewton/regular_expression/issues/12) |
 | Backreferences                                                                                                     | ❌     |                                                                  |
 
