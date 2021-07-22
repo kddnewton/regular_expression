@@ -4,7 +4,6 @@ module RegularExpression
   module Compiler
     module X86
       class Compiled
-
         RETURN_FAILED = 0xffffffffffffffff
         RETURN_DEOPT = RETURN_FAILED - 1
 
@@ -39,7 +38,7 @@ module RegularExpression
             when RETURN_FAILED
               nil
             when RETURN_DEOPT
-              raise Deoptimized
+              raise Pattern::Deoptimize
             else
               value
             end
@@ -445,6 +444,11 @@ module RegularExpression
               when Bytecode::Insns::Fail
                 inc match_index
                 jmp label(:start_loop_head)
+              when Bytecode::Insns::Deoptimize
+                mov return_value, imm64(RegularExpression::Compiler::X86::Compiled::RETURN_DEOPT)
+                mov stack_pointer, frame_pointer
+                pop frame_pointer
+                ret
               else
                 raise
               end

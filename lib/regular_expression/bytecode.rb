@@ -200,6 +200,11 @@ module RegularExpression
       # Fail to match the string at the current index. Increment the starting
       # index and try again if possible.
       Fail = Class.new
+
+      # Indicate that this version of the compiled pattern is not able to
+      # match this string, but it may match and you should retry with the
+      # original pattern.
+      Deoptimize = Class.new
     end
 
     class Builder

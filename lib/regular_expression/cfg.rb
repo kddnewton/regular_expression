@@ -155,6 +155,50 @@ module RegularExpression
         @label_map = label_map
       end
 
+      # Replace the block that an exits goes to.
+      def replace_exit(pred, exit, new_block)
+        old_block = label_map[exit.label]
+        old_block.preds.delete_at old_block.preds.find_index(pred)
+        exit.label = new_block.name
+        blocks.push new_block
+        label_map[new_block.name] = new_block
+
+        exit_insn = pred.insns.last
+        case exit_insn
+        when Bytecode::Insns::Jump
+          pred.insns[-1] = Bytecode::Insns::Jump.new(new_block.name)
+        when Bytecode::Insns::Branch
+          true_target = exit_insn.true_target
+          false_target = exit_insn.false_target
+
+          case exit.metadata[:kind]
+          when :true_edge
+            true_target = new_block.name
+          when :false_edge
+            false_target = new_block.name
+          else
+            raise
+          end
+          pred.insns[-1] = Bytecode::Insns::Branch.new(true_target, false_target)
+        else
+          raise
+        end
+      end
+
+      # Remove a block - it should not have any predecessors - you need
+      # to replace them first.
+      def remove(block)
+        raise if block.preds.any?
+
+        block.exits.each do |exit|
+          block.exits.clear
+          succ = label_map[exit.label]
+          succ.preds.delete_at succ.preds.find_index(block)
+        end
+        blocks.delete block
+        label_map.delete_if { |_, b| b == block }
+      end
+
       def dump
         output = StringIO.new
         blocks.each { |block| block.dump(label_map, io: output) }

@@ -9,7 +9,7 @@ module RegularExpression
 
       # Given a definition of 'ready to be scheduled' as a block that has yet
       # to be scheduled and where all the predecessors except itself have
-      # already been scheduled.
+      # already been scheduled, and where it is not a deoptimize block.
       #
       # First we schedule the starting block.
       #
@@ -23,6 +23,8 @@ module RegularExpression
       #   2) The earliest deferred block that is ready to be scheduled.
       #
       #   3) The earliest deferred block or just any block (which allows for loops.)
+      #
+      #   4) Schedule deoptimize blocks right at the end
       #
       # We stop scheduling when all blocks that have yet to be scheduled have
       # no predecessors (which allows for orphan blocks - but we really should just
@@ -52,7 +54,7 @@ module RegularExpression
           if sucss_ready.any?
             # Yes - the last block has successors ready to be scheduled.
 
-            # Find the most probbale successor that is ready to be scheduled
+            # Find the most probable successor that is ready to be scheduled
             # (rule 1).
             most_probable_ready_succ = sucss_ready.max_by { |e| e.metadata[:probability] || 0.0 }
             most_probable_ready_succ_block = cfg.label_map[most_probable_ready_succ.label]
@@ -66,7 +68,8 @@ module RegularExpression
 
             # Defer other successors that still need to be scheduled, less the
             # one that we just scheduled.
-            deferred.push(*(succs_to_schedule.map { |s| cfg.label_map[s.label] } - [most_probable_ready_succ_block]))
+            succs = succs_to_schedule.map { |s| cfg.label_map[s.label] } - [most_probable_ready_succ_block]
+            deferred.push(*(succs.reject { |s| deoptimize?(s) }))
           elsif deferred.any?
             # No - none of the successors of the last block are ready to be
             # scheduled. We do have deferred blocks.
@@ -95,6 +98,10 @@ module RegularExpression
           end
         end
 
+        deoptimize = cfg.blocks.select { |b| b.insns.first.is_a?(Bytecode::Insns::Deoptimize) && !schedule.include?(b) }
+
+        schedule.push(*deoptimize)
+
         schedule
       rescue StandardError => e
         fallback_schedule(cfg, schedule, deferred, e.message)
@@ -102,9 +109,14 @@ module RegularExpression
     end
 
     # A block that has yet to be scheduled and where all the predecessors
-    # except itself have already been scheduled.
+    # except itself have already been scheduled, and it is not a deoptimize
+    # block.
     def self.ready?(schedule, block)
-      (block.preds - [block]).all? { |pred| schedule.include?(pred) }
+      (block.preds - [block]).all? { |pred| schedule.include?(pred) } && !deoptimize?(block)
+    end
+
+    def self.deoptimize?(block)
+      block.insns.first.is_a?(Bytecode::Insns::Deoptimize)
     end
 
     def self.fallback_schedule(cfg, schedule, deferred, where)
@@ -121,7 +133,8 @@ module RegularExpression
       io = StringIO.new
       schedule.each do |block|
         io.puts("#{block.name}:")
-        block.exits.each { |e| io.puts("    -> #{cfg.label_map[e.label].name} #{e.metadata.inspect}") }
+        block.preds.each { |p| io.puts("    <- #{p.name}") }
+        block.exits.each { |e| io.puts("    #{e.label} -> #{cfg.label_map[e.label].name} #{e.metadata.inspect}") }
       end
       io.string
     end
