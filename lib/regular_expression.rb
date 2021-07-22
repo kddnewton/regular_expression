@@ -4,6 +4,7 @@ require "fiddle"
 require "fisk"
 require "fisk/helpers"
 require "set"
+require "cranelift_ruby"
 require "stringio"
 require "strscan"
 
@@ -26,3 +27,4 @@ require_relative "./regular_expression/version"
 
 require_relative "./regular_expression/compiler/ruby"
 require_relative "./regular_expression/compiler/x86"
+require_relative "./regular_expression/compiler/cranelift"

@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     regular_expression (0.1.0)
+      cranelift_ruby
       fisk
       racc
 
@@ -11,6 +12,8 @@ GEM
     ast (2.4.2)
     crabstone (4.0.3)
       ffi
+    cranelift_ruby (0.1.1)
+      rutie (~> 0.0.4)
     docile (1.4.0)
     ffi (1.15.3)
     fisk (2.1.0)
@@ -43,6 +46,7 @@ GEM
     rubocop-ast (1.8.0)
       parser (>= 3.0.1.1)
     ruby-progressbar (1.11.0)
+    rutie (0.0.4)
     simplecov (0.21.2)
       docile (~> 1.1)
       simplecov-html (~> 0.11)

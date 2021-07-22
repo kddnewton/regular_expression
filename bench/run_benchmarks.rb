@@ -58,9 +58,10 @@ def time_all_matches(source, value, should_match: true, iters_per_batch: 100, op
 
   # Three RE-gem objects, one basic and two compiled
   begin
-    re_basic, re_x86, re_ruby = *(1..3).map { RegularExpression::Pattern.new(source) }
+    re_basic, re_x86, re_ruby, re_cranelift = *(1..4).map { RegularExpression::Pattern.new(source) }
     re_x86.compile(compiler: RegularExpression::Compiler::X86) unless options[:compiled_x86] == false
     re_ruby.compile(compiler: RegularExpression::Compiler::Ruby) unless options[:compiled_ruby] == false
+    re_cranelift.compile(compiler: RegularExpression::Compiler::Cranelift) unless options[:compiled_cranelift] == false
   rescue StandardError
     warn "Exception when building RE objects for regexp (#{source.inspect} / #{value.inspect})"
     raise
@@ -71,6 +72,7 @@ def time_all_matches(source, value, should_match: true, iters_per_batch: 100, op
     [re_basic, :re, "uncompiled RegularExpression object"],
     [re_x86, :re_x86, "RegularExpression x86 compiler"],
     [re_ruby, :re_ruby, "RegularExpression Ruby-backend compiler"]
+    [re_cranelift, :re_cranelift, "RegularExpression cranelift compiler"]
   ].each do |match_obj, samples_name, matcher_description|
     next if samples_name == :ruby && options[:native] == false
     next if samples_name == :re && options[:uncompiled] == false
@@ -138,7 +140,7 @@ end
 report_rows = []
 
 BENCHMARKS.each do |category, benchmarks|
-  category_total_times = [0.0, 0.0, 0.0, 0.0]
+  category_total_times = [0.0, 0.0, 0.0, 0.0, 0.0]
 
   samples = benchmarks.map do |pattern, value, should_match, iters_per_batch, options|
     time_all_matches(pattern,
@@ -156,11 +158,12 @@ BENCHMARKS.each do |category, benchmarks|
     bench_pcts = []
     bench_means = []
     bench_rsds = []
-    %i[ruby re re_x86 re_ruby].each_with_index do |impl, impl_idx|
+    %i[ruby re re_x86 re_ruby, re_cranelift].each_with_index do |impl, impl_idx|
       if (impl == :ruby && options[:native] == false) ||
          (impl == :re && options[:uncompiled] == false) ||
          (impl == :re_x86 && options[:compiled_x86] == false) ||
-         (impl == :re_ruby && options[:compiled_ruby] == false)
+         (impl == :re_ruby && options[:compiled_ruby] == false) ||
+         impl == :re_cranelift && options[:compiled_cranelift] == false)
         bench_pcts.push nil
         bench_rsds.push nil
         next
@@ -175,7 +178,6 @@ BENCHMARKS.each do |category, benchmarks|
       bench_means.push samples_mean
       bench_pcts.push(100.0 * bench_means[0] / samples_mean)
       bench_rsds.push rel_stddev_pct
-
       category_total_times[impl_idx] += samples_sum
     end
 
@@ -189,14 +191,14 @@ BENCHMARKS.each do |category, benchmarks|
   ruby_total_ms = category_total_times[0] * 1000.0
 
   # The final column is the number of milliseconds taken by the Ruby native regexps
-  report_rows.push [category] + category_pct + [nil] * 4 + [ruby_total_ms]
+  report_rows.push [category] + category_pct + [nil] * 5 + [ruby_total_ms]
 end
 
 puts "Finished running..."
 
-header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "ruby RSD", "re RSD",
-          "re_x86 RSD", "re_ruby RSD", "ruby time (ms)"]
-row_f = ["%s"] + ["%.1f"] * 4 + ["%.2f"] * 4 + ["%.2e"]
+header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "re_cranelift (%)", "ruby RSD", "re RSD",
+          "re_x86 RSD", "re_ruby RSD", "re_cranelift RSD", "ruby time (ms)"]
+row_f = ["%s"] + ["%.1f"] * 5 + ["%.2f"] * 5 + ["%.2e"]
 
 puts
 puts format_as_table(header, report_rows, row_f)

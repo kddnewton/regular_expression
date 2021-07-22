@@ -236,13 +236,21 @@ module RegularExpression
       attr_reader :insns # Array[Insns]
       attr_reader :labels # Hash[Symbol, Integer]
       attr_accessor :captures # Integer
+<<<<<<< HEAD
       attr_accessor :backtracks # Integer
+=======
+      attr_accessor :n_of_transitions
+>>>>>>> 12432bb (Add cranelift backend)
 
       def initialize
         @insns = []
         @labels = {}
         @captures = 0
+<<<<<<< HEAD
         @backtracks = 0
+=======
+        @n_of_transitions = 0
+>>>>>>> 12432bb (Add cranelift backend)
       end
 
       def mark_label(label)
@@ -254,18 +262,30 @@ module RegularExpression
       end
 
       def build
+<<<<<<< HEAD
         Compiled.new(insns, labels, captures, backtracks)
+=======
+        Compiled.new(insns, labels, captures, n_of_transitions)
+>>>>>>> 12432bb (Add cranelift backend)
       end
     end
 
     class Compiled
       attr_reader :insns, :labels, :captures, :backtracks
 
+<<<<<<< HEAD
       def initialize(insns, labels, captures, backtracks)
         @insns = insns
         @labels = labels
         @captures = captures
         @backtracks = backtracks
+=======
+      def initialize(insns, labels, captures, n_of_transitions)
+        @insns = insns
+        @labels = labels
+        @captures = captures
+        @n_of_transitions = n_of_transitions
+>>>>>>> 12432bb (Add cranelift backend)
       end
 
       def dump
