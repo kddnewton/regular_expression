@@ -40,6 +40,7 @@ RegularExpression::AST.to_dot(ast)
 
 nfa = ast.to_nfa
 RegularExpression::NFA.to_dot(nfa)
+
 dfa = RegularExpression::DFA.build(nfa)
 RegularExpression::NFA.to_dot(dfa, filename: "dfa")
 
@@ -79,3 +80,12 @@ check.call(ruby)
 
 # Test x86 against any passed strings
 check.call(x86)
+
+# Test out the profiling
+if ARGV.any?
+  profile = RegularExpression::Interpreter.empty_profiling_data
+  100.times { ARGV.each { |string| interpreter.interpret(string, profile) } }
+
+  control_flow_graph = RegularExpression::CFG.build(bytecode, profile)
+  RegularExpression::CFG.to_dot(control_flow_graph)
+end
