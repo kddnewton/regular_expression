@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 $:.unshift(File.expand_path("../lib", __dir__))
+require "optparse"
 require "bundler/setup"
 require "regular_expression"
 require "crabstone"
@@ -12,15 +13,35 @@ unless `which dot`.chomp.end_with?("dot")
        " Please install Graphviz if you want dotfile visual output to work."
 end
 
+options = {
+  flags: RegularExpression::Flags.new
+}
+
+OptionParser.new do |opts|
+  opts.banner = <<~DESC
+    Parses a regular expression, prints debugging information to string, \
+    generates graphiz information in the build directory, and runs it \
+    against the provided input strings (if any).
+
+    Usage: bin/parse pattern [input ...]
+  DESC
+
+  opts.on("-f", "--flags FLAGS", "Regexp flags as string (example: x for Regexp::EXTENDED)") do |str|
+    options[:flags] = RegularExpression::Flags.parse(str)
+  end
+end.parse!
+
 # Pass the source through the various parsing phases
 #
 source = ARGV.shift
 
-ast = RegularExpression::Parser.new.parse(source)
+ast = RegularExpression::Parser.new.parse(source, options[:flags])
 RegularExpression::AST.to_dot(ast)
 
 nfa = ast.to_nfa
 RegularExpression::NFA.to_dot(nfa)
+dfa = RegularExpression::DFA.build(nfa)
+RegularExpression::NFA.to_dot(dfa, filename: "dfa")
 
 bytecode = RegularExpression::Bytecode.compile(nfa)
 puts "#{bytecode.dump}\n"

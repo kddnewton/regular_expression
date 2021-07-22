@@ -28,16 +28,17 @@ module RegularExpression
       end
 
       def to_nfa
+        labels = ("1"..).each
+
         start_state = NFA::StartState.new
-        match_start = NFA::State.new
+        match_start = NFA::State.new(labels.next)
         start_state.add_transition(NFA::Transition::StartCapture.new(match_start, "$0"))
 
         finish_state = NFA::FinishState.new
-        match_finish = NFA::State.new
+        match_finish = NFA::State.new(+"") # replaced below
         match_finish.add_transition(NFA::Transition::EndCapture.new(finish_state, "$0"))
 
         current = match_start
-        labels = ("1"..).each
 
         if at_start
           current = NFA::State.new(labels.next)
@@ -47,6 +48,8 @@ module RegularExpression
         expressions.each do |expression|
           expression.to_nfa(current, match_finish, labels)
         end
+
+        match_finish.label.replace(labels.next)
 
         start_state
       end
@@ -118,10 +121,10 @@ module RegularExpression
 
       def to_nfa(start, finish, labels)
         quantifier.quantify(start, finish, labels) do |quantified_start, quantified_finish|
-          capture_start = NFA::State.new
+          capture_start = NFA::State.new(labels.next)
           quantified_start.add_transition(NFA::Transition::StartCapture.new(capture_start, name))
 
-          capture_finish = NFA::State.new
+          capture_finish = NFA::State.new(labels.next)
           capture_finish.add_transition(NFA::Transition::EndCapture.new(quantified_finish, name))
 
           expressions.each { |expression| expression.to_nfa(capture_start, capture_finish, labels) }
