@@ -100,20 +100,20 @@ module RegularExpression
       #
       # Then if you passed [1] into here we would return [1,2,3].
       def follow_epsilon_transitions_from(nfa_states)
-        next_nfa_states = [*nfa_states]
+        nfa_states = [*nfa_states]
         index = 0
 
-        while index < next_nfa_states.length
-          next_nfa_states[index].transitions.each do |nfa_transition|
-            if nfa_transition.is_a?(NFA::Transition::Epsilon) && !next_nfa_states.include?(nfa_transition.state)
-              next_nfa_states << nfa_transition.state
+        while index < nfa_states.length
+          nfa_states[index].transitions.each do |nfa_transition|
+            if nfa_transition.is_a?(NFA::Transition::Epsilon) && !nfa_states.include?(nfa_transition.state)
+              nfa_states << nfa_transition.state
             end
           end
 
           index += 1
         end
 
-        next_nfa_states
+        nfa_states
       end
     end
   end
