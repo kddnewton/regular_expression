@@ -41,9 +41,9 @@ module RegularExpression
       # two levels!
       def self.compile(cfg, schedule)
         fisk = Fisk.new
-        buffer = Fisk::Helpers.jitbuffer(1024)
+        stringio = StringIO.new("".b)
 
-        fisk.asm(buffer) do
+        fisk.asm(stringio) do
           # Here we're setting up a couple of local variables that point to
           # registers so that it's easier to see what's actually going on
 
@@ -454,6 +454,10 @@ module RegularExpression
 
           ret
         end
+
+        buffer = Fisk::Helpers.jitbuffer(stringio.size)
+        stringio.rewind
+        stringio.each_byte(&buffer.method(:putc))
 
         Compiled.new(buffer)
       end
