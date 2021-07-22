@@ -13,7 +13,7 @@ GEM
       ffi
     docile (1.4.0)
     ffi (1.15.3)
-    fisk (2.0.0)
+    fisk (2.1.0)
     graphviz (1.2.1)
       process-pipeline
     minitest (5.14.4)
