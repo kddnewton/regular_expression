@@ -25,7 +25,7 @@ module RegularExpression
 
         until worklist.empty?
           states = worklist.pop
-          transitions = {}
+          transitions = []
 
           # First, we're going to build up a list of transitions that exit out
           # of the current set of states that we're looking at. We'll initialize
@@ -34,7 +34,7 @@ module RegularExpression
           states.each do |state|
             state.transitions.each do |transition|
               unless transition.is_a?(NFA::Transition::Epsilon)
-                transitions[transition] = []
+                transitions << transition
               end
             end
           end
@@ -42,7 +42,9 @@ module RegularExpression
           # Second, we're going to apply each of those transitions to each of
           # the states in our current set to determine where we could end up
           # for any of the transitions.
-          transitions.each do |transition, next_states|
+          transitions.each do |transition|
+            next_states = []
+
             states.each do |current_state|
               current_state.transitions.each do |current_transition|
                 next_states << current_transition.state if transition.matches?(current_transition)
