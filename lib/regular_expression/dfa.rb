@@ -77,7 +77,7 @@ module RegularExpression
         end
 
         # Return the start state of the new DFA.
-        dfa_states[nfa_start_states]
+        dfa_start_state
       end
 
       private
