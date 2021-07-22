@@ -14,7 +14,7 @@ module RegularExpression
       # machine should transition to. In effect, this means we're removing all
       # epsilon transitions.
       def build(nfa_start_state)
-        nfa_start_states = next_states_for([nfa_start_state])
+        nfa_start_states = follow_epsilon_transitions_from([nfa_start_state])
         worklist = [nfa_start_states]
 
         # dfa_states is a hash that points from a set of states in the NFA to the
@@ -55,7 +55,7 @@ module RegularExpression
             # Now that we have a full set of states that this transition goes
             # to, we're going to create a transition in our DFA that represents
             # this transition.
-            next_nfa_states = next_states_for(next_nfa_states)
+            next_nfa_states = follow_epsilon_transitions_from(next_nfa_states)
 
             unless dfa_states.key?(next_nfa_states)
               # Make sure we check the next states.
@@ -97,7 +97,7 @@ module RegularExpression
       #     └───ε-──^└───ε-───^
       #
       # Then if you passed [1] into here we would return [1,2,3].
-      def next_states_for(states)
+      def follow_epsilon_transitions_from(states)
         next_states = [*states]
         index = 0
 
