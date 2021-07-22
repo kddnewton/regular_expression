@@ -50,23 +50,23 @@ module RegularExpression
             # Now that we have a full set of states that this transition goes
             # to, we're going to create a transition in our DFA that represents
             # this transition.
-            next_key = next_states_for(next_states)
+            next_nfa_states = next_states_for(next_states)
 
-            unless result.key?(next_key)
+            unless result.key?(next_nfa_states)
               # Make sure we check the next states.
-              worklist << next_key
+              worklist << next_nfa_states
             end
 
             # If any of the NFA states is a finish state, the DFA state
             # should be too.
             state_class =
-              if next_key.any? { |state| state.is_a?(NFA::FinishState) }
+              if next_nfa_states.any? { |state| state.is_a?(NFA::FinishState) }
                 NFA::FinishState
               else
                 NFA::State
               end
 
-            new_state = (result[next_key] ||= state_class.new(next_key.map(&:label).join(",")))
+            new_state = (result[next_nfa_states] ||= state_class.new(next_nfa_states.map(&:label).join(",")))
             unless result[states].transitions.any? { |t| t.matches?(transition) }
               result[states].add_transition(transition.copy(new_state))
             end
