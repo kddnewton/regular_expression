@@ -16,11 +16,12 @@ module RegularExpression
       def build(nfa_start_state)
         nfa_start_states = follow_epsilon_transitions_from([nfa_start_state])
         dfa_start_state = NFA::StartState.new(nfa_start_states.map(&:label).join(","))
-        worklist = [nfa_start_states]
 
         # dfa_states is a hash that points from a set of states in the NFA to the
         # new state in the DFA.
         dfa_states = { nfa_start_states => dfa_start_state }
+
+        worklist = [nfa_start_states]
 
         until worklist.empty?
           current_nfa_states = worklist.pop
