@@ -31,11 +31,9 @@ module RegularExpression
           # of the current set of states that we're looking at. We'll initialize
           # them to an empty array which is going to eventually represent the
           # set of states that that transition transitions to.
-          states.each do |state|
-            state.transitions.each do |transition|
-              unless transition.is_a?(NFA::Transition::Epsilon)
-                transitions << transition
-              end
+          states.flat_map(&:transitions).each do |transition|
+            unless transition.is_a?(NFA::Transition::Epsilon)
+              transitions << transition
             end
           end
 
@@ -45,10 +43,8 @@ module RegularExpression
           transitions.each do |transition|
             next_states = []
 
-            states.each do |current_state|
-              current_state.transitions.each do |current_transition|
-                next_states << current_transition.state if transition.matches?(current_transition)
-              end
+            states.flat_map(&:transitions).each do |current_transition|
+              next_states << current_transition.state if transition.matches?(current_transition)
             end
 
             # Now that we have a full set of states that this transition goes
