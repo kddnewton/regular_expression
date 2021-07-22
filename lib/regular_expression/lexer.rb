@@ -19,8 +19,9 @@ module RegularExpression
       "," => :COMMA
     }.freeze
 
-    def initialize(source)
+    def initialize(source, flags = nil)
       @scanner = StringScanner.new(source)
+      @flags = flags
     end
 
     def tokens
@@ -28,6 +29,8 @@ module RegularExpression
 
       until @scanner.eos?
         case # rubocop:disable Style/EmptyCaseCondition
+        when @flags&.extended? && (@scanner.scan(/\s/) || @scanner.scan(/#.+?\n/))
+          # ignore whitespace in extended mode
         when @scanner.scan(/\\\\/)
           result << [:CHAR, "\\"]
         when @scanner.scan(/\(\?=/)
