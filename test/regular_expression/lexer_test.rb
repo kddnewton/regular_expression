@@ -55,6 +55,29 @@ module RegularExpression
       assert_tokens("1\\+", [[:DIGIT, "1"], [:CHAR, "+"]])
     end
 
+    def test_extended_mode
+      source = <<~REGEXP
+        \\A
+        [[:digit:]]+ # 1 or more digits before the decimal point
+        (\\.         # Decimal point
+        [[:digit:]]+ # 1 or more digits after the decimal point
+        )?           # The decimal point and following digits are optional
+        \\z
+      REGEXP
+
+      tokens = Lexer.new(source, Pattern::Flags.new(Regexp::EXTENDED)).tokens
+      expected = %i[
+        ANCHOR
+        CHAR_TYPE PLUS
+        LPAREN CHAR
+        CHAR_TYPE PLUS
+        RPAREN QMARK
+        ANCHOR
+      ]
+
+      assert_equal(expected, tokens.tap(&:pop).map(&:first))
+    end
+
     private
 
     def assert_tokens(string, expected)
