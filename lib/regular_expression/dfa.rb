@@ -25,6 +25,7 @@ module RegularExpression
 
         until worklist.empty?
           current_nfa_states = worklist.pop
+          current_dfa_state = dfa_states[current_nfa_states]
 
           nfa_transitions = []
 
@@ -74,14 +75,14 @@ module RegularExpression
             # Skip duplicate value transitions.
             is_duplicate =
               nfa_transition.is_a?(NFA::Transition::Value) &&
-              dfa_states[current_nfa_states].transitions.any? do |t|
+              current_dfa_state.transitions.any? do |t|
                 t.is_a?(NFA::Transition::Value) && t.matches?(nfa_transition)
               end
 
             next_dfa_state =
               dfa_states[next_nfa_states] ||=
                 dfa_state_class.new(next_nfa_states.map(&:label).join(","))
-            dfa_states[current_nfa_states].add_transition(nfa_transition.copy(next_dfa_state)) unless is_duplicate
+            current_dfa_state.add_transition(nfa_transition.copy(next_dfa_state)) unless is_duplicate
           end
         end
 
