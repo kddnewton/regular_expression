@@ -81,14 +81,6 @@ module RegularExpression
       assert_tokens("(?#comment)a", [[:CHAR, "a"]])
     end
 
-    def test_multiline_mode
-      assert_tokens("\na", [[:CHAR, "\n"], [:CHAR, "a"]], Flags.new(Regexp::MULTILINE))
-    end
-
-    def test_non_multiline_mode
-      assert_tokens("\na", [[:CHAR, "a"]])
-    end
-
     private
 
     def assert_tokens(string, expected, flags = Flags.new)

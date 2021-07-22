@@ -8,8 +8,9 @@ module RegularExpression
 
     attr_reader :bytecode
 
-    def initialize(bytecode)
+    def initialize(bytecode, flags = nil)
       @bytecode = bytecode
+      @flags = flags
     end
 
     # This is just here for API parity with the compiled outputs.
@@ -37,7 +38,6 @@ module RegularExpression
 
         loop do
           insn = bytecode.insns[insn_n]
-
           case insn
           when Bytecode::Insns::PushIndex
             stack << string_n
@@ -59,7 +59,7 @@ module RegularExpression
             captures[insn.name][:end] = string_n
             insn_n += 1
           when Bytecode::Insns::TestAny
-            flag = string_n < string.size
+            flag = (string[string_n] != "\n" || @flags&.multiline?) && string_n < string.size
             string_n += 1 if flag
             insn_n += 1
           when Bytecode::Insns::TestValue

@@ -333,6 +333,19 @@ module RegularExpression
       assert_kind_of(String, CFG.to_dot(cfg))
     end
 
+    # There appears to be a better testing pattern above. Especially hitting all compilers.
+    # Unsure on appropriate implementation when testing flags passed.
+    def test_without_multiline_mode
+      pattern = Pattern.new("ab.c")
+      refute pattern.match?("ab\nc")
+    end
+
+    def test_with_multiline_mode
+      pattern = Pattern.new("ab.c", Regexp::MULTILINE)
+      assert pattern.match?("ab\nc")
+    end
+
+
     private
 
     def assertion_pattern(source)

@@ -5,7 +5,8 @@ module RegularExpression
     attr_reader :bytecode
 
     def initialize(source, flags = nil)
-      ast = Parser.new.parse(source, Flags.new(flags))
+      @flags = Flags.new(flags)
+      ast = Parser.new.parse(source, @flags)
       @bytecode = Bytecode.compile(ast.to_nfa)
     end
 
@@ -36,7 +37,7 @@ module RegularExpression
     end
 
     def match?(string)
-      Interpreter.new(bytecode).match?(string)
+      Interpreter.new(bytecode, @flags).match?(string)
     end
 
     private
