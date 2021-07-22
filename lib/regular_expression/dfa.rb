@@ -60,16 +60,18 @@ module RegularExpression
 
             # If any of the NFA states is a finish state, the DFA state
             # should be too.
-            state_class =
+            dfa_state_class =
               if next_nfa_states.any? { |state| state.is_a?(NFA::FinishState) }
                 NFA::FinishState
               else
                 NFA::State
               end
 
-            new_state = (dfa_states[next_nfa_states] ||= state_class.new(next_nfa_states.map(&:label).join(",")))
+            new_dfa_state =
+              dfa_states[next_nfa_states] ||=
+                dfa_state_class.new(next_nfa_states.map(&:label).join(","))
             unless dfa_states[current_nfa_states].transitions.any? { |t| t.matches?(nfa_transition) }
-              dfa_states[current_nfa_states].add_transition(nfa_transition.copy(new_state))
+              dfa_states[current_nfa_states].add_transition(nfa_transition.copy(new_dfa_state))
             end
           end
         end
