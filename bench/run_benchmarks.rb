@@ -20,14 +20,15 @@ BENCHMARKS = {
     [%q{ab{2,5}}, "ababab", false, 10_000],
   ],
   "large string" => [
-    ["#{'a' * 20}b", "#{'a' * 20}b", true, 1_000],
-    ["a{25,50}", "a" * 37, true, 1_000],
-    ["a{25,50}b", "#{'a' * 37}b", true, 1_000],
-    ["a{25,50}b", "#{'a' * 37}c", false, 1_000],
+    [%Q{#{'a' * 20}b}, "#{'a' * 20}b", true, 1_000],
+    [%q{a{25,50}}, "a" * 37, true, 1_000],
+    [%q{a{25,50}b}, "#{'a' * 37}b", true, 1_000],
+    [%q{a{25,50}b}, "#{'a' * 37}c", false, 1_000],
   ],
   "tricky" => [
-    ["(a?){10}a{10}", "a" * 15, true, 1_000, { uncompiled: false, compiled_x86: false, compiled_ruby: false }],
-    ["a?" * 10 + "a" * 10, "a" * 15, true, 1_000, { uncompiled: false, compiled_x86: false, compiled_ruby: false }]
+    [%q{(a?){10}a{10}}, "a" * 15, true, 1_000, { uncompiled: false, compiled_x86: false, compiled_ruby: false }],
+    [%Q{#{'a?' * 10}#{'a' * 10}}, "a" * 15, true, 1_000,
+     { uncompiled: false, compiled_x86: false, compiled_ruby: false }]
   ],
 
   # Benchmarks from Shopify's UserAgent sniffing code
