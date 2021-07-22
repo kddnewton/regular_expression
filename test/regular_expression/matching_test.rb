@@ -345,7 +345,6 @@ module RegularExpression
       assert pattern.match?("ab\nc")
     end
 
-
     private
 
     def assertion_pattern(source)
