@@ -15,9 +15,9 @@ require_relative "../lib/regular_expression"
 
 BENCHMARKS = {
   "basics" => [
-    ["ab", "ab", true, 10_000],
-    ["ab", "ac", false, 10_000],
-    ["ab{2,5}", "ababab", false, 10_000],
+    [%q{ab}, "ab", true, 10_000],
+    [%q{ab}, "ac", false, 10_000],
+    [%q{ab{2,5}}, "ababab", false, 10_000],
   ],
   "large string" => [
     ["#{'a' * 20}b", "#{'a' * 20}b", true, 1_000],
@@ -25,10 +25,10 @@ BENCHMARKS = {
     ["a{25,50}b", "#{'a' * 37}b", true, 1_000],
     ["a{25,50}b", "#{'a' * 37}c", false, 1_000],
   ],
-  # "tricky" => [
-  #   ["(a?){10}a{10}", "a" * 15, true, 1_000]
-  #   ["a?" * 10 + "a" * 10, "a" * 15, true, 1_000]
-  # ]
+  "tricky" => [
+    ["(a?){10}a{10}", "a" * 15, true, 1_000, { uncompiled: false, compiled_x86: false, compiled_ruby: false }],
+    ["a?" * 10 + "a" * 10, "a" * 15, true, 1_000, { uncompiled: false, compiled_x86: false, compiled_ruby: false }]
+  ],
 
   # Benchmarks from Shopify's UserAgent sniffing code
   "sniffer" => [
