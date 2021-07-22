@@ -32,8 +32,8 @@ module RegularExpression
           # of the current set of states that we're looking at. We'll initialize
           # them to an empty array which is going to eventually represent the
           # set of states that that transition transitions to.
-          current_nfa_states.each do |state|
-            state.transitions.each do |transition|
+          current_nfa_states.each do |nfa_state|
+            nfa_state.transitions.each do |transition|
               unless transition.is_a?(NFA::Transition::Epsilon)
                 transitions << transition
               end
@@ -46,8 +46,8 @@ module RegularExpression
           transitions.each do |transition|
             next_nfa_states = []
 
-            current_nfa_states.each do |current_state|
-              current_state.transitions.each do |current_transition|
+            current_nfa_states.each do |current_nfa_state|
+              current_nfa_state.transitions.each do |current_transition|
                 next_nfa_states << current_transition.state if transition.matches?(current_transition)
               end
             end
@@ -97,21 +97,21 @@ module RegularExpression
       #     └───ε-──^└───ε-───^
       #
       # Then if you passed [1] into here we would return [1,2,3].
-      def follow_epsilon_transitions_from(states)
-        next_states = [*states]
+      def follow_epsilon_transitions_from(nfa_states)
+        next_nfa_states = [*nfa_states]
         index = 0
 
-        while index < next_states.length
-          next_states[index].transitions.each do |transition|
-            if transition.is_a?(NFA::Transition::Epsilon) && !next_states.include?(transition.state)
-              next_states << transition.state
+        while index < next_nfa_states.length
+          next_nfa_states[index].transitions.each do |transition|
+            if transition.is_a?(NFA::Transition::Epsilon) && !next_nfa_states.include?(transition.state)
+              next_nfa_states << transition.state
             end
           end
 
           index += 1
         end
 
-        next_states
+        next_nfa_states
       end
     end
   end
