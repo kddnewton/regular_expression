@@ -33,6 +33,8 @@ module RegularExpression
           # ignore whitespace in extended mode
         when !@flags.extended? && @scanner.scan(/\(\?#.+?\)/)
           # ignore this interesting comment pattern in non-extended mode
+        when !@flags.multiline? && @scanner.scan(/\u0009|\u000A|\u000D/)
+          # unless multiline is enabled . will not match \n
         when @scanner.scan(/\\\\/)
           result << [:CHAR, "\\"]
         when @scanner.scan(/\(\?=/)

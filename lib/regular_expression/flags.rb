@@ -10,6 +10,15 @@ module RegularExpression
       @value = value || 0
     end
 
+    # This is multiline mode:
+    #
+    #   https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Options
+    #
+    # It means that a newline character will be matched by .
+    def multiline?
+      (value & Regexp::MULTILINE).positive?
+    end
+
     # This is the free-spacing mode:
     #
     #   https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Free-Spacing+Mode+and+Comments

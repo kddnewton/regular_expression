@@ -81,10 +81,18 @@ module RegularExpression
       assert_tokens("(?#comment)a", [[:CHAR, "a"]])
     end
 
+    def test_multiline_mode
+      assert_tokens("\na", [[:CHAR, "\n"], [:CHAR, "a"]], Flags.new(Regexp::MULTILINE))
+    end
+
+    def test_non_multiline_mode
+      assert_tokens("\na", [[:CHAR, "a"]])
+    end
+
     private
 
-    def assert_tokens(string, expected)
-      actual = Lexer.new(string).tokens
+    def assert_tokens(string, expected, flags = Flags.new)
+      actual = Lexer.new(string, flags).tokens
       assert_equal([false, "end"], actual.last, "Tokens must end with #{[false, 'end'].inspect}")
 
       actual.pop
