@@ -67,7 +67,7 @@ module RegularExpression
     end
 
     test_matching(:larger_strings) do
-      assert_matches(%Q{#{'a'*50}b}, "#{'a'*50}b")
+      assert_matches(%Q{#{'a' * 50}b}, "#{'a' * 50}b")
     end
 
     test_matching(:begin_anchor_caret) do
