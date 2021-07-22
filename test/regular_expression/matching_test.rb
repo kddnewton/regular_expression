@@ -61,6 +61,11 @@ module RegularExpression
       refute_matches(%q{ab|ac}, "bc")
     end
 
+    test_matching(:multicharacter_backtracking) do
+      skip
+      assert_matches(%q{a?a?a?aaa}, "aaaaa")
+    end
+
     test_matching(:begin_anchor_caret) do
       assert_matches(%q{^abc}, "abc")
       refute_matches(%q{^abc}, "!abc")
