@@ -56,7 +56,7 @@ module RegularExpression
     end
 
     def test_extended_mode
-      source = <<~REGEXP
+      tokens = Lexer.new(<<~REGEXP, Flags.new(Regexp::EXTENDED)).tokens
         \\A
         [[:digit:]]+ # 1 or more digits before the decimal point
         (\\.         # Decimal point
@@ -65,7 +65,6 @@ module RegularExpression
         \\z
       REGEXP
 
-      tokens = Lexer.new(source, Pattern::Flags.new(Regexp::EXTENDED)).tokens
       expected = %i[
         ANCHOR
         CHAR_TYPE PLUS
@@ -76,6 +75,10 @@ module RegularExpression
       ]
 
       assert_equal(expected, tokens.tap(&:pop).map(&:first))
+    end
+
+    def test_non_extended_mode_comments
+      assert_tokens("(?#comment)a", [[:CHAR, "a"]])
     end
 
     private

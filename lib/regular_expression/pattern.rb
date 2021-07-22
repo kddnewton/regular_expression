@@ -2,17 +2,9 @@
 
 module RegularExpression
   class Pattern
-    # An object to contain the value of the flags that were set when the pattern
-    # was initialized. These match up to the Regexp constants.
-    class Flags < Struct.new(:value)
-      def extended?
-        (value & Regexp::EXTENDED).positive?
-      end
-    end
-
     attr_reader :bytecode
 
-    def initialize(source, flags = 0)
+    def initialize(source, flags = nil)
       ast = Parser.new.parse(source, Flags.new(flags))
       @bytecode = Bytecode.compile(ast.to_nfa)
     end

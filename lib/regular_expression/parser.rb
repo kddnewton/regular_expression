@@ -10,7 +10,7 @@ module RegularExpression
 
 module_eval(<<'...end parser.y/module_eval...', 'parser.y', 126)
 
-  def parse(str, flags = nil)
+  def parse(str, flags = Flags.new)
     @tokens = Lexer.new(str, flags).tokens
     do_parse
   end

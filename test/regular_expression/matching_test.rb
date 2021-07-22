@@ -290,10 +290,10 @@ module RegularExpression
       # Now check that the right tokens were ignored
       pattern = Pattern.new(<<~REGEXP, Regexp::EXTENDED)
         \\A
-          [[:digit:]]+ # 1 or more digits before the decimal point
-          (\\.         # Decimal point
-          [[:digit:]]+ # 1 or more digits after the decimal point
-          )?           # The decimal point and following digits are optional
+        [[:digit:]]+ # 1 or more digits before the decimal point
+        (\\.         # Decimal point
+        [[:digit:]]+ # 1 or more digits after the decimal point
+        )?           # The decimal point and following digits are optional
         \\z
       REGEXP
 
