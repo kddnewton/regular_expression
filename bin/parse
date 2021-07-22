@@ -40,6 +40,8 @@ RegularExpression::AST.to_dot(ast)
 
 nfa = ast.to_nfa
 RegularExpression::NFA.to_dot(nfa)
+dfa = RegularExpression::DFA.build(nfa)
+RegularExpression::NFA.to_dot(dfa, filename: "dfa")
 
 bytecode = RegularExpression::Bytecode.compile(nfa)
 puts "#{bytecode.dump}\n"

@@ -18,6 +18,9 @@ Metrics:
 Style/AccessorGrouping:
   Enabled: false
 
+Style/AsciiComments:
+  Enabled: false
+
 Style/BarePercentLiterals:
   EnforcedStyle: percent_q
 
