@@ -88,21 +88,21 @@ module RegularExpression
       #     └───ε-──^└───ε-───^
       #
       # Then if you passed [1] into here we would return [1,2,3].
-      def follow_epsilon_transitions_from(states)
-        next_states = [*states]
+      def follow_epsilon_transitions_from(nfa_states)
+        next_nfa_states = [*nfa_states]
         index = 0
 
-        while index < next_states.length
-          next_states[index].transitions.each do |transition|
-            if transition.is_a?(NFA::Transition::Epsilon) && !next_states.include?(transition.state)
-              next_states << transition.state
+        while index < next_nfa_states.length
+          next_nfa_states[index].transitions.each do |transition|
+            if transition.is_a?(NFA::Transition::Epsilon) && !next_nfa_states.include?(transition.state)
+              next_nfa_states << transition.state
             end
           end
 
           index += 1
         end
 
-        next_states
+        next_nfa_states
       end
     end
   end
