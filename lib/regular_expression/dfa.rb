@@ -14,13 +14,13 @@ module RegularExpression
       # machine should transition to. In effect, this means we're removing all
       # epsilon transitions.
       def build(nfa_start_state)
-        start_key = next_states_for([nfa_start_state])
-        worklist = [start_key]
+        nfa_start_states = next_states_for([nfa_start_state])
+        worklist = [nfa_start_states]
 
         # dfa_states is a hash that points from a set of states in the NFA to the
         # new state in the DFA.
         dfa_states = {
-          start_key => NFA::StartState.new(start_key.map(&:label).join(","))
+          nfa_start_states => NFA::StartState.new(nfa_start_states.map(&:label).join(","))
         }
 
         until worklist.empty?
@@ -84,7 +84,7 @@ module RegularExpression
         end
 
         # Return the start state of the new DFA.
-        dfa_states[start_key]
+        dfa_states[nfa_start_states]
       end
 
       private
