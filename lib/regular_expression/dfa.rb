@@ -25,6 +25,7 @@ module RegularExpression
 
         until worklist.empty?
           current_nfa_states = worklist.pop
+          current_dfa_state = dfa_states[current_nfa_states]
 
           nfa_transitions = []
 
@@ -70,8 +71,8 @@ module RegularExpression
             next_dfa_state =
               dfa_states[next_nfa_states] ||=
                 dfa_state_class.new(next_nfa_states.map(&:label).join(","))
-            unless dfa_states[current_nfa_states].transitions.any? { |t| t.matches?(nfa_transition) }
-              dfa_states[current_nfa_states].add_transition(nfa_transition.copy(next_dfa_state))
+            unless current_dfa_state.transitions.any? { |t| t.matches?(nfa_transition) }
+              current_dfa_state.add_transition(nfa_transition.copy(next_dfa_state))
             end
           end
         end
