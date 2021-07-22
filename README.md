@@ -89,7 +89,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/kddnew
 
 ## Additional Reading
 * [Regular Expression Matching Can Be Simple And Fast - Russ Cox](https://swtch.com/~rsc/regexp/regexp1.html)
-* [Understanding Computation, Chapter 3: "The Simplest Computers" - Tom Stuart](https://www.oreilly.com/library/view/understanding-computation/9781449330071/)
+* [Understanding Computation, Chapter 3: "The Simplest Computers" - Tom Stuart](https://computationbook.com/)
 
 ## License
 
