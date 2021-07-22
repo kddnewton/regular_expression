@@ -66,6 +66,10 @@ module RegularExpression
       assert_matches(%q{a?a?a?aaa}, "aaaaa")
     end
 
+    test_matching(:larger_strings) do
+      assert_matches(%Q{#{'a'*50}b}, "#{'a'*50}b")
+    end
+
     test_matching(:begin_anchor_caret) do
       assert_matches(%q{^abc}, "abc")
       refute_matches(%q{^abc}, "!abc")
