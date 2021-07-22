@@ -17,6 +17,11 @@ module RegularExpression
       refute(Flags.new.extended?)
     end
 
+    def test_ignorecase
+      assert(Flags.new(Regexp::IGNORECASE).ignore_case?)
+      refute(Flags.new.ignore_case?)
+    end
+
     def test_unknown_flag_raises
       assert_raises(ArgumentError) do
         Flags.parse("z")

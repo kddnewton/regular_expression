@@ -60,24 +60,50 @@ module RegularExpression
               ruby_src.push "        flag = string_n < string.size"
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestValue
-              ruby_src.push "        flag = string_n < string.size && string[string_n] == #{insn.char.inspect}"
+              if insn.ignore_case
+                ruby_src.push "        flag = string_n < string.size && string[string_n].downcase == #{insn.char.downcase.inspect}"
+              else
+                ruby_src.push "        flag = string_n < string.size && string[string_n] == #{insn.char.inspect}"
+              end
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestType
               ruby_src.push "        flag = string_n < string.size && ::RegularExpression::CharacterType.new(#{insn.type.type.inspect}).match?(string[string_n])"
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestValuesInvert
-              ruby_src.push "        flag = string_n < string.size && !#{insn.chars.inspect}.include?(string[string_n])"
+              if insn.ignore_case
+                ruby_src.push "        flag = string_n < string.size && !#{insn.chars.map(&:downcase).inspect}.include?(string[string_n].downcase)"
+              else
+                ruby_src.push "        flag = string_n < string.size && !#{insn.chars.inspect}.include?(string[string_n])"
+              end
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestRange
-              ruby_src.push "        flag = string_n < string.size && string[string_n] >= #{insn.left.inspect} && string[string_n] <= #{insn.right.inspect}"
+              if insn.ignore_case
+                ruby_src.push "        flag = string_n < string.size && string[string_n].downcase >= #{insn.left.inspect} && string[string_n].downcase <= #{insn.right.inspect}"
+                ruby_src.push "        flag ||= string_n < string.size && string[string_n].upcase >= #{insn.left.inspect} && string[string_n].upcase <= #{insn.right.inspect}"
+              else
+                ruby_src.push "        flag = string_n < string.size && string[string_n] >= #{insn.left.inspect} && string[string_n] <= #{insn.right.inspect}"
+              end
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestRangeInvert
-              ruby_src.push "        flag = string_n < string.size && (string[string_n] < #{insn.left.inspect} || string[string_n] > #{insn.right.inspect})"
+              if insn.ignore_case
+                ruby_src.push "        flag = string_n < string.size && (string[string_n].downcase < #{insn.left.inspect} || string[string_n].downcase > #{insn.right.inspect})"
+                ruby_src.push "        flag ||= string_n < string.size && (string[string_n].upcase < #{insn.left.inspect} || string[string_n].upcase > #{insn.right.inspect})"
+              else
+                ruby_src.push "        flag = string_n < string.size && (string[string_n] < #{insn.left.inspect} || string[string_n] > #{insn.right.inspect})"
+              end
               ruby_src.push "        string_n += 1 if flag"
             when Bytecode::Insns::TestPositiveLookahead
-              ruby_src.push "        flag = string[string_n..].start_with?(#{insn.value.inspect})"
+              if insn.ignore_case
+                ruby_src.push "        flag = string[string_n..].downcase.start_with?(#{insn.value.downcase.inspect})"
+              else
+                ruby_src.push "        flag = string[string_n..].start_with?(#{insn.value.inspect})"
+              end
             when Bytecode::Insns::TestNegativeLookahead
-              ruby_src.push "        flag = !string[string_n..].start_with?(#{insn.value.inspect})"
+              if insn.ignore_case
+                ruby_src.push "        flag = !string[string_n..].downcase.start_with?(#{insn.value.downcase.inspect})"
+              else
+                ruby_src.push "        flag = !string[string_n..].start_with?(#{insn.value.inspect})"
+              end
             when Bytecode::Insns::Branch
               true_block = cfg.label_map[insn.true_target]
               false_block = cfg.label_map[insn.false_target]

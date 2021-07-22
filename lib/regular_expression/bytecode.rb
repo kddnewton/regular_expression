@@ -71,21 +71,21 @@ module RegularExpression
             when NFA::Transition::Any
               builder.push(Insns::TestAny.new)
             when NFA::Transition::Value
-              builder.push(Insns::TestValue.new(transition.value))
+              builder.push(Insns::TestValue.new(transition.value, transition.ignore_case))
             when NFA::Transition::Invert
-              builder.push(Insns::TestValuesInvert.new(transition.values))
+              builder.push(Insns::TestValuesInvert.new(transition.values, transition.ignore_case))
             when NFA::Transition::Range
               if transition.invert
-                builder.push(Insns::TestRangeInvert.new(transition.left, transition.right))
+                builder.push(Insns::TestRangeInvert.new(transition.left, transition.right, transition.ignore_case))
               else
-                builder.push(Insns::TestRange.new(transition.left, transition.right))
+                builder.push(Insns::TestRange.new(transition.left, transition.right, transition.ignore_case))
               end
             when NFA::Transition::Type
               builder.push(Insns::TestType.new(CharacterType.new(transition.type)))
             when NFA::Transition::PositiveLookahead
-              builder.push(Insns::TestPositiveLookahead.new(transition.value))
+              builder.push(Insns::TestPositiveLookahead.new(transition.value, transition.ignore_case))
             when NFA::Transition::NegativeLookahead
-              builder.push(Insns::TestNegativeLookahead.new(transition.value))
+              builder.push(Insns::TestNegativeLookahead.new(transition.value, transition.ignore_case))
             else
               raise
             end
@@ -185,7 +185,7 @@ module RegularExpression
 
       # If it's possible to read a character off the input and that character
       # matches the char value, then do so and set the flag, otherwise clear it.
-      TestValue = Struct.new(:char)
+      TestValue = Struct.new(:char, :ignore_case)
 
       # If it's possible to read a character off the input and that character is
       # included in the POSIX character type class defined by the type variable,
@@ -195,22 +195,22 @@ module RegularExpression
       # If it's possible to read a character off the input and that character is
       # not contained within the list of values, then do so and set the flag,
       # otherwise clear it
-      TestValuesInvert = Struct.new(:chars)
+      TestValuesInvert = Struct.new(:chars, :ignore_case)
 
       # If it's possible to read a character off the input and that character is
       # within the range of possible values, then do so set the flag, otherwise
       # clear it
-      TestRange = Struct.new(:left, :right)
+      TestRange = Struct.new(:left, :right, :ignore_case)
 
       # If it's possible to read a character off the input and that character is
       # not within the range of possible values, then do so and set the flag,
       # otherwise clear it
-      TestRangeInvert = Struct.new(:left, :right)
+      TestRangeInvert = Struct.new(:left, :right, :ignore_case)
 
       # If the next characters in the input string match the value of this
       # transition, then set the flag, otherwise clear it
-      TestPositiveLookahead = Struct.new(:value)
-      TestNegativeLookahead = Struct.new(:value)
+      TestPositiveLookahead = Struct.new(:value, :ignore_case)
+      TestNegativeLookahead = Struct.new(:value, :ignore_case)
 
       # If the flag has been set, jump to the true target, otherwise if it's
       # been cleared jump to the false target.

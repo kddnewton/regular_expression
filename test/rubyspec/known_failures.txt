@@ -52,7 +52,6 @@ lets us use quantifiers on assertions
 supports * (0 or more of previous subexpression)
 supports {m,n} (m to n of previous subexpression)
 supports modifier combinations
-supports /i (case-insensitive)
 supports /o (once)
 supports . with /m
 supports (?imx-imx) (inline modifiers)

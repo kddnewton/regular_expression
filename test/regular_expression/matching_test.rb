@@ -303,6 +303,11 @@ module RegularExpression
       refute_matches("a(?!b)", "ab")
     end
 
+    test_matching(:ignore_case_flag) do
+      assert_matches("a", "A", flags: "i")
+      assert_matches("[a-z]", "A", flags: "i")
+    end
+
     def test_extended_mode
       # First just check that this pattern actually works
       pattern = Pattern.new(%q{\A[[:digit:]]+(\.[[:digit:]]+)?\z})
@@ -337,7 +342,7 @@ module RegularExpression
       source = %q{^\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\d\D\w\W\h\s|.)\z$}
 
       ast = Parser.new.parse(source)
-      nfa = NFA.build(ast)
+      nfa = NFA.build(ast, Flags.new)
       bytecode = Bytecode.compile(nfa)
       cfg = CFG.build(bytecode)
       schedule = Scheduler.schedule(cfg)
@@ -390,8 +395,8 @@ module RegularExpression
 
     private
 
-    def assertion_pattern(source)
-      pattern = Pattern.new(source)
+    def assertion_pattern(source, flags)
+      pattern = Pattern.new(source, flags)
 
       case compiler
       when :x86
@@ -409,18 +414,18 @@ module RegularExpression
       pattern
     end
 
-    def assert_matches(source, value)
+    def assert_matches(source, value, flags: "")
       message = "Expected /#{source}/ to match #{value.inspect} (#{compiler})"
-      pattern = assertion_pattern(source)
+      pattern = assertion_pattern(source, flags)
       (THRESHOLD * 2).times do
         pattern.match?(value)
       end
       assert_operator pattern, :match?, value, message
     end
 
-    def refute_matches(source, value)
+    def refute_matches(source, value, flags: "")
       message = "Expected /#{source}/ to not match #{value.inspect} (#{compiler})"
-      pattern = assertion_pattern(source)
+      pattern = assertion_pattern(source, flags)
       (THRESHOLD * 2).times do
         pattern.match?(value)
       end

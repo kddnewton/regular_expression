@@ -12,7 +12,7 @@ module RegularExpression
       end
 
       # Using a queue, walk through the AST and build up a state machine.
-      def build(root)
+      def build(root, flags)
         response = StartState.new
         worklist = [[root, response, FinishState.new]]
 
@@ -75,7 +75,7 @@ module RegularExpression
             end
           when AST::CharacterGroup
             if node.invert
-              transition = Transition::Invert.new(finish_state, node.items.flat_map(&:to_nfa_values).sort)
+              transition = Transition::Invert.new(finish_state, node.items.flat_map(&:to_nfa_values).sort, ignore_case: flags.ignore_case?)
               start_state.unshift(transition)
             else
               node.items.each { |item| worklist.push([item, start_state, finish_state]) }
@@ -83,22 +83,22 @@ module RegularExpression
           when AST::CharacterClass
             case node.value
             when %q{\w}
-              start_state.unshift(Transition::Range.new(finish_state, "a", "z"))
-              start_state.unshift(Transition::Range.new(finish_state, "A", "Z"))
+              start_state.unshift(Transition::Range.new(finish_state, "a", "z", ignore_case: flags.ignore_case?))
+              start_state.unshift(Transition::Range.new(finish_state, "A", "Z", ignore_case: flags.ignore_case?))
               start_state.unshift(Transition::Range.new(finish_state, "0", "9"))
               start_state.unshift(Transition::Value.new(finish_state, "_"))
             when %q{\W}
-              start_state.unshift(Transition::Invert.new(finish_state, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"]))
+              start_state.unshift(Transition::Invert.new(finish_state, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"], ignore_case: flags.ignore_case?))
             when %q{\d}
               start_state.unshift(Transition::Range.new(finish_state, "0", "9"))
             when %q{\D}
               start_state.unshift(Transition::Range.new(finish_state, "0", "9", invert: true))
             when %q{\h}
-              start_state.unshift(Transition::Range.new(finish_state, "a", "f"))
-              start_state.unshift(Transition::Range.new(finish_state, "A", "F"))
+              start_state.unshift(Transition::Range.new(finish_state, "a", "f", ignore_case: flags.ignore_case?))
+              start_state.unshift(Transition::Range.new(finish_state, "A", "F", ignore_case: flags.ignore_case?))
               start_state.unshift(Transition::Range.new(finish_state, "0", "9"))
             when %q{\H}
-              start_state.unshift(Transition::Invert.new(finish_state, [*("a".."h"), *("A".."H"), *("0".."9")]))
+              start_state.unshift(Transition::Invert.new(finish_state, [*("a".."h"), *("A".."H"), *("0".."9")], ignore_case: flags.ignore_case?))
             when %q{\s}
               start_state.unshift(Transition::Value.new(finish_state, " "))
               start_state.unshift(Transition::Value.new(finish_state, "\t"))
@@ -114,7 +114,7 @@ module RegularExpression
           when AST::CharacterType
             start_state.unshift(Transition::Type.new(finish_state, node.value))
           when AST::Character
-            start_state.unshift(Transition::Value.new(finish_state, node.value))
+            start_state.unshift(Transition::Value.new(finish_state, node.value, ignore_case: flags.ignore_case?))
           when AST::Period
             start_state.unshift(Transition::Any.new(finish_state))
           when AST::PositiveLookahead
@@ -122,7 +122,7 @@ module RegularExpression
           when AST::NegativeLookahead
             start_state.unshift(Transition::NegativeLookahead.new(finish_state, node.value))
           when AST::CharacterRange
-            start_state.unshift(Transition::Range.new(finish_state, node.left, node.right))
+            start_state.unshift(Transition::Range.new(finish_state, node.left, node.right, ignore_case: flags.ignore_case?))
           when AST::Anchor
             transition =
               case node.value
@@ -183,6 +183,14 @@ module RegularExpression
           end
         else
           raise
+        end
+      end
+
+      def char_in_other_case(char)
+        if char != (downcase = char.downcase)
+          downcase
+        elsif char != (upcase = char.upcase)
+          upcase
         end
       end
     end
@@ -319,9 +327,19 @@ module RegularExpression
         end
       end
 
-      class Value < Struct.new(:state, :value)
+      class Value
+        attr_reader :state # State
+        attr_reader :value # String
+        attr_reader :ignore_case # bool
+
+        def initialize(state, value, ignore_case: false)
+          @state = state
+          @value = value
+          @ignore_case = ignore_case
+        end
+
         def label
-          value.inspect
+          IgnoreCase.label(value.inspect, ignore_case)
         end
 
         def matches?(other)
@@ -329,24 +347,31 @@ module RegularExpression
           when Any
             true
           when Value
-            value == other.value
+            IgnoreCase.matches?(value, ignore_case) do |value|
+              value == other.value
+            end
           when Invert
-            !other.values.include?(value)
+            IgnoreCase.matches?(value, ignore_case) do |value|
+              !other.values.include?(value)
+            end
           when Range
-            matches = value >= other.left && value <= other.right
-            matches = !matched if other.invert
-            matches
+            IgnoreCase.matches?(value, ignore_case) do |value|
+              matches = value >= other.left && value <= other.right
+              matches = !matched if other.invert
+              matches
+            end
           else
             false
           end
         end
 
         def copy(new_state)
-          Value.new(new_state, value)
+          Value.new(new_state, value, ignore_case: ignore_case)
         end
       end
 
       class Type < Struct.new(:state, :type)
+        # @TODO does it make sense to add ignore case to these character class?
         def label
           "[[:#{type}:]]"
         end
@@ -363,14 +388,16 @@ module RegularExpression
       class Invert
         attr_reader :state # State
         attr_reader :values # Array[String]
+        attr_reader :ignore_case # bool
 
-        def initialize(state, values)
+        def initialize(state, values, ignore_case: false)
           @state = state
           @values = values
+          @ignore_case = ignore_case
         end
 
         def label
-          %Q{[^#{values.join}]}
+          IgnoreCase.label(%Q{[^#{values.join}]}, ignore_case)
         end
 
         def matches?(other)
@@ -397,16 +424,18 @@ module RegularExpression
         attr_reader :state # State
         attr_reader :left, :right # String
         attr_reader :invert # bool
+        attr_reader :ignore_case # bool
 
-        def initialize(state, left, right, invert: false)
+        def initialize(state, left, right, invert: false, ignore_case: false)
           @state = state
           @left = left
           @right = right
           @invert = invert
+          @ignore_case = ignore_case
         end
 
         def label
-          %Q{#{left}-#{right}}
+          IgnoreCase.label(%Q{#{left}-#{right}}, ignore_case)
         end
 
         def matches?(other)
@@ -427,13 +456,13 @@ module RegularExpression
         end
 
         def copy(new_state)
-          Range.new(new_state, left, right, invert: invert)
+          Range.new(new_state, left, right, invert: invert, ignore_case: ignore_case)
         end
       end
 
-      class PositiveLookahead < Struct.new(:state, :value)
+      class PositiveLookahead < Struct.new(:state, :value, :ignore_case)
         def label
-          "(?=#{value})"
+          IgnoreCase.label("(?=#{value})", ignore_case)
         end
 
         def matches?(other)
@@ -445,9 +474,9 @@ module RegularExpression
         end
       end
 
-      class NegativeLookahead < Struct.new(:state, :value)
+      class NegativeLookahead < Struct.new(:state, :value, :ignore_case)
         def label
-          "(?!#{value})"
+          IgnoreCase.label("(?!#{value})", ignore_case)
         end
 
         def matches?(other)

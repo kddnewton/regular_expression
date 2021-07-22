@@ -62,30 +62,50 @@ module RegularExpression
             string_n += 1 if flag
             insn_n += 1
           when Bytecode::Insns::TestValue
-            flag = string_n < string.size && string[string_n] == insn.char
+            flag = string_n < string.size && IgnoreCase.matches?(string[string_n], insn.ignore_case) do |char|
+              char == insn.char
+            end
             string_n += 1 if flag
             insn_n += 1
           when Bytecode::Insns::TestType
             flag = string_n < string.size && insn.type.match?(string[string_n])
+            #flag = string_n < string.size && IgnoreCase.matches?(string[string_n], insn.ignore_case) do |char|
+              #insn.type.match?(char)
+            #end
             string_n += 1 if flag
             insn_n += 1
           when Bytecode::Insns::TestValuesInvert
-            flag = string_n < string.size && !insn.chars.include?(string[string_n])
+            flag = string_n < string.size && IgnoreCase.matches?(string[string_n], insn.ignore_case) do |char|
+              !insn.chars.include?(string[string_n])
+            end
             string_n += 1 if flag
             insn_n += 1
           when Bytecode::Insns::TestRange
-            flag = string_n < string.size && string[string_n] >= insn.left && string[string_n] <= insn.right
+            flag = string_n < string.size && IgnoreCase.matches?(string[string_n], insn.ignore_case) do |char|
+              char >= insn.left && char <= insn.right
+            end
             string_n += 1 if flag
             insn_n += 1
           when Bytecode::Insns::TestRangeInvert
-            flag = string_n < string.size && (string[string_n] < insn.left || string[string_n] > insn.right)
+            flag = string_n < string.size && IgnoreCase.matches?(string[string_n], insn.ignore_case) do |char|
+              char >= insn.left && char <= insn.right
+            end
+
             string_n += 1 if flag
             insn_n += 1
           when Bytecode::Insns::TestPositiveLookahead
-            flag = string[string_n..].start_with?(insn.value)
+            flag = if insn.ignore_case
+                string[string_n..].downcase.start_with?(insn.value.downcase)
+              else
+                string[string_n..].start_with?(insn.value)
+              end
             insn_n += 1
           when Bytecode::Insns::TestNegativeLookahead
-            flag = !string[string_n..].start_with?(insn.value)
+            flag = if insn.ignore_case
+                !string[string_n..].downcase.start_with?(insn.value.downcase)
+              else
+                !string[string_n..].start_with?(insn.value)
+              end
             insn_n += 1
           when Bytecode::Insns::Branch
             if profiling_data

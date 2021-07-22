@@ -7,7 +7,8 @@ module RegularExpression
     attr_reader :value
 
     CODES = {
-      "x" => Regexp::EXTENDED
+      "x" => Regexp::EXTENDED,
+      "i" => Regexp::IGNORECASE,
     }.freeze
 
     # Parses a String into a Flags object.
@@ -36,6 +37,10 @@ module RegularExpression
     # regular expression.
     def extended?
       (value & Regexp::EXTENDED).positive?
+    end
+
+    def ignore_case?
+      (value & Regexp::IGNORECASE).positive?
     end
   end
 end
