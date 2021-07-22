@@ -41,7 +41,7 @@ module RegularExpression
       # two levels!
       def self.compile(cfg, schedule)
         fisk = Fisk.new
-        buffer = Fisk::Helpers.jitbuffer(1024)
+        buffer = Fisk::Helpers.jitbuffer(1024 * 32)
 
         fisk.asm(buffer) do
           # Here we're setting up a couple of local variables that point to
