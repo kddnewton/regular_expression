@@ -158,6 +158,8 @@ BENCHMARKS.each do |category, benchmarks|
   report_rows.push [category] + category_pct + [nil] * 4 + [ruby_total_ms]
 end
 
+puts "Finished running..."
+
 header = ["category", "ruby (%)", "re (%)", "re_x86 (%)", "re_ruby (%)", "ruby RSD", "re RSD",
           "re_x86 RSD", "re_ruby RSD", "ruby time (ms)"]
 row_f = ["%s"] + ["%.1f"] * 4 + ["%.2f"] * 4 + ["%.2e"]
