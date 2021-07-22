@@ -17,9 +17,9 @@ module RegularExpression
         start_key = next_states_for([nfa])
         worklist = [start_key]
 
-        # Result is a hash that points from a set of states in the NFA to the
+        # dfa_states is a hash that points from a set of states in the NFA to the
         # new state in the DFA.
-        result = {
+        dfa_states = {
           start_key => NFA::StartState.new(start_key.map(&:label).join(","))
         }
 
@@ -53,7 +53,7 @@ module RegularExpression
             # this transition.
             next_nfa_states = next_states_for(next_states)
 
-            unless result.key?(next_nfa_states)
+            unless dfa_states.key?(next_nfa_states)
               # Make sure we check the next states.
               worklist << next_nfa_states
             end
@@ -67,15 +67,15 @@ module RegularExpression
                 NFA::State
               end
 
-            new_state = (result[next_nfa_states] ||= state_class.new(next_nfa_states.map(&:label).join(",")))
-            unless result[current_nfa_states].transitions.any? { |t| t.matches?(transition) }
-              result[current_nfa_states].add_transition(transition.copy(new_state))
+            new_state = (dfa_states[next_nfa_states] ||= state_class.new(next_nfa_states.map(&:label).join(",")))
+            unless dfa_states[current_nfa_states].transitions.any? { |t| t.matches?(transition) }
+              dfa_states[current_nfa_states].add_transition(transition.copy(new_state))
             end
           end
         end
 
         # Return the start state of the new DFA.
-        result[start_key]
+        dfa_states[start_key]
       end
 
       private
