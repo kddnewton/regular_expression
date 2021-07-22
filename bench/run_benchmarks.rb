@@ -17,11 +17,11 @@ BENCHMARKS = {
     ["ab", "ac", false, 10_000],
     ["ab{2,5}", "ababab", false, 10_000],
   ],
-  #"large string" => [
-  #  ["a" * 150 + "b", "a" * 150 + "b", true, 1_000], # issue: https://github.com/kddnewton/regular_expression/issues/74
-  #],
+  "large string" => [
+    ["a" * 50 + "b", "a" * 50 + "b", true, 1_000], # issue: https://github.com/kddnewton/regular_expression/issues/74
+  ],
   #"tricky" => [
-  #  ["a?" * 50 + "a" * 50, "a" * 53, true, 10_000]
+  #  ["a?" * 10 + "a" * 10, "a" * 15, true, 1_000]
   #]
 }.freeze
 
