@@ -71,7 +71,7 @@ def time_all_matches(source, value, should_match: true, iters_per_batch: 100, op
     [Regexp.new(source), :ruby, "Ruby built-in regexp"],
     [re_basic, :re, "uncompiled RegularExpression object"],
     [re_x86, :re_x86, "RegularExpression x86 compiler"],
-    [re_ruby, :re_ruby, "RegularExpression Ruby-backend compiler"]
+    [re_ruby, :re_ruby, "RegularExpression Ruby-backend compiler"],
     [re_cranelift, :re_cranelift, "RegularExpression cranelift compiler"]
   ].each do |match_obj, samples_name, matcher_description|
     next if samples_name == :ruby && options[:native] == false
@@ -158,12 +158,12 @@ BENCHMARKS.each do |category, benchmarks|
     bench_pcts = []
     bench_means = []
     bench_rsds = []
-    %i[ruby re re_x86 re_ruby, re_cranelift].each_with_index do |impl, impl_idx|
+    %i[ruby re re_x86 re_ruby re_cranelift].each_with_index do |impl, impl_idx|
       if (impl == :ruby && options[:native] == false) ||
          (impl == :re && options[:uncompiled] == false) ||
          (impl == :re_x86 && options[:compiled_x86] == false) ||
          (impl == :re_ruby && options[:compiled_ruby] == false) ||
-         impl == :re_cranelift && options[:compiled_cranelift] == false)
+         (impl == :re_cranelift && options[:compiled_cranelift] == false)
         bench_pcts.push nil
         bench_rsds.push nil
         next
