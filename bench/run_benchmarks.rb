@@ -26,9 +26,9 @@ BENCHMARKS = {
     [%q{a{25,50}b}, "#{'a' * 37}c", false, 1_000],
   ],
   "tricky" => [
-    [%q{(a?){10}a{10}}, "a" * 15, true, 1_000, { uncompiled: false, compiled_x86: false, compiled_ruby: false }],
+    [%q{(a?){10}a{10}}, "a" * 15, true, 1_000, { uncompiled: false, compiled_x86: false, compiled_ruby: false, compiled_cranelift: false }],
     [%Q{#{'a?' * 10}#{'a' * 10}}, "a" * 15, true, 1_000,
-     { uncompiled: false, compiled_x86: false, compiled_ruby: false }]
+     { uncompiled: false, compiled_x86: false, compiled_ruby: false, compiled_cranelift: false }]
   ],
 
   # Benchmarks from Shopify's UserAgent sniffing code
@@ -38,7 +38,7 @@ BENCHMARKS = {
       "Shopify Mobile/iOS/5.4.4 "\
       "(iPhone9,3/com.jadedpixel.shopify/OperatingSystemVersion(majorVersion: 10, minorVersion: 3, patchVersion: 2))",
       true, 100,
-      { uncompiled: false, compiled_x86: false, compiled_ruby: false }
+      { uncompiled: false, compiled_x86: false, compiled_ruby: false, compiled_cranelift: false }
     ]
   ]
 }.freeze
@@ -78,6 +78,7 @@ def time_all_matches(source, value, should_match: true, iters_per_batch: 100, op
     next if samples_name == :re && options[:uncompiled] == false
     next if samples_name == :re_x86 && options[:compiled_x86] == false
     next if samples_name == :re_ruby && options[:compiled_ruby] == false
+    next if samples_name == :re_cranelift && options[:compiled_cranelift] == false
 
     did_match = match_obj.match?(value)
 
