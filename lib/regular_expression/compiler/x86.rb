@@ -5,9 +5,11 @@ module RegularExpression
     module X86
       class Compiled
         attr_reader :buffer
+        attr_reader :context
 
-        def initialize(buffer)
+        def initialize(buffer, context)
           @buffer = buffer
+          @context = context
         end
 
         def disasm
@@ -27,11 +29,18 @@ module RegularExpression
         end
 
         def to_proc
-          function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
+          n_of_captures = context[:n_of_captures]
+          capture_names = context[:capture_names]
+          captures = ([-1] * (n_of_captures * 2)).pack("q*")
+          function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T, Fiddle::TYPE_VOIDP], Fiddle::TYPE_SIZE_T)
 
           lambda do |string|
-            value = function.call(string, string.length)
-            value if value != string.length + 1
+            value = function.call(string, string.length, captures)
+            captures_result = {}
+            captures.unpack("q*").each_slice(2).with_index do |(s,e), i|
+              captures_result[capture_names[i]] = {start: s, end: e}
+            end
+            captures_result if value != string.length + 1
           end
         end
       end
@@ -55,9 +64,9 @@ module RegularExpression
           # string where we're currently looking
           string_index = rcx
 
-          # rdx is a scratch register that is used to track the index of the
+          # r12 is a scratch register that is used to track the index of the
           # string where we've started the match
-          match_index = rdx
+          match_index = r12
 
           # rsp is a reserved register that stores a pointer to the stack
           stack_pointer = rsp
@@ -73,6 +82,14 @@ module RegularExpression
           # rdi is a scratch register that stores the first argument to the
           # function, and in our case stores a pointer to the base of the string
           string_pointer = rdi
+
+          # rdx is a scratch register that stores the 3rd argument to the
+          # function, and in our case stores a pointer to the base of the captures array
+          captures_pointer = rdx
+
+          # r11 is a scratch register that stores the current position in the
+          # captures array
+          captures_pointer_buffer = r11
 
           # r8 is a scratch register that we're using to store the last read
           # character value from the string
@@ -146,9 +163,15 @@ module RegularExpression
                 mov flag, imm32(1)
                 make_label end_label
               when Bytecode::Insns::StartCapture
-                # raise NotImplementedError
+                index = insn.index * 16
+                mov captures_pointer_buffer, captures_pointer
+                add captures_pointer_buffer, imm32(index)
+                mov m64(captures_pointer_buffer), string_index
               when Bytecode::Insns::EndCapture
-                # raise NotImplementedError
+                index = insn.index * 16 + 8
+                mov captures_pointer_buffer, captures_pointer
+                add captures_pointer_buffer, imm32(index)
+                mov m64(captures_pointer_buffer), string_index
               when Bytecode::Insns::TestAny
                 no_match_label = :"no_match_#{insn.object_id}"
                 end_label = :"end_#{insn.object_id}"
@@ -459,7 +482,7 @@ module RegularExpression
         stringio.rewind
         stringio.each_byte(&buffer.method(:putc))
 
-        Compiled.new(buffer)
+        Compiled.new(buffer, cfg.context)
       end
     end
   end
