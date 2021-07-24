@@ -32,13 +32,14 @@ module RegularExpression
           n_of_captures = context[:n_of_captures]
           capture_names = context[:capture_names]
           captures = ([-1] * (n_of_captures * 2)).pack("q*")
-          function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T, Fiddle::TYPE_VOIDP], Fiddle::TYPE_SIZE_T)
+          function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T, Fiddle::TYPE_VOIDP],
+                                        Fiddle::TYPE_SIZE_T)
 
           lambda do |string|
             value = function.call(string, string.length, captures)
             captures_result = {}
-            captures.unpack("q*").each_slice(2).with_index do |(s,e), i|
-              captures_result[capture_names[i]] = {start: s, end: e}
+            captures.unpack("q*").each_slice(2).with_index do |(s, e), i|
+              captures_result[capture_names[i]] = { start: s, end: e }
             end
             captures_result if value != string.length + 1
           end
@@ -163,14 +164,14 @@ module RegularExpression
                 mov flag, imm32(1)
                 make_label end_label
               when Bytecode::Insns::StartCapture
-                index = insn.index * 16
+                capture_index = insn.index * 16
                 mov captures_pointer_buffer, captures_pointer
-                add captures_pointer_buffer, imm32(index)
+                add captures_pointer_buffer, imm32(capture_index)
                 mov m64(captures_pointer_buffer), string_index
               when Bytecode::Insns::EndCapture
-                index = insn.index * 16 + 8
+                capture_index = insn.index * 16 + 8
                 mov captures_pointer_buffer, captures_pointer
-                add captures_pointer_buffer, imm32(index)
+                add captures_pointer_buffer, imm32(capture_index)
                 mov m64(captures_pointer_buffer), string_index
               when Bytecode::Insns::TestAny
                 no_match_label = :"no_match_#{insn.object_id}"
