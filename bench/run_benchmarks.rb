@@ -26,7 +26,8 @@ BENCHMARKS = {
     [%q{a{25,50}b}, "#{'a' * 37}c", false, 1_000],
   ],
   "tricky" => [
-    [%q{(a?){10}a{10}}, "a" * 15, true, 1_000, { uncompiled: false, compiled_x86: false, compiled_ruby: false, compiled_cranelift: false }],
+    [%q{(a?){10}a{10}}, "a" * 15, true, 1_000,
+     { uncompiled: false, compiled_x86: false, compiled_ruby: false, compiled_cranelift: false }],
     [%Q{#{'a?' * 10}#{'a' * 10}}, "a" * 15, true, 1_000,
      { uncompiled: false, compiled_x86: false, compiled_ruby: false, compiled_cranelift: false }]
   ],
