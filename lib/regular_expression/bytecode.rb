@@ -14,8 +14,6 @@ module RegularExpression
 
       visited = Set.new
       worklist = [[nfa, [:jump_to_fail]]]
-      n_of_captures = 0
-      captures = []
       capture_names = []
       # For each state in the NFA.
       until worklist.empty?
@@ -50,17 +48,16 @@ module RegularExpression
             when NFA::Transition::EndAnchor
               builder.push(Insns::TestEnd.new)
             when NFA::Transition::StartCapture
-              captures << n_of_captures
+              n_of_captures = capture_names.length
               capture_names << transition.name
               builder.push(
                 Insns::StartCapture.new(transition.name, n_of_captures),
                 Insns::Jump.new(label[transition.state])
               )
-              n_of_captures += 1
             when NFA::Transition::EndCapture
-              index = captures.pop
+              capture_index = capture_names.find_index(transition.name)
               builder.push(
-                Insns::EndCapture.new(transition.name, index),
+                Insns::EndCapture.new(transition.name, capture_index),
                 Insns::Jump.new(label[transition.state])
               )
             when NFA::Transition::Any
@@ -136,7 +133,7 @@ module RegularExpression
       # We always have a failure case - it's just the failure instruction.
       builder.mark_label(:fail)
       builder.push(Insns::Fail.new)
-      builder.context = { n_of_captures: n_of_captures, capture_names: capture_names }
+      builder.context = { capture_names: capture_names }
       builder.build
     end
 

@@ -29,8 +29,8 @@ module RegularExpression
         end
 
         def to_proc
-          n_of_captures = context[:n_of_captures]
           capture_names = context[:capture_names]
+          n_of_captures = capture_names.length
           captures = ([-1] * (n_of_captures * 2)).pack("q*")
           function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T, Fiddle::TYPE_VOIDP],
                                         Fiddle::TYPE_SIZE_T)
