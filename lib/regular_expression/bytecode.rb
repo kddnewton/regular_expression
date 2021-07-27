@@ -16,6 +16,7 @@ module RegularExpression
       worklist = [[nfa, [:jump_to_fail]]]
       captures = 0
 
+      n_of_transitions = 0
       # For each state in the NFA.
       until worklist.empty?
         state, fallback = worklist.pop
@@ -39,7 +40,7 @@ module RegularExpression
           builder.mark_label(label[state, index])
 
           if state.transitions.length > 1 && index != state.transitions.length - 1
-            builder.push(Insns::PushIndex.new)
+            builder.push(Insns::PushIndex.new(n_of_transitions))
           end
 
           if !transition.is_a?(NFA::Transition::Epsilon)
@@ -118,11 +119,11 @@ module RegularExpression
 
           next_fallback =
             if state.transitions.length > 1 && index != state.transitions.length - 1
-              [Insns::PopIndex.new, Insns::Jump.new(label[state, index + 1])]
+              [Insns::PopIndex.new(n_of_transitions), Insns::Jump.new(label[state, index + 1])]
             else
               fallback
             end
-
+          n_of_transitions += 1
           worklist.push([transition.state, next_fallback])
         end
 
@@ -140,6 +141,7 @@ module RegularExpression
       builder.mark_label(:fail)
       builder.push(Insns::Fail.new)
       builder.captures = captures
+      builder.n_of_transitions = n_of_transitions
       builder.build
     end
 
@@ -147,11 +149,11 @@ module RegularExpression
       # Push the current string index onto the stack. This is necessary to
       # support backtracking so that we can pop it off later when we want to go
       # backward.
-      PushIndex = Class.new
+      PushIndex = Struct.new(:index)
 
       # Pop the string index off the stack. This is necessary so that we can
       # support backtracking.
-      PopIndex = Class.new
+      PopIndex = Struct.new(:index)
 
       # If we're at the beginning of the string, then set the flag, otherwise
       # clear it.
@@ -226,11 +228,13 @@ module RegularExpression
       attr_reader :insns # Array[Insns]
       attr_reader :labels # Hash[Symbol, Integer]
       attr_accessor :captures # Integer
+      attr_accessor :n_of_transitions
 
       def initialize
         @insns = []
         @labels = {}
         @captures = 0
+        @n_of_transitions = 0
       end
 
       def mark_label(label)
@@ -242,17 +246,18 @@ module RegularExpression
       end
 
       def build
-        Compiled.new(insns, labels, captures)
+        Compiled.new(insns, labels, captures, n_of_transitions)
       end
     end
 
     class Compiled
-      attr_reader :insns, :labels, :captures
+      attr_reader :insns, :labels, :captures, :n_of_transitions
 
-      def initialize(insns, labels, captures)
+      def initialize(insns, labels, captures, n_of_transitions)
         @insns = insns
         @labels = labels
         @captures = captures
+        @n_of_transitions = n_of_transitions
       end
 
       def dump
