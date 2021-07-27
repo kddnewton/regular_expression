@@ -41,6 +41,10 @@ rule
     { result = AST::Group.new(val[1], quantifier: val[3]) }
     | NO_CAPTURE expression RPAREN
     { result = AST::Group.new(val[1]) }
+    | NAMED_CAPTURE expression RPAREN
+    { result = AST::CaptureGroup.new(val[1], name: val[0]) }
+    | NAMED_CAPTURE expression RPAREN quantifier
+    { result = AST::CaptureGroup.new(val[1], quantifier: val[3], name: val[0]) }
 
   match:
     match_item quantifier
