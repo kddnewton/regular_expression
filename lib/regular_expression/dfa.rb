@@ -82,7 +82,7 @@ module RegularExpression
             next_dfa_state =
               dfa_states[next_nfa_states] ||=
                 dfa_state_class.new(next_nfa_states.map(&:label).join(","))
-            current_dfa_state.add_transition(nfa_transition.copy(next_dfa_state)) unless is_duplicate
+            current_dfa_state.push(nfa_transition.copy(next_dfa_state)) unless is_duplicate
           end
         end
 

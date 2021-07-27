@@ -14,7 +14,8 @@ module RegularExpression
 
       visited = Set.new
       worklist = [[nfa, [:jump_to_fail]]]
-      capture_names = []
+      captures = 0
+
       # For each state in the NFA.
       until worklist.empty?
         state, fallback = worklist.pop
@@ -48,16 +49,14 @@ module RegularExpression
             when NFA::Transition::EndAnchor
               builder.push(Insns::TestEnd.new)
             when NFA::Transition::StartCapture
-              n_of_captures = capture_names.length
-              capture_names << transition.name
+              captures = [captures, transition.index + 1].max
               builder.push(
-                Insns::StartCapture.new(transition.name, n_of_captures),
+                Insns::StartCapture.new(transition.index),
                 Insns::Jump.new(label[transition.state])
               )
             when NFA::Transition::EndCapture
-              capture_index = capture_names.find_index(transition.name)
               builder.push(
-                Insns::EndCapture.new(transition.name, capture_index),
+                Insns::EndCapture.new(transition.index),
                 Insns::Jump.new(label[transition.state])
               )
             when NFA::Transition::Any
@@ -133,7 +132,7 @@ module RegularExpression
       # We always have a failure case - it's just the failure instruction.
       builder.mark_label(:fail)
       builder.push(Insns::Fail.new)
-      builder.context = { capture_names: capture_names }
+      builder.captures = captures
       builder.build
     end
 
@@ -155,8 +154,13 @@ module RegularExpression
       # otherwise clear it.
       TestEnd = Class.new
 
-      StartCapture = Struct.new(:name, :index)
-      EndCapture = Struct.new(:name, :index)
+      # Record the string index when we get to this instruction so that it can
+      # be used to return the beginning of capture groups.
+      StartCapture = Struct.new(:index)
+
+      # Record the string index when we get to this instruction so that it can
+      # be used to return the ending of capture groups.
+      EndCapture = Struct.new(:index)
 
       # If it's possible to read a character off the input, then do so and set
       # the flag, otherwise clear it.
@@ -214,12 +218,12 @@ module RegularExpression
     class Builder
       attr_reader :insns # Array[Insns]
       attr_reader :labels # Hash[Symbol, Integer]
-      attr_accessor :context # { n_captures: Integer }
+      attr_accessor :captures # Integer
 
       def initialize
         @insns = []
         @labels = {}
-        @context = nil
+        @captures = 0
       end
 
       def mark_label(label)
@@ -231,17 +235,17 @@ module RegularExpression
       end
 
       def build
-        Compiled.new(insns, labels, context)
+        Compiled.new(insns, labels, captures)
       end
     end
 
     class Compiled
-      attr_reader :insns, :labels, :context
+      attr_reader :insns, :labels, :captures
 
-      def initialize(insns, labels, context)
+      def initialize(insns, labels, captures)
         @insns = insns
         @labels = labels
-        @context = context
+        @captures = captures
       end
 
       def dump

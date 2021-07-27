@@ -81,7 +81,7 @@ def time_all_matches(source, value, should_match: true, iters_per_batch: 100, op
 
     # We check inverted match values because false isn't the same as nil,
     # and Rubocop hates double-not.
-    if !did_match != !should_match
+    if did_match != should_match
       warn "did_match: #{did_match.inspect}    should_match: #{should_match.inspect}"
       msg = "Pattern #{source.inspect} should#{should_match ? '' : "n't"} " \
             "match #{value.inspect} with #{matcher_description}!"

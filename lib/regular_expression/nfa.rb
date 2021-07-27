@@ -17,17 +17,20 @@ module RegularExpression
         worklist = [[root, response, FinishState.new]]
 
         labels = ("1"..).each
+        captures = (0..).each
 
         while worklist.any?
           node, start_state, finish_state = worklist.shift
 
           case node
           when AST::Root
+            capture_index = captures.next
+
             match_start = State.new(labels.next)
-            start_state.unshift(Transition::StartCapture.new(match_start, "$0"))
+            start_state.unshift(Transition::StartCapture.new(match_start, capture_index))
 
             match_finish = State.new(+"") # replaced below
-            match_finish.unshift(Transition::EndCapture.new(finish_state, "$0"))
+            match_finish.unshift(Transition::EndCapture.new(finish_state, capture_index))
 
             current = match_start
 
@@ -54,11 +57,13 @@ module RegularExpression
             end
           when AST::CaptureGroup
             quantify(node.quantifier, start_state, finish_state, labels) do |quantified_start, quantified_finish|
+              capture_index = captures.next
+
               capture_start = State.new(labels.next)
-              quantified_start.unshift(Transition::StartCapture.new(capture_start, node.name))
+              quantified_start.unshift(Transition::StartCapture.new(capture_start, capture_index))
 
               capture_finish = State.new(labels.next)
-              capture_finish.unshift(Transition::EndCapture.new(quantified_finish, node.name))
+              capture_finish.unshift(Transition::EndCapture.new(quantified_finish, capture_index))
 
               node.expressions.each do |expression|
                 worklist.push([expression, capture_start, capture_finish])
@@ -153,13 +158,13 @@ module RegularExpression
           yield start_state, finish_state
           start_state.push(Transition::Epsilon.new(finish_state))
         when AST::Quantifier::Exact
-          states = [start_state, *(quantifier.value - 1).times.map { NFA::State.new(labels.next) }, finish_state]
+          states = [start_state, *(quantifier.value - 1).times.map { State.new(labels.next) }, finish_state]
 
           quantifier.value.times do |index|
             yield states[index], states[index + 1]
           end
         when AST::Quantifier::AtLeast
-          states = [start_state, *(quantifier.value - 1).times.map { NFA::State.new(labels.next) }, finish_state]
+          states = [start_state, *(quantifier.value - 1).times.map { State.new(labels.next) }, finish_state]
 
           quantifier.value.times do |index|
             yield states[index], states[index + 1]
@@ -167,7 +172,7 @@ module RegularExpression
 
           states[-1].push(Transition::Epsilon.new(states[-2]))
         when AST::Quantifier::Range
-          states = [start_state, *(quantifier.upper - 1).times.map { NFA::State.new(labels.next) }, finish_state]
+          states = [start_state, *(quantifier.upper - 1).times.map { State.new(labels.next) }, finish_state]
 
           quantifier.upper.times do |index|
             yield states[index], states[index + 1]
@@ -267,31 +272,31 @@ module RegularExpression
         end
       end
 
-      class StartCapture < Struct.new(:state, :name)
+      class StartCapture < Struct.new(:state, :index)
         def label
-          "Start capture #{name}"
+          "Start capture #{index}"
         end
 
         def matches?(other)
-          other.is_a?(StartCapture) && name == other.name
+          other.is_a?(StartCapture) && index == other.index
         end
 
         def copy(new_state)
-          StartCapture.new(new_state, name)
+          StartCapture.new(new_state, index)
         end
       end
 
-      class EndCapture < Struct.new(:state, :name)
+      class EndCapture < Struct.new(:state, :index)
         def label
-          "End capture #{name}"
+          "End capture #{index}"
         end
 
         def matches?(other)
-          other.is_a?(EndCapture) && name == other.name
+          other.is_a?(EndCapture) && index == other.index
         end
 
         def copy(new_state)
-          EndCapture.new(new_state, name)
+          EndCapture.new(new_state, index)
         end
       end
 
