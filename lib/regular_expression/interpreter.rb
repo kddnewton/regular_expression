@@ -28,7 +28,7 @@ module RegularExpression
 
     def interpret(string, profiling_data)
       stack = []
-      captures = [-1] * bytecode.captures * 2
+      captures = [-1] * bytecode.captures.length * 2
 
       (0..string.size).each do |start_n|
         string_n = start_n
