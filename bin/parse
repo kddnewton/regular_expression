@@ -57,7 +57,7 @@ ruby = RegularExpression::Compiler::Ruby.compile(cfg, schedule)
 puts "#{ruby.source}\n"
 
 x86 = RegularExpression::Compiler::X86.compile(cfg, schedule)
-# puts "#{x86.disasm}\n"
+puts "#{x86.disasm}\n"
 
 cranelift = RegularExpression::Compiler::Cranelift.compile(cfg, schedule)
 

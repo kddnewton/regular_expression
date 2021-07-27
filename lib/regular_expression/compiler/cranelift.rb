@@ -79,79 +79,39 @@ module RegularExpression
                 var_val = bcx.use_var(var)
                 bcx.def_var(string_index, var_val)
               when Bytecode::Insns::TestBegin
-                over_block = bcx.create_block
-                end_block = bcx.create_block
-
                 string_index_val = bcx.use_var(string_index)
-                bcx.br_icmp(:e, string_index_val, zero, over_block, [])
-
-                next_block = bcx.create_block
-                bcx.jump(next_block, [])
-                bcx.switch_to_block(next_block)
-                bcx.def_var(flag, zero)
-                bcx.jump(end_block, [])
-                bcx.switch_to_block(over_block)
-                bcx.def_var(flag, one)
-                bcx.jump(end_block, [])
-                bcx.switch_to_block(end_block)
+                v = bcx.icmp(:e, string_index_val, zero)
+                flag_val = bcx.select(v, one, zero)
+                bcx.def_var(flag, flag_val)
               when Bytecode::Insns::TestEnd
-                over_block = bcx.create_block
-                end_block = bcx.create_block
-
                 string_index_val = bcx.use_var(string_index)
-                bcx.br_icmp(:e, string_index_val, string_length, over_block, [])
-
-                next_block = bcx.create_block
-                bcx.jump(next_block, [])
-                bcx.switch_to_block(next_block)
-                bcx.def_var(flag, zero)
-                bcx.jump(end_block, [])
-                bcx.switch_to_block(over_block)
-                bcx.def_var(flag, one)
-                bcx.jump(end_block, [])
-                bcx.switch_to_block(end_block)
+                v = bcx.icmp(:e, string_index_val, string_length)
+                flag_val = bcx.select(v, one, zero)
+                bcx.def_var(flag, flag_val)
               when Bytecode::Insns::TestAny
-                no_match_block = bcx.create_block
-                post_check_block = bcx.create_block
-                end_block = bcx.create_block
                 string_index_val = bcx.use_var(string_index)
-                bcx.br_icmp(:e, string_index_val, string_length, no_match_block, [])
-                bcx.jump(post_check_block, [])
-                bcx.switch_to_block(post_check_block)
-                increased = bcx.iadd(string_index_val, one)
+                v = bcx.icmp(:ne, string_index_val, string_length)
+                flag_val = bcx.select(v, one, zero)
+                increased = bcx.iadd(string_index_val, flag_val)
                 bcx.def_var(string_index, increased)
-                bcx.def_var(flag, one)
-                bcx.jump(end_block, [])
-                bcx.switch_to_block(no_match_block)
-                bcx.def_var(flag, zero)
-                bcx.jump(end_block, [])
-                bcx.switch_to_block(end_block)
+                bcx.def_var(flag, flag_val)
               when Bytecode::Insns::TestValue
-                no_match_block = bcx.create_block
                 post_length_check_block = bcx.create_block
-                post_equal_check_block = bcx.create_block
                 end_block = bcx.create_block
                 string_index_val = bcx.use_var(string_index)
-                bcx.br_icmp(:e, string_index_val, string_length, no_match_block, [])
+                bcx.def_var(flag, zero)
+                bcx.br_icmp(:e, string_index_val, string_length, end_block, [])
                 bcx.jump(post_length_check_block, [])
-
                 bcx.switch_to_block(post_length_check_block)
                 char_ptr = bcx.iadd(string_pointer, string_index_val)
                 char = bcx.load(:I8, char_ptr, 0)
                 expected_char = bcx.iconst(:I8, insn.char.ord)
-                bcx.br_icmp(:ne, char, expected_char, no_match_block, [])
-                bcx.jump(post_equal_check_block, [])
-
-                bcx.switch_to_block(post_equal_check_block)
-                increased = bcx.iadd(string_index_val, one)
+                v = bcx.icmp(:e, char, expected_char)
+                flag_val = bcx.select(v, one, zero)
+                increased = bcx.iadd(string_index_val, flag_val)
                 bcx.def_var(string_index, increased)
-                bcx.def_var(flag, one)
+                bcx.def_var(flag, flag_val)
                 bcx.jump(end_block, [])
-
-                bcx.switch_to_block(no_match_block)
-                bcx.def_var(flag, zero)
-                bcx.jump(end_block, [])
-
                 bcx.switch_to_block(end_block)
               when Bytecode::Insns::TestValuesInvert
                 no_match_block = bcx.create_block
