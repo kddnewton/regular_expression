@@ -38,7 +38,7 @@ source = ARGV.shift
 ast = RegularExpression::Parser.new.parse(source, options[:flags])
 RegularExpression::AST.to_dot(ast)
 
-nfa = ast.to_nfa
+nfa = RegularExpression::NFA.build(ast)
 RegularExpression::NFA.to_dot(nfa)
 
 dfa = RegularExpression::DFA.build(nfa)
