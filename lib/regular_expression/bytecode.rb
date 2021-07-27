@@ -14,7 +14,7 @@ module RegularExpression
 
       visited = Set.new
       worklist = [[nfa, [:jump_to_fail]]]
-
+      capture_names = []
       # For each state in the NFA.
       until worklist.empty?
         state, fallback = worklist.pop
@@ -48,13 +48,16 @@ module RegularExpression
             when NFA::Transition::EndAnchor
               builder.push(Insns::TestEnd.new)
             when NFA::Transition::StartCapture
+              n_of_captures = capture_names.length
+              capture_names << transition.name
               builder.push(
-                Insns::StartCapture.new(transition.name),
+                Insns::StartCapture.new(transition.name, n_of_captures),
                 Insns::Jump.new(label[transition.state])
               )
             when NFA::Transition::EndCapture
+              capture_index = capture_names.find_index(transition.name)
               builder.push(
-                Insns::EndCapture.new(transition.name),
+                Insns::EndCapture.new(transition.name, capture_index),
                 Insns::Jump.new(label[transition.state])
               )
             when NFA::Transition::Any
@@ -130,6 +133,7 @@ module RegularExpression
       # We always have a failure case - it's just the failure instruction.
       builder.mark_label(:fail)
       builder.push(Insns::Fail.new)
+      builder.context = { capture_names: capture_names }
       builder.build
     end
 
@@ -151,8 +155,8 @@ module RegularExpression
       # otherwise clear it.
       TestEnd = Class.new
 
-      StartCapture = Struct.new(:name)
-      EndCapture = Struct.new(:name)
+      StartCapture = Struct.new(:name, :index)
+      EndCapture = Struct.new(:name, :index)
 
       # If it's possible to read a character off the input, then do so and set
       # the flag, otherwise clear it.
@@ -210,10 +214,12 @@ module RegularExpression
     class Builder
       attr_reader :insns # Array[Insns]
       attr_reader :labels # Hash[Symbol, Integer]
+      attr_accessor :context # { n_captures: Integer }
 
       def initialize
         @insns = []
         @labels = {}
+        @context = nil
       end
 
       def mark_label(label)
@@ -225,16 +231,17 @@ module RegularExpression
       end
 
       def build
-        Compiled.new(insns, labels)
+        Compiled.new(insns, labels, context)
       end
     end
 
     class Compiled
-      attr_reader :insns, :labels
+      attr_reader :insns, :labels, :context
 
-      def initialize(insns, labels)
+      def initialize(insns, labels, context)
         @insns = insns
         @labels = labels
+        @context = context
       end
 
       def dump

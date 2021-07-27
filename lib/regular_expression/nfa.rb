@@ -2,12 +2,184 @@
 
 module RegularExpression
   module NFA
-    def self.to_dot(nfa, filename: "nfa")
-      graph = Graphviz::Graph.new(rankdir: "LR")
-      nfa.to_dot(graph, {})
+    class << self
+      def to_dot(nfa, filename: "nfa")
+        graph = Graphviz::Graph.new(rankdir: "LR")
+        nfa.to_dot(graph, {})
 
-      Graphviz.output(graph, path: "build/#{filename}.svg", format: "svg")
-      graph.to_dot
+        Graphviz.output(graph, path: "build/#{filename}.svg", format: "svg")
+        graph.to_dot
+      end
+
+      # Using a queue, walk through the AST and build up a state machine.
+      def build(root)
+        response = StartState.new
+        worklist = [[root, response, FinishState.new]]
+
+        labels = ("1"..).each
+
+        while worklist.any?
+          node, start_state, finish_state = worklist.shift
+
+          case node
+          when AST::Root
+            match_start = State.new(labels.next)
+            start_state.unshift(Transition::StartCapture.new(match_start, "$0"))
+
+            match_finish = State.new(+"") # replaced below
+            match_finish.unshift(Transition::EndCapture.new(finish_state, "$0"))
+
+            current = match_start
+
+            if node.at_start
+              current = State.new(labels.next)
+              match_start.unshift(Transition::BeginAnchor.new(current))
+            end
+
+            node.expressions.each do |expression|
+              worklist.push([expression, current, match_finish])
+            end
+          when AST::Expression
+            inner_states = Array.new(node.items.length - 1) { State.new(labels.next) }
+            node_states = [start_state, *inner_states, finish_state]
+
+            node.items.each_with_index do |item, index|
+              worklist.push([item, node_states[index], node_states[index + 1]])
+            end
+          when AST::Group
+            quantify(node.quantifier, start_state, finish_state, labels) do |quantified_start, quantified_finish|
+              node.expressions.each do |expression|
+                worklist.push([expression, quantified_start, quantified_finish])
+              end
+            end
+          when AST::CaptureGroup
+            quantify(node.quantifier, start_state, finish_state, labels) do |quantified_start, quantified_finish|
+              capture_start = State.new(labels.next)
+              quantified_start.unshift(Transition::StartCapture.new(capture_start, node.name))
+
+              capture_finish = State.new(labels.next)
+              capture_finish.unshift(Transition::EndCapture.new(quantified_finish, node.name))
+
+              node.expressions.each do |expression|
+                worklist.push([expression, capture_start, capture_finish])
+              end
+            end
+          when AST::Match
+            quantify(node.quantifier, start_state, finish_state, labels) do |quantified_start, quantified_finish|
+              worklist.push([node.item, quantified_start, quantified_finish])
+            end
+          when AST::CharacterGroup
+            if node.invert
+              transition = Transition::Invert.new(finish_state, node.items.flat_map(&:to_nfa_values).sort)
+              start_state.unshift(transition)
+            else
+              node.items.each { |item| worklist.push([item, start_state, finish_state]) }
+            end
+          when AST::CharacterClass
+            case node.value
+            when %q{\w}
+              start_state.unshift(Transition::Range.new(finish_state, "a", "z"))
+              start_state.unshift(Transition::Range.new(finish_state, "A", "Z"))
+              start_state.unshift(Transition::Range.new(finish_state, "0", "9"))
+              start_state.unshift(Transition::Value.new(finish_state, "_"))
+            when %q{\W}
+              start_state.unshift(Transition::Invert.new(finish_state, [*("a".."z"), *("A".."Z"), *("0".."9"), "_"]))
+            when %q{\d}
+              start_state.unshift(Transition::Range.new(finish_state, "0", "9"))
+            when %q{\D}
+              start_state.unshift(Transition::Range.new(finish_state, "0", "9", invert: true))
+            when %q{\h}
+              start_state.unshift(Transition::Range.new(finish_state, "a", "f"))
+              start_state.unshift(Transition::Range.new(finish_state, "A", "F"))
+              start_state.unshift(Transition::Range.new(finish_state, "0", "9"))
+            when %q{\H}
+              start_state.unshift(Transition::Invert.new(finish_state, [*("a".."h"), *("A".."H"), *("0".."9")]))
+            when %q{\s}
+              start_state.unshift(Transition::Value.new(finish_state, " "))
+              start_state.unshift(Transition::Value.new(finish_state, "\t"))
+              start_state.unshift(Transition::Value.new(finish_state, "\r"))
+              start_state.unshift(Transition::Value.new(finish_state, "\n"))
+              start_state.unshift(Transition::Value.new(finish_state, "\f"))
+              start_state.unshift(Transition::Value.new(finish_state, "\v"))
+            when %q{\S}
+              start_state.unshift(Transition::Invert.new(finish_state, [" ", "\t", "\r", "\n", "\f", "\v"]))
+            else
+              raise
+            end
+          when AST::CharacterType
+            start_state.unshift(Transition::Type.new(finish_state, node.value))
+          when AST::Character
+            start_state.unshift(Transition::Value.new(finish_state, node.value))
+          when AST::Period
+            start_state.unshift(Transition::Any.new(finish_state))
+          when AST::PositiveLookahead
+            start_state.unshift(Transition::PositiveLookahead.new(finish_state, node.value))
+          when AST::NegativeLookahead
+            start_state.unshift(Transition::NegativeLookahead.new(finish_state, node.value))
+          when AST::CharacterRange
+            start_state.unshift(Transition::Range.new(finish_state, node.left, node.right))
+          when AST::Anchor
+            transition =
+              case node.value
+              when %q{\A}
+                Transition::BeginAnchor.new(finish_state)
+              when %q{\z}, %q{$}
+                Transition::EndAnchor.new(finish_state)
+              end
+
+            start_state.unshift(transition)
+          else
+            raise
+          end
+        end
+
+        match_finish.label.replace(labels.next)
+        response
+      end
+
+      private
+
+      def quantify(quantifier, start_state, finish_state, labels)
+        case quantifier
+        when AST::Quantifier::Once
+          yield start_state, finish_state
+        when AST::Quantifier::ZeroOrMore
+          yield start_state, start_state
+          start_state.push(Transition::Epsilon.new(finish_state))
+        when AST::Quantifier::OneOrMore
+          yield start_state, finish_state
+          finish_state.push(Transition::Epsilon.new(start_state))
+        when AST::Quantifier::Optional
+          yield start_state, finish_state
+          start_state.push(Transition::Epsilon.new(finish_state))
+        when AST::Quantifier::Exact
+          states = [start_state, *(quantifier.value - 1).times.map { NFA::State.new(labels.next) }, finish_state]
+
+          quantifier.value.times do |index|
+            yield states[index], states[index + 1]
+          end
+        when AST::Quantifier::AtLeast
+          states = [start_state, *(quantifier.value - 1).times.map { NFA::State.new(labels.next) }, finish_state]
+
+          quantifier.value.times do |index|
+            yield states[index], states[index + 1]
+          end
+
+          states[-1].push(Transition::Epsilon.new(states[-2]))
+        when AST::Quantifier::Range
+          states = [start_state, *(quantifier.upper - 1).times.map { NFA::State.new(labels.next) }, finish_state]
+
+          quantifier.upper.times do |index|
+            yield states[index], states[index + 1]
+          end
+
+          (quantifier.upper - quantifier.lower).times do |index|
+            states[quantifier.lower + index].push(Transition::Epsilon.new(states[-1]))
+          end
+        else
+          raise
+        end
+      end
     end
 
     class State
@@ -19,7 +191,11 @@ module RegularExpression
         @transitions = []
       end
 
-      def add_transition(transition)
+      def unshift(transition)
+        transitions.unshift(transition)
+      end
+
+      def push(transition)
         transitions << transition
       end
 
