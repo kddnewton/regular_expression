@@ -87,11 +87,6 @@ To benchmark the current performance on your current version of Ruby, run:
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/kddnewton/regular_expression. For information about how to contribute to the development of this gem, see the [CONTRIBUTING.md](CONTRIBUTING.md) document.
 
-## Additional Reading
-
-* [Regular Expression Matching Can Be Simple And Fast - Russ Cox](https://swtch.com/~rsc/regexp/regexp1.html)
-* [Understanding Computation, Chapter 3: "The Simplest Computers" - Tom Stuart](https://computationbook.com/)
-
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

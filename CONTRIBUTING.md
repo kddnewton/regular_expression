@@ -74,3 +74,10 @@ Fifth, we can take the control flow graph and pass it to one of our compilers. T
 
 * `RegularExpression::Compiler::Ruby` - takes the control flow graph and converts it into a ruby string. To convert the string to a proc, the compiled object calls `eval`.
 * `RegularExpression::Compiler::X86` - takes the control flow graph and uses the `fisk` gem to generate `X86-64` assembly. The assembly returns a function pointer, and the compiled object knows how to convert that into a proc using the `Fiddle` library. The assembled code can be disassembled using the `crabstone` gem.
+
+## Additional reading
+
+Below are a couple of links to other reading you can do for background on regular expressions which additionally served as inspiration for this project.
+
+* [Regular Expression Matching Can Be Simple And Fast - Russ Cox](https://swtch.com/~rsc/regexp/regexp1.html)
+* [Understanding Computation, Chapter 3: "The Simplest Computers" - Tom Stuart](https://computationbook.com/)
