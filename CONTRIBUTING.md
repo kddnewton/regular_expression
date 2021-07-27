@@ -80,5 +80,7 @@ Fifth, we can take the control flow graph and pass it to one of our compilers. T
 Below are a couple of links to other reading you can do for background on regular expressions which additionally served as inspiration for this project.
 
 * [Regular Expression Matching Can Be Simple And Fast - Russ Cox](https://swtch.com/~rsc/regexp/regexp1.html)
+* [Regular Expression Matching: the Virtual Machine Approach](https://swtch.com/~rsc/regexp/regexp2.html)
+* [Regular Expression Matching in the Wild](https://swtch.com/~rsc/regexp/regexp3.html)
 * [Understanding Computation, Chapter 3: "The Simplest Computers" - Tom Stuart](https://computationbook.com/)
 * [Exploring Ruby’s Regular Expression Algorithm](http://patshaughnessy.net/2012/4/3/exploring-rubys-regular-expression-algorithm)
