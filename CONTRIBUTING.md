@@ -81,3 +81,4 @@ Below are a couple of links to other reading you can do for background on regula
 
 * [Regular Expression Matching Can Be Simple And Fast - Russ Cox](https://swtch.com/~rsc/regexp/regexp1.html)
 * [Understanding Computation, Chapter 3: "The Simplest Computers" - Tom Stuart](https://computationbook.com/)
+* [Exploring Ruby’s Regular Expression Algorithm](http://patshaughnessy.net/2012/4/3/exploring-rubys-regular-expression-algorithm)
