@@ -29,6 +29,11 @@ module RegularExpression
         @compiler = :profile_x86
         instance_eval(&block)
       end
+
+      define_method(:"test_#{name}_speculative_x86") do
+        @compiler = :speculative_x86
+        instance_eval(&block)
+      end
     end
 
     test_matching(:basic) do
@@ -342,6 +347,40 @@ module RegularExpression
       assert_kind_of(String, CFG.to_dot(cfg))
     end
 
+    def test_speculation
+      threshold = 100
+      compiled = 0
+      deoptimized = 0
+
+      pattern = Pattern.new("a(bcde)?f")
+
+      pattern.define_singleton_method :compiled do
+        compiled += 1
+      end
+
+      pattern.define_singleton_method :deoptimized do
+        deoptimized += 1
+      end
+
+      pattern.profile threshold: threshold, speculative: true
+
+      assert_equal 0, compiled
+      assert_equal 0, deoptimized
+      (threshold * 2).times do
+        assert_operator pattern, :match?, "af"
+      end
+      assert_equal 1, compiled
+      assert_equal 0, deoptimized
+
+      assert_equal 1, compiled
+      assert_equal 0, deoptimized
+      (threshold * 2).times do
+        assert_operator pattern, :match?, "abcdef"
+      end
+      assert_equal 2, compiled
+      assert_equal 1, deoptimized
+    end
+
     private
 
     def assertion_pattern(source)
@@ -354,6 +393,8 @@ module RegularExpression
         pattern.compile(compiler: Compiler::Ruby)
       when :profile_x86
         pattern.profile(compiler: Compiler::Ruby, threshold: THRESHOLD)
+      when :speculative_x86
+        pattern.profile(compiler: Compiler::Ruby, threshold: THRESHOLD, speculative: true)
       end
 
       pattern

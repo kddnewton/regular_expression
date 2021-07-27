@@ -4,6 +4,9 @@ module RegularExpression
   module Compiler
     module X86
       class Compiled
+        RETURN_FAILED = 0xffffffffffffffff
+        RETURN_DEOPT = RETURN_FAILED - 1
+
         attr_reader :buffer
         attr_reader :context
 
@@ -37,11 +40,18 @@ module RegularExpression
 
           lambda do |string|
             value = function.call(string, string.length, captures)
-            captures_result = {}
-            captures.unpack("q*").each_slice(2).with_index do |(s, e), i|
-              captures_result[capture_names[i]] = { start: s, end: e }
+            case value
+            when RETURN_FAILED
+              nil
+            when RETURN_DEOPT
+              raise Pattern::Deoptimize
+            else
+              captures_result = {}
+              captures.unpack("q*").each_slice(2).with_index do |(s, e), i|
+                captures_result[capture_names[i]] = { start: s, end: e }
+              end
+              captures_result if value != string.length + 1
             end
-            captures_result if value != string.length + 1
           end
         end
       end
@@ -458,6 +468,11 @@ module RegularExpression
               when Bytecode::Insns::Fail
                 inc match_index
                 jmp label(:start_loop_head)
+              when Bytecode::Insns::Deoptimize
+                mov return_value, imm64(RegularExpression::Compiler::X86::Compiled::RETURN_DEOPT)
+                mov stack_pointer, frame_pointer
+                pop frame_pointer
+                ret
               else
                 raise
               end
@@ -468,8 +483,7 @@ module RegularExpression
           # possible index in the string, so we're going to return the length
           # of the string + 1 so that the caller knows that this match failed
           make_label :exit
-          mov return_value, string_length
-          inc return_value
+          mov return_value, imm64(RegularExpression::Compiler::X86::Compiled::RETURN_FAILED)
 
           # Here we make sure to clean up after ourselves by returning the frame
           # pointer to its former position

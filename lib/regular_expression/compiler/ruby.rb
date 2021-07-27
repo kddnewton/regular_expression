@@ -122,6 +122,8 @@ module RegularExpression
             when Bytecode::Insns::Fail
               ruby_src.push "        start_n += 1"
               ruby_src.push "        break"
+            when Bytecode::Insns::Deoptimize
+              ruby_src.push "        raise ::RegularExpression::Pattern::Deoptimize"
             else
               raise
             end
