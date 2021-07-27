@@ -23,7 +23,7 @@ module RegularExpression
         ruby_src.push "-> (string) {"
         ruby_src.push "  start_n = 0"
         ruby_src.push "  stack = []"
-        ruby_src.push "  captures = []"
+        ruby_src.push "  captures = [-1] * #{(cfg.captures * 2).inspect}"
         ruby_src.push ""
         ruby_src.push "  while start_n <= string.size"
         ruby_src.push "    string_n = start_n"

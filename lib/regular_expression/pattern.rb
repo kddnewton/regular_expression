@@ -56,7 +56,8 @@ module RegularExpression
     end
 
     def match(string)
-      run(string)
+      indices = run(string)
+      MatchData.new(string, indices) if indices
     end
 
     def compiled
