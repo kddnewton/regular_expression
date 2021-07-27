@@ -6,7 +6,7 @@ module RegularExpression
 
     def initialize(source, flags = nil)
       ast = Parser.new.parse(source, Flags.new(flags))
-      @bytecode = Bytecode.compile(ast.to_nfa)
+      @bytecode = Bytecode.compile(NFA.build(ast))
     end
 
     def compile(compiler: Compiler::X86)

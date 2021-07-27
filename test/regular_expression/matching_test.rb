@@ -325,7 +325,7 @@ module RegularExpression
       source = %q{^\A(a?|b{2,3}|[cd]*|[e-g]+|[^h-jk]|\d\D\w\W\h\s|.)\z$}
 
       ast = Parser.new.parse(source)
-      nfa = ast.to_nfa
+      nfa = NFA.build(ast)
       bytecode = Bytecode.compile(nfa)
       cfg = CFG.build(bytecode)
       schedule = Scheduler.schedule(cfg)
