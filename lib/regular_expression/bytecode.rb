@@ -102,7 +102,14 @@ module RegularExpression
               false_target = label[state, index + 1]
             end
 
-            builder.push(Insns::Branch.new(true_target, false_target))
+            if true_target != false_target
+              # If we actually have two different targets, then create a branch
+              # instruction
+              builder.push(Insns::Branch.new(true_target, false_target))
+            else
+              # If the targets are the same, then just add a jump instruction
+              builder.push(Insns::Jump.new(true_target))
+            end
           elsif needs_epsilon
             builder.push(Insns::Jump.new(label[transition.state]))
           else
