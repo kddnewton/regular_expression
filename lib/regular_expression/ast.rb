@@ -67,7 +67,7 @@ module RegularExpression
       def initialize(expressions, quantifier: Quantifier::Once.new, name: nil)
         @expressions = expressions
         @quantifier = quantifier
-        @name = name || object_id
+        @name = name
       end
 
       def to_dot(parent)

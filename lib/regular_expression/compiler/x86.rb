@@ -3,16 +3,26 @@
 module RegularExpression
   module Compiler
     module X86
+      # A return status that indicates that the input string did not match the
+      # state machine
+      MATCHING_FAILED = 0
+
+      # A return status that indicates that the input string contained an
+      # uncommon pattern that we had already optimized away, so we need to
+      # deoptimize and fall back to the interpreter
+      MATCHING_DEOPTIMIZE = 1
+
+      # A return status that indicates that the input string matched the state
+      # machine
+      MATCHING_SUCCESS = 2
+
       class Compiled
-        RETURN_FAILED = 0xffffffffffffffff
-        RETURN_DEOPT = RETURN_FAILED - 1
-
         attr_reader :buffer
-        attr_reader :context
+        attr_reader :captures
 
-        def initialize(buffer, context)
+        def initialize(buffer, captures)
           @buffer = buffer
-          @context = context
+          @captures = captures
         end
 
         def disasm
@@ -32,25 +42,35 @@ module RegularExpression
         end
 
         def to_proc
-          capture_names = context[:capture_names]
-          n_of_captures = capture_names.length
-          captures = ([-1] * (n_of_captures * 2)).pack("q*")
-          function = buffer.to_function([Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T, Fiddle::TYPE_VOIDP],
-                                        Fiddle::TYPE_SIZE_T)
+          # This is a preallocated array that represents the indices of the
+          # captures. The length is two times the number of captures so that
+          # each capture can return its start and end index.
+          indices = ([-1] * (captures * 2)).pack("q*")
+
+          # This is a proc that will call through to the native function that
+          # we've assembled using Fisk.
+          function =
+            buffer.to_function(
+              [
+                Fiddle::TYPE_VOIDP, # a pointer to the string
+                Fiddle::TYPE_SIZE_T, # the size of the string
+                Fiddle::TYPE_VOIDP # a pointer to the captures
+              ],
+              Fiddle::TYPE_SIZE_T # an integer indicating the status
+            )
 
           lambda do |string|
-            value = function.call(string, string.length, captures)
+            value = function.call(string, string.length, indices)
+
             case value
-            when RETURN_FAILED
+            when MATCHING_FAILED
               nil
-            when RETURN_DEOPT
+            when MATCHING_DEOPTIMIZE
               raise Pattern::Deoptimize
+            when MATCHING_SUCCESS
+              indices.unpack("q*")
             else
-              captures_result = {}
-              captures.unpack("q*").each_slice(2).with_index do |(s, e), i|
-                captures_result[capture_names[i]] = { start: s, end: e }
-              end
-              captures_result if value != string.length + 1
+              raise
             end
           end
         end
@@ -460,8 +480,8 @@ module RegularExpression
               when Bytecode::Insns::Match
                 # If we reach this instruction, then we've successfully matched
                 # against the input string, so we're going to return the integer
-                # that represents the index at which this match began
-                mov return_value, match_index
+                # that represents success
+                mov return_value, imm64(MATCHING_SUCCESS)
                 mov stack_pointer, frame_pointer
                 pop frame_pointer
                 ret
@@ -469,7 +489,7 @@ module RegularExpression
                 inc match_index
                 jmp label(:start_loop_head)
               when Bytecode::Insns::Deoptimize
-                mov return_value, imm64(RegularExpression::Compiler::X86::Compiled::RETURN_DEOPT)
+                mov return_value, imm64(MATCHING_DEOPTIMIZE)
                 mov stack_pointer, frame_pointer
                 pop frame_pointer
                 ret
@@ -480,10 +500,10 @@ module RegularExpression
           end
 
           # If we reach this instruction, then we've failed to match at every
-          # possible index in the string, so we're going to return the length
-          # of the string + 1 so that the caller knows that this match failed
+          # possible index in the string, so we're going to return the integer
+          # that represents failure
           make_label :exit
-          mov return_value, imm64(RegularExpression::Compiler::X86::Compiled::RETURN_FAILED)
+          mov return_value, imm64(MATCHING_FAILED)
 
           # Here we make sure to clean up after ourselves by returning the frame
           # pointer to its former position
@@ -497,7 +517,7 @@ module RegularExpression
         stringio.rewind
         stringio.each_byte(&buffer.method(:putc))
 
-        Compiled.new(buffer, cfg.context)
+        Compiled.new(buffer, cfg.captures)
       end
     end
   end

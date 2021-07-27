@@ -15,10 +15,10 @@ module RegularExpression
     # This is just here for API parity with the compiled outputs.
     def to_proc
       interpreter = self
-      ->(string) { interpreter.match?(string) }
+      ->(string) { interpreter.match(string) }
     end
 
-    def match?(string)
+    def match(string)
       interpret(string, nil)
     end
 
@@ -28,7 +28,7 @@ module RegularExpression
 
     def interpret(string, profiling_data)
       stack = []
-      captures = {}
+      captures = []
 
       (0..string.size).each do |start_n|
         string_n = start_n
@@ -52,11 +52,10 @@ module RegularExpression
             flag = string_n == string.size
             insn_n += 1
           when Bytecode::Insns::StartCapture
-            captures[insn.name] ||= {}
-            captures[insn.name][:start] = string_n
+            captures[insn.index * 2] = string_n
             insn_n += 1
           when Bytecode::Insns::EndCapture
-            captures[insn.name][:end] = string_n
+            captures[insn.index * 2 + 1] = string_n
             insn_n += 1
           when Bytecode::Insns::TestAny
             flag = string_n < string.size
@@ -94,11 +93,13 @@ module RegularExpression
               entry.total_hits += 1
               entry.true_hits += 1 if flag
             end
-            insn_n = if flag
-                       bytecode.labels[insn.true_target]
-                     else
-                       bytecode.labels[insn.false_target]
-                     end
+
+            insn_n =
+              if flag
+                bytecode.labels[insn.true_target]
+              else
+                bytecode.labels[insn.false_target]
+              end
           when Bytecode::Insns::Jump
             insn_n = bytecode.labels[insn.target]
           when Bytecode::Insns::Match

@@ -16,7 +16,7 @@ module RegularExpression
       cfg = CFG.build(bytecode)
       schedule = Scheduler.schedule(cfg)
 
-      redefine_match(&compiler.compile(cfg, schedule))
+      redefine_run(&compiler.compile(cfg, schedule))
     end
 
     def profile(compiler: Compiler::X86, threshold: 100, speculative: false)
@@ -24,7 +24,7 @@ module RegularExpression
       profiling_data = Interpreter.empty_profiling_data
       iteration = threshold
 
-      # Replace with a profiling interpreter version of match?
+      # Replace with a profiling interpreter version of run
       profiling_impl = lambda do |s1|
         if (iteration -= 1).negative?
           compiled
@@ -34,13 +34,13 @@ module RegularExpression
           schedule = Scheduler.schedule(cfg)
           compiled = compiler.compile(cfg, schedule).to_proc
 
-          # Replace with a compiled version of match?
-          redefine_match do |s2|
+          # Replace with a compiled version of run
+          redefine_run do |s2|
             compiled.call(s2)
           rescue Deoptimize
             deoptimized
             iteration = threshold
-            redefine_match(&profiling_impl)
+            redefine_run(&profiling_impl)
             profiling_impl.call(s2)
           end
         end
@@ -48,11 +48,15 @@ module RegularExpression
         interpreter.interpret(s1, profiling_data)
       end
 
-      redefine_match(&profiling_impl)
+      redefine_run(&profiling_impl)
     end
 
     def match?(string)
-      Interpreter.new(bytecode).match?(string)
+      !run(string).nil?
+    end
+
+    def match(string)
+      run(string)
     end
 
     def compiled
@@ -65,9 +69,19 @@ module RegularExpression
 
     private
 
-    def redefine_match(&block)
-      singleton_class.undef_method(:match?)
-      define_singleton_method(:match?, &block)
+    # This is the actual method that runs whatever compiled version we're
+    # currently using against an input string. The entrypoint methods #match?
+    # and #match will call this method and use its result.
+    def run(string)
+      Interpreter.new(bytecode).match(string)
+    end
+
+    def redefine_run(&block)
+      # Undefining the method so that we don't get a warning
+      singleton_class.undef_method(:run)
+
+      # Redefine the match? method with the given block
+      define_singleton_method(:run, &block)
     end
   end
 end
