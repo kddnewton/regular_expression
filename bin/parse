@@ -60,6 +60,7 @@ x86 = RegularExpression::Compiler::X86.compile(cfg, schedule)
 puts "#{x86.disasm}\n"
 
 cranelift = RegularExpression::Compiler::Cranelift.compile(cfg, schedule)
+puts "#{cranelift.disasm}\n"
 
 check =
   if ARGV.any?
