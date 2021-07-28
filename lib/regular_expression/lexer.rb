@@ -41,6 +41,8 @@ module RegularExpression
           result << [:NEGATIVE_LOOKAHEAD, @scanner.matched]
         when @scanner.scan(/\(\?:/)
           result << [:NO_CAPTURE, @scanner.matched]
+        when @scanner.scan(/\(\?<(?<name>\w+)>/x)
+          result << [:NAMED_CAPTURE, @scanner[:name]]
         when @scanner.scan(/\\[wWdDhHsS]/)
           result << [:CHAR_CLASS, @scanner.matched]
         when @scanner.scan(/\[\[:(?<type>#{CharacterType::KNOWN.map(&:downcase).join("|")}):\]\]/)

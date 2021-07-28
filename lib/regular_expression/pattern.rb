@@ -57,7 +57,7 @@ module RegularExpression
 
     def match(string)
       indices = run(string)
-      MatchData.new(string, indices) if indices
+      MatchData.new(string, indices, bytecode.captures) if indices
     end
 
     def compiled
