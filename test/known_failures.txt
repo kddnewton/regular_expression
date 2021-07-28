@@ -1,165 +1,97 @@
-matches unicode Hangul properties
-doesn't match Unicode private-use characters with [[:punct:]]
-doesn't match non-ASCII characters with [[:ascii:]]
-doesn't match Unicode title-case characters with [[:lower:]]
-doesn't match Unicode format characters with [[:word:]]
-doesn't match Unicode punctuation characters with [[:upper:]]
-doesn't match Unicode digits [^0-9] with [[:xdigit:]]
-doesn't match Unicode private-use characters with [[:digit:]]
-supports \w (word character)
-doesn't match Unicode private-use characters with [[:xdigit:]]
-doesn't match Unicode punctuation characters with [[:word:]]
-doesn't match Unicode lowercase letter characters with [[:punct:]]
-doesn't match Unicode marks with [[:space:]]
-doesn't match Unicode marks with [[:punct:]]
-doesn't match Unicode private-use characters with [[:space:]]
-doesn't match Unicode title-case characters with [[:upper:]]
-supports \s (space character)
-doesn't match Unicode marks with [[:cntrl:]]
-supports [[:alpha:][:digit:][:etc:]] (predefined character classes)
-doesn't match Unicode letter characters with [[:blank:]]
-matches Unicode marks with [[:word:]]
-doesn't match Unicode control characters with [[:digit:]]
-doesn't match Unicode title-case characters with [[:space:]]
-doesn't match Unicode format characters with [[:punct:]]
-doesn't match Unicode marks with [[:blank:]]
-doesn't match Unicode control characters with [[:print:]]
-doesn't match Unicode format characters with [[:upper:]]
-doesn't match Unicode format characters with [[:xdigit:]]
-doesn't match Unicode digits with [[:cntrl:]]
-supports \S (non-space character)
-doesn't matches Unicode marks with [[:alnum:]]
-doesn't match Unicode lowercase characters with [[:upper:]]
-doesn't match Unicode private-use characters with [[:cntrl:]]
-doesn't match Unicode punctuation characters with [[:cntrl:]]
-doesn't match Unicode uppercase letter characters with [[:space:]]
-doesn't match Unicode control characters with [[:word:]]
-doesn't match Unicode private-use characters with [[:lower:]]
-doesn't match Unicode marks with [[:digit:]]
-matches Unicode decimal digits with [[:word:]]
-doesn't match Unicode control characters with [[:upper:]]
-doesn't matches Unicode marks with [[:alpha:]]
-matches unicode Han properties
-doesn't match Unicode digits with [[:upper:]]
-doesn't match Unicode letter characters [^a-fA-F] with [[:xdigit:]]
-matches Unicode digits with [[:digit:]]
-doesn't match Unicode No characters with [[:word:]]
-doesn't match Unicode format characters with [[:space:]]
-doesn't match Unicode digits with [[:punct:]]
-doesn't match Unicode digits with [[:blank:]]
-matches Unicode digits with [[:alnum:]]
-supports \d (numeric digit)
-doesn't match Unicode uppercase letter characters with [[:punct:]]
-doesn't match Unicode letter characters with [[:digit:]]
-doesn't match Unicode private-use characters with [[:upper:]]
-doesn't match Unicode marks with [[:xdigit:]]
-doesn't match Unicode private-use characters with [[:word:]]
-doesn't match Unicode punctuation characters with [[:blank:]]
-doesn't match Unicode punctuation characters with [[:digit:]]
-match Unicode format characters with [[:graph:]]
-matches Unicode uppercase characters with [[:word:]]
-doesn't match Unicode control characters with [[:graph:]]
-doesn't match Unicode title-case characters with [[:punct:]]
-doesn't match Unicode lowercase letter characters with [[:space:]]
-supports \X (unicode 9.0 with UTR #51 workarounds)
-matches Unicode Pd characters with [[:punct:]]
-doesn't match Unicode format characters with [[:digit:]]
-supports [] (character class)
-matches Unicode title-case characters with [[:word:]]
-matches unicode abbreviated character properties
-doesn't match Unicode digits with [[:space:]]
-matches Unicode lowercase characters with [[:word:]]
-doesn't match Unicode digits with [[:lower:]]
-doesn't match Unicode control characters with [[:xdigit:]]
-match Unicode Nl characters with [[:word:]]
-matches unicode script properties
-supports \W (non-word character)
-doesn't match Unicode punctuation characters with [[:lower:]]
-doesn't match Unicode format characters with [[:lower:]]
-supports \D (non-digit)
-matches unicode Katakana properties
-matches unicode Hiragana properties
-doesn't match Unicode control characters with [[:lower:]]
-doesn't match Unicode uppercase letter characters with [[:lower:]]
-doesn't match Unicode control characters with [[:blank:]]
-doesn't Unicode letter characters with [[:cntrl:]]
-doesn't match Unicode marks with [[:upper:]]
-doesn't match Unicode punctuation characters with [[:xdigit:]]
-doesn't match Unicode format characters with [[:cntrl:]]
-match Unicode format characters with [[:print:]]
-doesn't match Unicode marks with [[:lower:]]
-disallows forward references >= 10
-allows negative numeric backreferences
-allows forward references
-supports <n> (backreference to previous group match)
-fails when trying to match a backreference to an unmatched capture group
-regular numeric backreferences cannot start with 0
-delimited numeric backreferences can start with 0
-saves captures in numbered $[1-N] variables
-named capture groups invalidate numeric backreferences
-0 is not a valid backreference
-can match an optional quote, followed by content, followed by a matching quote, as the whole string
-allows numeric conditional backreferences
-treats + or - as the beginning of a level specifier in \k<> backreferences and (?(...)...|...) conditional backreferences
-will not clobber capture variables across threads
-does not reset enclosed capture groups
-resets nested <n> backreference before match of outer subexpression
-allows either <> or '' in named conditional backreferences
-saves match data in the $~ pseudo-global variable
-allows + and - in group names and referential constructs that don't use levels, i.e. subexpression calls
-allows access to back-references from the current level
-treats subexpression calls as distinct from simple back-references
-allows recursive subexpression calls
-allows numeric subexpression calls
-supports (?imx-imx:expr) (scoped inline modifiers)
-supports . with /m
-supports /m (multiline)
-invokes substitutions for /o only once
-supports modifier combinations
-supports (?imx-imx) (inline modifiers)
-supports /i (case-insensitive)
-supports /x (extended syntax)
-supports /o (once)
-allow empty iterations in the middle of a loop
-allow extra empty iterations
-make the Regexp proceed past the quantified expression on failure
-shouldn't cause the Regexp parser to get stuck in a loop
-matches zero-width capture groups in optional iterations of loops
-supports + (1 or more of previous subexpression)
-handles incomplete range quantifiers
-treats ? after {n} quantifier as another quantifier, not as non-greedy marker
-supports {m,n}? (m to n of previous subexpression) - lazy)
-lets us use quantifiers on assertions
-supports * (0 or more of previous subexpression)
-supports +? (0 or more of previous subexpression - lazy)
-supports *? (0 or more of previous subexpression - lazy)
-does not treat {m,n}+ as possessive
-supports {m,n} (m to n of previous subexpression)
-does not delete optional assertions
-supports nested quantifiers
-group names cannot start with digits or minus
-raises a SyntaxError when parentheses aren't balanced
-supports \Z (string end anchor, including before trailing \n)
-supports (?!<) (negative lookbehind)
-supports \z (string end anchor)
-supports \A (string start anchor)
-supports \b (word boundary)
-supports (?<=) (positive lookbehind)
-does not match ^ after trailing \n
-supports (?!<\b) (negative lookbehind with word boundary)
-supports (?<=\b) (positive lookbehind with word boundary)
-supports $ (line end anchor)
-supports ^ (line start anchor)
-supports \B (non-word-boundary)
-handles control escapes with \C-x syntax
 supports the \K keep operator
-handles three digit octal escapes starting with 0
 support \x (hex characters)
 support \c (control characters)
+handles three digit octal escapes starting with 0
+handles control escapes with \C-x syntax
 supports the \R line break escape
 they're supported
-gives precedence to escape sequences over substitution
+matches unicode Katakana properties
+matches Unicode marks with [[:word:]]
+match Unicode format characters with [[:print:]]
+matches Unicode digits with [[:alnum:]]
+matches unicode abbreviated character properties
+supports \X (unicode 9.0 with UTR #51 workarounds)
+supports [] (character class)
+match Unicode Nl characters with [[:word:]]
+doesn't match Unicode No characters with [[:word:]]
+match Unicode format characters with [[:graph:]]
+matches Unicode decimal digits with [[:word:]]
+supports \D (non-digit)
+doesn't match Unicode format characters with [[:cntrl:]]
+doesn't match Unicode control characters with [[:word:]]
+supports \S (non-space character)
+matches unicode Hangul properties
+matches Unicode title-case characters with [[:word:]]
+doesn't match Unicode format characters with [[:word:]]
+doesn't match Unicode private-use characters with [[:word:]]
+matches unicode script properties
+matches Unicode digits with [[:digit:]]
+matches unicode Hiragana properties
+matches Unicode uppercase characters with [[:word:]]
+supports [[:alpha:][:digit:][:etc:]] (predefined character classes)
+matches Unicode Pd characters with [[:punct:]]
+matches unicode Han properties
+matches Unicode lowercase characters with [[:word:]]
+supports \W (non-word character)
+supports \s (space character)
+doesn't match Unicode punctuation characters with [[:word:]]
 allows interpolation which mixes modifiers
 allows interpolation of literal regexps
+gives precedence to escape sequences over substitution
 throws RegexpError for malformed interpolation
 allows escape sequences in interpolated regexps
+supports + (1 or more of previous subexpression)
+supports {m,n}? (m to n of previous subexpression) - lazy)
+does not delete optional assertions
+treats ? after {n} quantifier as another quantifier, not as non-greedy marker
+matches zero-width capture groups in optional iterations of loops
+supports *? (0 or more of previous subexpression - lazy)
+supports +? (0 or more of previous subexpression - lazy)
+handles incomplete range quantifiers
+lets us use quantifiers on assertions
+supports * (0 or more of previous subexpression)
+supports {m,n} (m to n of previous subexpression)
+supports modifier combinations
+supports /i (case-insensitive)
+supports /o (once)
+supports . with /m
+supports (?imx-imx) (inline modifiers)
+invokes substitutions for /o only once
+supports /m (multiline)
+supports /x (extended syntax)
+supports (?imx-imx:expr) (scoped inline modifiers)
+supports \b (word boundary)
+supports \B (non-word-boundary)
+supports (?!<\b) (negative lookbehind with word boundary)
+supports (?!<) (negative lookbehind)
+supports (?<=\b) (positive lookbehind with word boundary)
+does not match ^ after trailing \n
+supports $ (line end anchor)
+supports (?<=) (positive lookbehind)
+supports ^ (line start anchor)
+supports \Z (string end anchor, including before trailing \n)
+supports \A (string start anchor)
+treats subexpression calls as distinct from simple back-references
+allows + and - in group names and referential constructs that don't use levels, i.e. subexpression calls
+allows access to back-references from the current level
+allows recursive subexpression calls
+allows numeric subexpression calls
+can match an optional quote, followed by content, followed by a matching quote, as the whole string
+supports <n> (backreference to previous group match)
+allows forward references
+resets nested <n> backreference before match of outer subexpression
+fails when trying to match a backreference to an unmatched capture group
+saves match data in the $~ pseudo-global variable
+allows either <> or '' in named conditional backreferences
+allows negative numeric backreferences
+saves captures in numbered $[1-N] variables
+regular numeric backreferences cannot start with 0
+will not clobber capture variables across threads
+disallows forward references >= 10
+delimited numeric backreferences can start with 0
+allows numeric conditional backreferences
+does not reset enclosed capture groups
+shouldn't cause the Regexp parser to get stuck in a loop
+allow extra empty iterations
+allow empty iterations in the middle of a loop
+make the Regexp proceed past the quantified expression on failure

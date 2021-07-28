@@ -27,7 +27,7 @@ Minitest.after_run do
       The following ruby/spec specs passed, even though they were listed as \
       known failures. Please remove them from test/#{source_path}.
 
-      #{NOT_ACTUALLY_FAILURES}
+      #{NOT_ACTUALLY_FAILURES.join("\n")}
     MSG
 
     exit 1
@@ -38,7 +38,7 @@ Minitest.after_run do
       The following ruby/spec specs failed. The skip the warning, add the name \
       of the test to test/#{source_path}.
 
-      #{UNKNOWN_FAILURES}
+      #{UNKNOWN_FAILURES.join("\n")}
     MSG
 
     exit 1
@@ -48,7 +48,7 @@ end
 module KnownFailuresItExtension
   def it(name, &block)
     define_method("test_ #{name}") do
-      block.call
+      instance_eval(&block)
       NOT_ACTUALLY_FAILURES << name if KNOWN_FAILURES.include?(name)
     rescue # rubocop:disable Style/RescueStandardError
       if KNOWN_FAILURES.include?(name)

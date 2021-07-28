@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require "simplecov"
-SimpleCov.start
+SimpleCov.start do
+  add_filter(%r{^/spec})
+end
 
 $:.unshift File.expand_path("../lib", __dir__)
 require "regular_expression"
