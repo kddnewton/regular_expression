@@ -63,7 +63,7 @@ At the moment we support most basic features, but there is a lot of ground left 
 | [Repetition](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Repetition)                            | ✅     |                                                                  |
 | [Non-greedy repetition](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Repetition)                 | ❌     |                                                                  |
 | [Capturing](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Capturing)                              | 🛠      | [#3](https://github.com/kddnewton/regular_expression/issues/3)   |
-| Named captures                                                                                                     | ❌     | [#84](https://github.com/kddnewton/regular_expression/issues/84) |
+| Named captures                                                                                                     | ✅     | [#84](https://github.com/kddnewton/regular_expression/issues/84) |
 | [Grouping](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Grouping)                                | ✅     |                                                                  |
 | [Atomic grouping](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Atomic+Grouping)                  | ❌     |                                                                  |
 | [Subexpression calls](https://ruby-doc.org/core-3.0.0/Regexp.html#class-Regexp-label-Subexpression+Calls)          | ❌     |                                                                  |

@@ -45,7 +45,7 @@ module RegularExpression
           # This is a preallocated array that represents the indices of the
           # captures. The length is two times the number of captures so that
           # each capture can return its start and end index.
-          indices = ([-1] * (captures * 2)).pack("q*")
+          indices = ([-1] * (captures.length * 2)).pack("q*")
 
           # This is a proc that will call through to the native function that
           # we've assembled using Fisk.

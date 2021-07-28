@@ -60,7 +60,7 @@ module RegularExpression
               capture_index = captures.next
 
               capture_start = State.new(labels.next)
-              quantified_start.unshift(Transition::StartCapture.new(capture_start, capture_index))
+              quantified_start.unshift(Transition::StartCapture.new(capture_start, capture_index, node.name))
 
               capture_finish = State.new(labels.next)
               capture_finish.unshift(Transition::EndCapture.new(quantified_finish, capture_index))
@@ -272,9 +272,9 @@ module RegularExpression
         end
       end
 
-      class StartCapture < Struct.new(:state, :index)
+      class StartCapture < Struct.new(:state, :index, :name)
         def label
-          "Start capture #{index}"
+          "Start capture #{name || index}"
         end
 
         def matches?(other)
