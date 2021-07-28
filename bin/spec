@@ -101,7 +101,10 @@ File.open(destination, "w") do |file|
 
       # Get the modified string segment
       segment = "RegularExpression::Pattern.new(#{original.inspect})"
+
+      # Make sure interpolation and escaped characters gets properly unescaped
       segment.gsub!("\\#", "#")
+      segment.gsub!(/\\\\([aefnrtv])/) { "\\#{$1}" }
 
       # Add any flags that may have been passed
       unless bound.flags.empty?

@@ -315,7 +315,7 @@ module RegularExpression
     end
 
     def test_raises_syntax_errors
-      assert_raises(SyntaxError) do
+      assert_raises(Lexer::Error) do
         Parser.new.parse("\u0000")
       end
     end

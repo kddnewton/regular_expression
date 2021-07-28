@@ -3,13 +3,13 @@ require_relative "../rubyspec_helper"
 
 describe "Regexps with escape characters" do
   it "they're supported" do
-    RegularExpression::Pattern.new("\\t").match("\t").to_a.should == ["\t"] # horizontal tab
-    RegularExpression::Pattern.new("\\v").match("\v").to_a.should == ["\v"] # vertical tab
-    RegularExpression::Pattern.new("\\n").match("\n").to_a.should == ["\n"] # newline
-    RegularExpression::Pattern.new("\\r").match("\r").to_a.should == ["\r"] # return
-    RegularExpression::Pattern.new("\\f").match("\f").to_a.should == ["\f"] # form feed
-    RegularExpression::Pattern.new("\\a").match("\a").to_a.should == ["\a"] # bell
-    RegularExpression::Pattern.new("\\e").match("\e").to_a.should == ["\e"] # escape
+    RegularExpression::Pattern.new("\t").match("\t").to_a.should == ["\t"] # horizontal tab
+    RegularExpression::Pattern.new("\v").match("\v").to_a.should == ["\v"] # vertical tab
+    RegularExpression::Pattern.new("\n").match("\n").to_a.should == ["\n"] # newline
+    RegularExpression::Pattern.new("\r").match("\r").to_a.should == ["\r"] # return
+    RegularExpression::Pattern.new("\f").match("\f").to_a.should == ["\f"] # form feed
+    RegularExpression::Pattern.new("\a").match("\a").to_a.should == ["\a"] # bell
+    RegularExpression::Pattern.new("\e").match("\e").to_a.should == ["\e"] # escape
 
     # \nnn         octal char            (encoded byte value)
   end

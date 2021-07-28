@@ -2,32 +2,6 @@
 
 require "stringio"
 
-known_failures_path = "rubyspec/known_failures.txt"
-KNOWN_FAILURES = File.readlines(File.expand_path(known_failures_path, __dir__)).map(&:chomp)
-
-NOT_ACTUALLY_FAILURES = []
-UNKNOWN_FAILURES = []
-
-Minitest.after_run do
-  if NOT_ACTUALLY_FAILURES.any?
-    puts
-    puts "The following ruby/spec specs passed, even though they were listed " \
-      "as known failures. Please remove them from test/#{known_failures_path}."
-
-    puts NOT_ACTUALLY_FAILURES
-    exit 1
-  end
-
-  if UNKNOWN_FAILURES.any?
-    puts
-    puts "The following ruby/spec specs failed. The skip the warning, add " \
-      "the name of the test to test/#{known_failures_path}."
-
-    puts UNKNOWN_FAILURES
-    exit 1
-  end
-end
-
 # ruby/spec runs everything with mspec, but I don't feel like cloning down a
 # whole other submodule just to get these things running. So I'm copying down
 # just the subset that we're actually using.
@@ -40,20 +14,7 @@ module MSpec
 
   module TestDSL
     def it(name, &block)
-      define_method("test_ #{name}") do
-        block.call
-
-        if KNOWN_FAILURES.include?(name)
-
-        end
-      rescue
-        if KNOWN_FAILURES.include?(name)
-          skip
-        else
-          UNKNOWN_FAILURES << name
-          raise
-        end
-      end
+      define_method("test_ #{name}", &block)
     end
   end
 

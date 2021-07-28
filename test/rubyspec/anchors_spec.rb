@@ -24,7 +24,7 @@ describe "Regexps with anchors" do
     # Grouping
     RegularExpression::Pattern.new("(^foo)").match("foo").to_a.should == ["foo", "foo"]
     RegularExpression::Pattern.new("(^)").match("foo").to_a.should == ["", ""]
-    RegularExpression::Pattern.new("(foo\\n^)(^bar)").match("foo\nbar").to_a.should == ["foo\nbar", "foo\n", "bar"]
+    RegularExpression::Pattern.new("(foo\n^)(^bar)").match("foo\nbar").to_a.should == ["foo\nbar", "foo\n", "bar"]
   end
 
   it "does not match ^ after trailing \\n" do
@@ -53,7 +53,7 @@ describe "Regexps with anchors" do
     # Grouping
     RegularExpression::Pattern.new("(foo$)").match("foo").to_a.should == ["foo", "foo"]
     (RegularExpression::Pattern.new("($)") =~ "foo").should == "foo".size and $~.to_a.should == ["", ""]
-    RegularExpression::Pattern.new("(foo$)($\\nbar)").match("foo\nbar").to_a.should == ["foo\nbar", "foo", "\nbar"]
+    RegularExpression::Pattern.new("(foo$)($\nbar)").match("foo\nbar").to_a.should == ["foo\nbar", "foo", "\nbar"]
   end
 
   it "supports \\A (string start anchor)" do

@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "./test_helper"
+
 require_relative "./mspec"
+require_relative "./known_failures"
+
 require_relative "../spec/language/fixtures/classes"
 
 module RegularExpression
