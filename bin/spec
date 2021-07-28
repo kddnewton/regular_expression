@@ -104,7 +104,7 @@ File.open(destination, "w") do |file|
 
       # Make sure interpolation and escaped characters gets properly unescaped
       segment.gsub!("\\#", "#")
-      segment.gsub!(/\\\\([aefnrtv])/) { "\\#{$1}" }
+      segment.gsub!(/\\\\([acefnrtvx])/) { "\\#{$1}" }
 
       # Add any flags that may have been passed
       unless bound.flags.empty?

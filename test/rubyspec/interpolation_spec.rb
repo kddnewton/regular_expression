@@ -35,7 +35,7 @@ describe "Regexps with interpolation" do
 
   it "gives precedence to escape sequences over substitution" do
     str = "J"
-    RegularExpression::Pattern.new("\\c#{str}").to_s.should include('{str}')
+    RegularExpression::Pattern.new("\c#{str}").to_s.should include('{str}')
   end
 
   it "throws RegexpError for malformed interpolation" do
@@ -51,7 +51,7 @@ describe "Regexps with interpolation" do
   end
 
   it "allows escape sequences in interpolated regexps" do
-    escape_seq = RegularExpression::Pattern.new("\"\\x80\"}", "n")
-    RegularExpression::Pattern.new("#{escape_seq}}", "n").should == RegularExpression::Pattern.new("(?-mix:\"\\x80\")/", "n")
+    escape_seq = RegularExpression::Pattern.new("\"\x80\"}", "n")
+    RegularExpression::Pattern.new("#{escape_seq}}", "n").should == RegularExpression::Pattern.new("(?-mix:\"\x80\")/", "n")
   end
 end

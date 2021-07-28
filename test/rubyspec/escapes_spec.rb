@@ -41,11 +41,11 @@ describe "Regexps with escape characters" do
   end
 
   it "support \\x (hex characters)" do
-    RegularExpression::Pattern.new("\\xA").match("\nxyz").to_a.should == ["\n"]
-    RegularExpression::Pattern.new("\\x0A").match("\n").to_a.should == ["\n"]
-    RegularExpression::Pattern.new("\\xAA").match("\nA").should be_nil
-    RegularExpression::Pattern.new("\\x0AA").match("\nA").to_a.should == ["\nA"]
-    RegularExpression::Pattern.new("\\xAG").match("\nG").to_a.should == ["\nG"]
+    RegularExpression::Pattern.new("\xA").match("\nxyz").to_a.should == ["\n"]
+    RegularExpression::Pattern.new("\x0A").match("\n").to_a.should == ["\n"]
+    RegularExpression::Pattern.new("\xAA").match("\nA").should be_nil
+    RegularExpression::Pattern.new("\x0AA").match("\nA").to_a.should == ["\nA"]
+    RegularExpression::Pattern.new("\xAG").match("\nG").to_a.should == ["\nG"]
     # Non-matches
     -> { eval('/\xG/') }.should raise_error(SyntaxError)
 
@@ -54,20 +54,20 @@ describe "Regexps with escape characters" do
 
   it "support \\c (control characters)" do
     #/\c \c@\c`/.match("\00\00\00").to_a.should == ["\00\00\00"]
-    RegularExpression::Pattern.new("\\c#\\cc\\cC").match("\03\03\03").to_a.should == ["\03\03\03"]
-    RegularExpression::Pattern.new("\\c'\\cG\\cg").match("\a\a\a").to_a.should == ["\a\a\a"]
-    RegularExpression::Pattern.new("\\c(\\cH\\ch").match("\b\b\b").to_a.should == ["\b\b\b"]
-    RegularExpression::Pattern.new("\\c)\\cI\\ci").match("\t\t\t").to_a.should == ["\t\t\t"]
-    RegularExpression::Pattern.new("\\c*\\cJ\\cj").match("\n\n\n").to_a.should == ["\n\n\n"]
-    RegularExpression::Pattern.new("\\c+\\cK\\ck").match("\v\v\v").to_a.should == ["\v\v\v"]
-    RegularExpression::Pattern.new("\\c,\\cL\\cl").match("\f\f\f").to_a.should == ["\f\f\f"]
-    RegularExpression::Pattern.new("\\c-\\cM\\cm").match("\r\r\r").to_a.should == ["\r\r\r"]
+    RegularExpression::Pattern.new("\c#\cc\cC").match("\03\03\03").to_a.should == ["\03\03\03"]
+    RegularExpression::Pattern.new("\c'\cG\cg").match("\a\a\a").to_a.should == ["\a\a\a"]
+    RegularExpression::Pattern.new("\c(\cH\ch").match("\b\b\b").to_a.should == ["\b\b\b"]
+    RegularExpression::Pattern.new("\c)\cI\ci").match("\t\t\t").to_a.should == ["\t\t\t"]
+    RegularExpression::Pattern.new("\c*\cJ\cj").match("\n\n\n").to_a.should == ["\n\n\n"]
+    RegularExpression::Pattern.new("\c+\cK\ck").match("\v\v\v").to_a.should == ["\v\v\v"]
+    RegularExpression::Pattern.new("\c,\cL\cl").match("\f\f\f").to_a.should == ["\f\f\f"]
+    RegularExpression::Pattern.new("\c-\cM\cm").match("\r\r\r").to_a.should == ["\r\r\r"]
 
-    RegularExpression::Pattern.new("\\cJ").match("\r").should be_nil
+    RegularExpression::Pattern.new("\cJ").match("\r").should be_nil
 
     # Parsing precedence
-    RegularExpression::Pattern.new("\\cJ+").match("\n\n").to_a.should == ["\n\n"] # Quantifiers apply to entire escape sequence
-    RegularExpression::Pattern.new("\\\\cJ").match("\\cJ").to_a.should == ["\\cJ"]
+    RegularExpression::Pattern.new("\cJ+").match("\n\n").to_a.should == ["\n\n"] # Quantifiers apply to entire escape sequence
+    RegularExpression::Pattern.new("\\\cJ").match("\\cJ").to_a.should == ["\\cJ"]
     -> { eval('/[abc\x]/') }.should raise_error(SyntaxError) # \x is treated as a escape sequence even inside a character class
     # Syntax error
     -> { eval('/\c/') }.should raise_error(SyntaxError)

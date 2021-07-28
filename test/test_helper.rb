@@ -16,15 +16,16 @@ end
 
 require "minitest/autorun"
 
-# We're going to filter out the == in a void context warnings as they're
-# actually intentionally used by the specs. Doing this first so that we don't
-# get any warnings when the test files are required.
-module DoubleEqualVoidWarningFilter
+# We're intentionally going to filter out some warnings that we know exist
+# because of our use of ruby/spec.
+module WarningFilter
   def warn(message, **)
     return if message.include?("possibly useless use of == in void context")
+
+    return if message.include?("assigned but unused variable - str")
 
     super
   end
 end
 
-Warning.extend(DoubleEqualVoidWarningFilter)
+Warning.extend(WarningFilter)
