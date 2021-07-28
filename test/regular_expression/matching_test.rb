@@ -302,7 +302,7 @@ module RegularExpression
       assert_operator(pattern, :match?, "3.1")
 
       # Now check that the right tokens were ignored
-      pattern = Pattern.new(<<~REGEXP, Regexp::EXTENDED)
+      pattern = Pattern.new(<<~REGEXP, "x")
         \\A
         [[:digit:]]+ # 1 or more digits before the decimal point
         (\\.         # Decimal point

@@ -5,11 +5,12 @@ module RegularExpression
     class Deoptimize < RuntimeError
     end
 
-    attr_reader :bytecode
+    attr_reader :source, :flags, :bytecode
 
     def initialize(source, flags = nil)
-      ast = Parser.new.parse(source, Flags.new(flags))
-      @bytecode = Bytecode.compile(NFA.build(ast))
+      @source = source
+      @flags = Flags.parse(flags)
+      @bytecode = Bytecode.compile(NFA.build(Parser.new.parse(source, @flags)))
     end
 
     def compile(compiler: Compiler::X86)
@@ -58,6 +59,15 @@ module RegularExpression
     def match(string)
       indices = run(string)
       MatchData.new(string, indices, bytecode.captures) if indices
+    end
+
+    def =~(string)
+      indices = run(string)
+      indices[0] if indices
+    end
+
+    def ==(other)
+      source == other.source && flags == other.flags
     end
 
     def compiled

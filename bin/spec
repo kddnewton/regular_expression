@@ -1,0 +1,117 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# This is an admittedly weird script. The function of it is to reuse the specs
+# from rubyspec, but to use our own infrastructure for it. So we parse through
+# the file and convert over regexp literals into our own regular expressions.
+
+# It's expected that this file is going to be run with two arguments, the source
+# spec file and the destination spec file.
+source, destination = ARGV
+raise if !File.file?(source) || !destination
+
+require "ripper"
+
+# Parse through the ruby source and find all the regexp literals. This parser
+# returns the bounds of those regex as arrays containing pairs of line number
+# and column.
+class Convert < Ripper::SexpBuilderPP
+  # Represents a regexp literal in the original source.
+  Bound = Struct.new(:lineno, :col_start, :col_body, :col_end, :flags)
+
+  def initialize(source, *)
+    @lines = source.lines
+    @beginnings = []
+    @bounds = []
+    super
+  end
+
+  def on_regexp_beg(body)
+    super(body).tap { |event| @beginnings << event }
+  end
+
+  def on_regexp_literal(body, ending)
+    super(body, ending).tap do
+      beginning = @beginnings.pop
+
+      start_line, start_column = beginning[2]
+      end_line, end_column = ending[2]
+      flags = ending[1][1..]
+
+      # No support at the moment for multiline regexp
+      return if start_line != end_line
+
+      # We need to do some special processing for column numbers when we have
+      # multibyte characters in the string, since the column actually refers to
+      # the byte offset, not the character offset.
+      line = @lines[start_line - 1]
+
+      if line.size != line.bytesize
+        indices = []
+
+        line.each_char.with_index do |char, index|
+          char.bytesize.times { indices << index }
+        end
+
+        start_column = indices[start_column]
+        end_column = indices[end_column]
+      end
+
+      @bounds << Bound.new(
+        start_line, # the line of the regex
+        start_column, # the column of the / or %r
+        start_column + beginning[1].length, # the column of the body
+        end_column + flags.length, # the column of end of the regex
+        flags # any flags that may have been passed
+      )
+    end
+  end
+
+  def on_program(*)
+    @bounds
+  end
+end
+
+content = File.read(source)
+bounds = Convert.parse(content)
+
+File.open(destination, "w") do |file|
+  content.lines.each.with_index(1) do |line, lineno|
+    if line == "require_relative '../../spec_helper'\n"
+      # If this is the require line, then rewrite the require to the path we
+      # expect
+      line = "require_relative \"../rubyspec_helper\"\n"
+    elsif line.start_with?("require_relative")
+      # If this is any other require, then just skip it, as we'll patch it as
+      # necessary in our spec helper
+      next
+    end
+
+    # Get all the modifications that need to be applied to this line, then
+    # apply them in reverse order
+    line_bounds = bounds.take_while { |bound| bound.lineno == lineno }.reverse
+
+    # If we're on a line that has a regexp, rewrite the line to include our own
+    # regexp class.
+    while line_bounds.any?
+      bound = bounds.delete(line_bounds.shift)
+
+      # Get the original content of the regexp
+      original = line[bound.col_body...bound.col_end]
+
+      # Get the modified string segment
+      segment = "RegularExpression::Pattern.new(#{original.inspect})"
+      segment.gsub!("\\#", "#")
+
+      # Add any flags that may have been passed
+      unless bound.flags.empty?
+        segment = "#{segment[0...-1]}, #{bound.flags.inspect})"
+      end
+
+      # Rewrite the string segments with the modified string
+      line[bound.col_start..bound.col_end] = segment
+    end
+
+    file.write(line)
+  end
+end

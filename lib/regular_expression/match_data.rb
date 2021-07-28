@@ -87,7 +87,9 @@ module RegularExpression
     end
 
     def ==(other)
-      string == other.string && indices == other.indices
+      other.is_a?(MatchData) &&
+        string == other.string &&
+        indices == other.indices
     end
 
     # This method is largely here to mirror the top-level MatchData object. It
