@@ -11,8 +11,8 @@ describe "Regexps with anchors" do
 
     # A bit advanced
     RegularExpression::Pattern.new("^^^foo").match("foo").to_a.should == ["foo"]
-    (RegularExpression::Pattern.new("^[^f]") =~ "foo\n\n").should == "foo\n".size and $~.to_a.should == ["\n"]
-    (RegularExpression::Pattern.new("($^)($^)") =~ "foo\n\n").should == "foo\n".size and $~.to_a.should == ["", "", ""]
+    (RegularExpression::Pattern.new("^[^f]") =~ "foo\n\n").should == "foo\n".size and RegularExpression.last_match.to_a.should == ["\n"]
+    (RegularExpression::Pattern.new("($^)($^)") =~ "foo\n\n").should == "foo\n".size and RegularExpression.last_match.to_a.should == ["", "", ""]
 
     # Different start of line chars
     RegularExpression::Pattern.new("^bar").match("foo\rbar").should be_nil
@@ -41,18 +41,18 @@ describe "Regexps with anchors" do
 
     # A bit advanced
     RegularExpression::Pattern.new("foo$$$").match("foo").to_a.should == ["foo"]
-    (RegularExpression::Pattern.new("[^o]$") =~ "foo\n\n").should == ("foo\n".size - 1) and $~.to_a.should == ["\n"]
+    (RegularExpression::Pattern.new("[^o]$") =~ "foo\n\n").should == ("foo\n".size - 1) and RegularExpression.last_match.to_a.should == ["\n"]
 
     # Different end of line chars
     RegularExpression::Pattern.new("foo$").match("foo\r\nbar").should be_nil
     RegularExpression::Pattern.new("foo$").match("foo\0bar").should be_nil
 
     # Trivial
-    (RegularExpression::Pattern.new("$") =~ "foo").should == "foo".size and $~.to_a.should == [""]
+    (RegularExpression::Pattern.new("$") =~ "foo").should == "foo".size and RegularExpression.last_match.to_a.should == [""]
 
     # Grouping
     RegularExpression::Pattern.new("(foo$)").match("foo").to_a.should == ["foo", "foo"]
-    (RegularExpression::Pattern.new("($)") =~ "foo").should == "foo".size and $~.to_a.should == ["", ""]
+    (RegularExpression::Pattern.new("($)") =~ "foo").should == "foo".size and RegularExpression.last_match.to_a.should == ["", ""]
     RegularExpression::Pattern.new("(foo$)($\nbar)").match("foo\nbar").to_a.should == ["foo\nbar", "foo", "\nbar"]
   end
 
@@ -85,8 +85,8 @@ describe "Regexps with anchors" do
 
     # A bit advanced
     RegularExpression::Pattern.new("foo\\Z\\Z\\Z").match("foo\n").to_a.should == ["foo"]
-    (RegularExpression::Pattern.new("($\\Z)($\\Z)") =~ "foo\n").should == "foo".size and $~.to_a.should == ["", "", ""]
-    (RegularExpression::Pattern.new("(\\z\\Z)(\\z\\Z)") =~ "foo\n").should == "foo\n".size and $~.to_a.should == ["", "", ""]
+    (RegularExpression::Pattern.new("($\\Z)($\\Z)") =~ "foo\n").should == "foo".size and RegularExpression.last_match.to_a.should == ["", "", ""]
+    (RegularExpression::Pattern.new("(\\z\\Z)(\\z\\Z)") =~ "foo\n").should == "foo\n".size and RegularExpression.last_match.to_a.should == ["", "", ""]
 
     # Different end of line chars
     RegularExpression::Pattern.new("foo\\Z").match("foo\0bar").should be_nil
@@ -94,7 +94,7 @@ describe "Regexps with anchors" do
 
     # Grouping
     RegularExpression::Pattern.new("(foo\\Z)").match("foo").to_a.should == ["foo", "foo"]
-    (RegularExpression::Pattern.new("(\\Z)") =~ "foo").should == "foo".size and $~.to_a.should == ["", ""]
+    (RegularExpression::Pattern.new("(\\Z)") =~ "foo").should == "foo".size and RegularExpression.last_match.to_a.should == ["", ""]
   end
 
   it "supports \\z (string end anchor)" do
@@ -107,7 +107,7 @@ describe "Regexps with anchors" do
 
     # A bit advanced
     RegularExpression::Pattern.new("foo\\z\\z\\z").match("foo").to_a.should == ["foo"]
-    (RegularExpression::Pattern.new("($\\z)($\\z)") =~ "foo").should == "foo".size and $~.to_a.should == ["", "", ""]
+    (RegularExpression::Pattern.new("($\\z)($\\z)") =~ "foo").should == "foo".size and RegularExpression.last_match.to_a.should == ["", "", ""]
 
     # Different end of line chars
     RegularExpression::Pattern.new("foo\\z").match("foo\0bar").should be_nil
@@ -115,7 +115,7 @@ describe "Regexps with anchors" do
 
     # Grouping
     RegularExpression::Pattern.new("(foo\\z)").match("foo").to_a.should == ["foo", "foo"]
-    (RegularExpression::Pattern.new("(\\z)") =~ "foo").should == "foo".size and $~.to_a.should == ["", ""]
+    (RegularExpression::Pattern.new("(\\z)") =~ "foo").should == "foo".size and RegularExpression.last_match.to_a.should == ["", ""]
   end
 
   it "supports \\b (word boundary)" do

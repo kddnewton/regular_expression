@@ -1,36 +1,36 @@
 require_relative "../rubyspec_helper"
 
 describe "Regexps with back-references" do
-  it "saves match data in the $~ pseudo-global variable" do
+  it "saves match data in the RegularExpression.last_match pseudo-global variable" do
     "hello" =~ RegularExpression::Pattern.new("l+")
-    $~.to_a.should == ["ll"]
+    RegularExpression.last_match.to_a.should == ["ll"]
   end
 
   it "saves captures in numbered $[1-N] variables" do
     "1234567890" =~ RegularExpression::Pattern.new("(1)(2)(3)(4)(5)(6)(7)(8)(9)(0)")
-    $~.to_a.should == ["1234567890", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
-    $1.should == "1"
-    $2.should == "2"
-    $3.should == "3"
-    $4.should == "4"
-    $5.should == "5"
-    $6.should == "6"
-    $7.should == "7"
-    $8.should == "8"
-    $9.should == "9"
-    $10.should == "0"
+    RegularExpression.last_match.to_a.should == ["1234567890", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
+    RegularExpression.last_match(1).should == "1"
+    RegularExpression.last_match(2).should == "2"
+    RegularExpression.last_match(3).should == "3"
+    RegularExpression.last_match(4).should == "4"
+    RegularExpression.last_match(5).should == "5"
+    RegularExpression.last_match(6).should == "6"
+    RegularExpression.last_match(7).should == "7"
+    RegularExpression.last_match(8).should == "8"
+    RegularExpression.last_match(9).should == "9"
+    RegularExpression.last_match(10).should == "0"
   end
 
   it "will not clobber capture variables across threads" do
     cap1, cap2, cap3 = nil
     "foo" =~ RegularExpression::Pattern.new("(o+)")
-    cap1 = [$~.to_a, $1]
+    cap1 = [RegularExpression.last_match.to_a, RegularExpression.last_match(1)]
     Thread.new do
-      cap2 = [$~.to_a, $1]
+      cap2 = [RegularExpression.last_match.to_a, RegularExpression.last_match(1)]
       "bar" =~ RegularExpression::Pattern.new("(a)")
-      cap3 = [$~.to_a, $1]
+      cap3 = [RegularExpression.last_match.to_a, RegularExpression.last_match(1)]
     end.join
-    cap4 = [$~.to_a, $1]
+    cap4 = [RegularExpression.last_match.to_a, RegularExpression.last_match(1)]
     cap1.should == [["oo", "oo"], "oo"]
     cap2.should == [[], nil]
     cap3.should == [["a", "a"], "a"]

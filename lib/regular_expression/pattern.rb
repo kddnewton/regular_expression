@@ -61,9 +61,11 @@ module RegularExpression
       MatchData.new(string, indices, bytecode.captures) if indices
     end
 
+    # To be compliant with the spec, we have to allocate a match data object
+    # here, we can't just skip straight to returning the index
     def =~(string)
-      indices = run(string)
-      indices[0] if indices
+      match_data = match(string)
+      match_data.indices[0] if match_data
     end
 
     def ==(other)

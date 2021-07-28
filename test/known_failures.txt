@@ -84,7 +84,6 @@ fails when trying to match a backreference to an unmatched capture group
 saves match data in the $~ pseudo-global variable
 allows either <> or '' in named conditional backreferences
 allows negative numeric backreferences
-saves captures in numbered $[1-N] variables
 regular numeric backreferences cannot start with 0
 will not clobber capture variables across threads
 disallows forward references >= 10
@@ -95,3 +94,4 @@ shouldn't cause the Regexp parser to get stuck in a loop
 allow extra empty iterations
 allow empty iterations in the middle of a loop
 make the Regexp proceed past the quantified expression on failure
+saves match data in the RegularExpression.last_match pseudo-global variable

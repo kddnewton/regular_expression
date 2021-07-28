@@ -80,7 +80,7 @@ File.open(destination, "w") do |file|
     if line == "require_relative '../../spec_helper'\n"
       # If this is the require line, then rewrite the require to the path we
       # expect
-      line = "require_relative \"../rubyspec_helper\"\n"
+      line = +"require_relative \"../rubyspec_helper\"\n"
     elsif line.start_with?("require_relative")
       # If this is any other require, then just skip it, as we'll patch it as
       # necessary in our spec helper
@@ -113,6 +113,14 @@ File.open(destination, "w") do |file|
 
       # Rewrite the string segments with the modified string
       line[bound.col_start..bound.col_end] = segment
+    end
+
+    # Here we're going to replace the global variables. Skipping using an actual
+    # parser for this and just rolling with regexp as that appears to be good
+    # enough.
+    line.gsub!(/\$(~|[1-9]\d*)/) do
+      response = "RegularExpression.last_match"
+      $1 == "~" ? response : "#{response}(#{$1})"
     end
 
     file.write(line)
