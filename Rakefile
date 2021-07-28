@@ -31,7 +31,13 @@ task :benchmark do
   end
 end
 
+# We're going to skip the encoding spec because it has nested regex and our
+# convert script can't really handle that at the moment.
 rubyspecs = FileList["spec/language/regexp/*_spec.rb"].exclude(/encoding_spec/)
+
+# Here we make sure that every filepath in the ruby/spec submodule is dependent
+# on bin/spec so that when we change the generation script all of the spec files
+# get regenerated.
 rubyspecs.each { |filepath| Rake::Task[filepath].enhance(["bin/spec"]) }
 
 task default: [
