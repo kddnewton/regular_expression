@@ -13,10 +13,18 @@ module RegularExpression
       label = ->(state, index = 0) { :"state_#{state.object_id}_#{index}" }
 
       visited = Set.new
+
+      # This is the overall worklist the contains pairs of
+      # [state, [list of instructions to execute when backtracking]]
       worklist = [[nfa, [:jump_to_fail]]]
+
+      # This is an array of integer and strings that correspond to captures
       captures = []
 
-      n_of_transitions = 0
+      # This is the total number of string indices we could be pushing onto our
+      # backtracking stack
+      backtracks = 0
+
       # For each state in the NFA.
       until worklist.empty?
         state, fallback = worklist.pop
@@ -40,7 +48,7 @@ module RegularExpression
           builder.mark_label(label[state, index])
 
           if state.transitions.length > 1 && index != state.transitions.length - 1
-            builder.push(Insns::PushIndex.new(n_of_transitions))
+            builder.push(Insns::PushIndex.new(backtracks))
           end
 
           if !transition.is_a?(NFA::Transition::Epsilon)
@@ -119,11 +127,11 @@ module RegularExpression
 
           next_fallback =
             if state.transitions.length > 1 && index != state.transitions.length - 1
-              [Insns::PopIndex.new(n_of_transitions), Insns::Jump.new(label[state, index + 1])]
+              [Insns::PopIndex.new(backtracks), Insns::Jump.new(label[state, index + 1])]
             else
               fallback
             end
-          n_of_transitions += 1
+          backtracks += 1
           worklist.push([transition.state, next_fallback])
         end
 
@@ -141,7 +149,7 @@ module RegularExpression
       builder.mark_label(:fail)
       builder.push(Insns::Fail.new)
       builder.captures = captures.sort_by(&:index).map { |transition| transition.name || transition.index }
-      builder.n_of_transitions = n_of_transitions
+      builder.backtracks = backtracks
       builder.build
     end
 
@@ -228,13 +236,13 @@ module RegularExpression
       attr_reader :insns # Array[Insns]
       attr_reader :labels # Hash[Symbol, Integer]
       attr_accessor :captures # Integer
-      attr_accessor :n_of_transitions
+      attr_accessor :backtracks # Integer
 
       def initialize
         @insns = []
         @labels = {}
         @captures = 0
-        @n_of_transitions = 0
+        @backtracks = 0
       end
 
       def mark_label(label)
@@ -246,18 +254,18 @@ module RegularExpression
       end
 
       def build
-        Compiled.new(insns, labels, captures, n_of_transitions)
+        Compiled.new(insns, labels, captures, backtracks)
       end
     end
 
     class Compiled
-      attr_reader :insns, :labels, :captures, :n_of_transitions
+      attr_reader :insns, :labels, :captures, :backtracks
 
-      def initialize(insns, labels, captures, n_of_transitions)
+      def initialize(insns, labels, captures, backtracks)
         @insns = insns
         @labels = labels
         @captures = captures
-        @n_of_transitions = n_of_transitions
+        @backtracks = backtracks
       end
 
       def dump

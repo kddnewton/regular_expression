@@ -114,7 +114,7 @@ module RegularExpression
       end
 
       start = blocks.values.first
-      Graph.new(start, exit_map.merge({ start.name => start }), compiled.captures, compiled.n_of_transitions)
+      Graph.new(start, exit_map.merge({ start.name => start }), compiled.captures, compiled.backtracks)
     end
 
     def self.to_dot(cfg)
@@ -147,14 +147,14 @@ module RegularExpression
 
     # A graph is a set of EBBs.
     class Graph
-      attr_reader :start, :blocks, :label_map, :captures, :n_of_transitions
+      attr_reader :start, :blocks, :label_map, :captures, :backtracks
 
-      def initialize(start, label_map, captures, n_of_transitions)
+      def initialize(start, label_map, captures, backtracks)
         @start = start
         @blocks = label_map.values.uniq
         @label_map = label_map
         @captures = captures
-        @n_of_transitions = n_of_transitions
+        @backtracks = backtracks
       end
 
       # Replace the block that an exits goes to.
