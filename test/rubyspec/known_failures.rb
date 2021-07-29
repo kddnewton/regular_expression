@@ -28,9 +28,8 @@ Minitest.after_run do
       known failures. Please remove them from test/rubyspec/#{source_filename}.
 
       #{NOT_ACTUALLY_FAILURES.join("\n")}
-    MSG
 
-    exit 1
+    MSG
   end
 
   if UNKNOWN_FAILURES.any?
@@ -39,9 +38,10 @@ Minitest.after_run do
       of the test to test/rubyspec/#{source_filename}.
 
       #{UNKNOWN_FAILURES.join("\n")}
+
     MSG
 
-    exit 1
+    exit(1)
   end
 end
 
