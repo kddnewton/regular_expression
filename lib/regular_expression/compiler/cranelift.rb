@@ -3,12 +3,25 @@
 module RegularExpression
   module Compiler
     module Cranelift
-      class Compiled
-        attr_reader :f_ptr, :f_size
+      # A return status that indicates that the input string did not match the
+      # state machine
+      MATCHING_FAILED = 0
 
-        def initialize(f_ptr, f_size)
+      # A return status that indicates that the input string contained an
+      # uncommon pattern that we had already optimized away, so we need to
+      # deoptimize and fall back to the interpreter
+      MATCHING_DEOPTIMIZE = 1
+
+      # A return status that indicates that the input string matched the state
+      # machine
+      MATCHING_SUCCESS = 2
+      class Compiled
+        attr_reader :f_ptr, :f_size, :captures
+
+        def initialize(f_ptr, f_size, captures)
           @f_ptr = f_ptr
           @f_size = f_size
+          @captures = captures
         end
 
         def disasm
@@ -29,10 +42,24 @@ module RegularExpression
         end
 
         def to_proc
-          function = Fiddle::Function.new(@f_ptr, [Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T], Fiddle::TYPE_SIZE_T)
+          indices = ([-1] * (captures.length * 2)).pack("q*")
+          function = Fiddle::Function.new(
+            @f_ptr,
+            [Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T, Fiddle::TYPE_VOIDP],
+            Fiddle::TYPE_INT8_T
+          )
           lambda do |string|
-            value = function.call(string, string.length)
-            value if value != string.length + 1
+            value = function.call(string, string.length, indices)
+            case value
+            when MATCHING_FAILED
+              nil
+            when MATCHING_DEOPTIMIZE
+              raise Pattern::Deoptimize
+            when MATCHING_SUCCESS
+              indices.unpack("q*")
+            else
+              raise
+            end
           end
         end
       end
@@ -43,9 +70,9 @@ module RegularExpression
         bcx.switch_to_block(block)
       end
 
-      def self.compile(cfg, _schedule)
+      def self.compile(cfg, schedule)
         b = CraneliftRuby::CraneliftBuilder.new
-        s = b.make_signature(%i[I64 I64], [:I64])
+        s = b.make_signature(%i[I64 I64 I64], [:I8])
         external_func_sig = b.make_signature([:I8], [:I64])
         f = b.make_function("regex", s, lambda { |bcx|
           external_func_sigref = bcx.import_signature(external_func_sig)
@@ -56,6 +83,7 @@ module RegularExpression
 
           string_pointer = bcx.block_param(initial_block, 0)
           string_length = bcx.block_param(initial_block, 1)
+          captures_pointer = bcx.block_param(initial_block, 2)
 
           match_index = CraneliftRuby::Variable.new(0)
           bcx.declare_var(match_index, :I64)
@@ -86,11 +114,11 @@ module RegularExpression
           bcx.def_var(string_index, match_index_val)
           block_map = {}
 
-          cfg.blocks.each do |block|
+          schedule.each do |block|
             block_map[block.name] = bcx.create_block
           end
-          bcx.jump(block_map[cfg.blocks[0].name], [])
-          cfg.blocks.each do |block|
+          bcx.jump(block_map[schedule[0].name], [])
+          schedule.each do |block|
             bcx.switch_to_block(block_map[block.name])
             block.insns.each do |insn|
               case insn
@@ -121,7 +149,7 @@ module RegularExpression
                 bcx.def_var(flag, flag_val)
               when Bytecode::Insns::TestValue
                 end_block = bcx.create_block
-                
+
                 string_index_val = bcx.use_var(string_index)
                 bcx.def_var(flag, zero)
                 bcx.br_icmp(:e, string_index_val, string_length, end_block, [])
@@ -133,11 +161,11 @@ module RegularExpression
                 v = bcx.icmp(:e, char, expected_char)
                 flag_val = bcx.select(v, one, zero)
                 increased = bcx.iadd(string_index_val, flag_val)
-                
+
                 bcx.def_var(string_index, increased)
                 bcx.def_var(flag, flag_val)
                 bcx.jump(end_block, [])
-                
+
                 bcx.switch_to_block(end_block)
               when Bytecode::Insns::TestValuesInvert
                 end_block = bcx.create_block
@@ -319,25 +347,28 @@ module RegularExpression
                 # If we reach this instruction, then we've successfully matched
                 # against the input string, so we're going to return the integer
                 # that represents the index at which this match began
-                match_index_val = bcx.use_var(match_index)
-                bcx.return([match_index_val])
+                ret = bcx.iconst(:I8, MATCHING_SUCCESS)
+                bcx.return([ret])
               when Bytecode::Insns::Fail
                 match_index_val = bcx.use_var(match_index)
                 increased = bcx.iadd(one, match_index_val)
                 bcx.def_var(match_index, increased)
                 bcx.jump(start_loop_head, [])
               when Bytecode::Insns::StartCapture
-                # raise NotImplementedError
+                capture_index = insn.index * 16
+                string_index_val = bcx.use_var(string_index)
+                bcx.store(string_index_val, captures_pointer, capture_index)
               when Bytecode::Insns::EndCapture
-                # raise NotImplementedError
+                capture_index = insn.index * 16 + 8
+                string_index_val = bcx.use_var(string_index)
+                bcx.store(string_index_val, captures_pointer, capture_index)
               else
-                print(insn)
                 raise
               end
             end
           end
           bcx.switch_to_block(exit_block)
-          res = bcx.iadd(one, string_length)
+          res = bcx.iconst(:I8, MATCHING_FAILED)
           bcx.return([res])
 
           bcx.finalize
@@ -345,7 +376,7 @@ module RegularExpression
         b.finalize
         f_ptr = b.get_function_pointer(f)
         f_size = b.get_function_size(f)
-        Compiled.new(f_ptr, f_size)
+        Compiled.new(f_ptr, f_size, cfg.captures)
       end
     end
   end
