@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "cranelift_ruby"
   spec.add_dependency "fisk"
   spec.add_dependency "racc"
 end

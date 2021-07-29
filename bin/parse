@@ -7,7 +7,6 @@ require "bundler/setup"
 require "regular_expression"
 require "crabstone"
 require "graphviz"
-
 unless `which dot`.chomp.end_with?("dot")
   warn "YOU HAVE NOT INSTALLED GRAPHVIZ. We found no 'dot' in your path.\n" \
        " Please install Graphviz if you want dotfile visual output to work."
@@ -60,6 +59,9 @@ puts "#{ruby.source}\n"
 x86 = RegularExpression::Compiler::X86.compile(cfg, schedule)
 puts "#{x86.disasm}\n"
 
+cranelift = RegularExpression::Compiler::Cranelift.compile(cfg, schedule)
+puts "#{cranelift.disasm}\n"
+
 check =
   if ARGV.any?
     lambda do |compiled|
@@ -80,6 +82,9 @@ check.call(ruby)
 
 # Test x86 against any passed strings
 check.call(x86)
+
+# Test cranelift against any passed strings
+check.call(cranelift)
 
 # Test out the profiling
 if ARGV.any?

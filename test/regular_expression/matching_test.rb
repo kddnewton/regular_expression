@@ -20,6 +20,11 @@ module RegularExpression
         instance_eval(&block)
       end
 
+      define_method(:"test_#{name}_cranelift") do
+        @compiler = :cranelift
+        instance_eval(&block)
+      end
+
       define_method(:"test_#{name}_ruby") do
         @compiler = :ruby
         instance_eval(&block)
@@ -395,6 +400,8 @@ module RegularExpression
         pattern.profile(compiler: Compiler::Ruby, threshold: THRESHOLD)
       when :speculative_x86
         pattern.profile(compiler: Compiler::Ruby, threshold: THRESHOLD, speculative: true)
+      when :cranelift
+        pattern.compile(compiler: Compiler::Cranelift)
       end
 
       pattern

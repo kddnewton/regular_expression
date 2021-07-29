@@ -12,6 +12,11 @@ jobs:
     - name: Install graphviz
       run: sudo apt-get install graphviz
     - uses: actions/checkout@master
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: stable
+          override: true
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
@@ -28,6 +33,11 @@ jobs:
       CI: true
     steps:
     - uses: actions/checkout@master
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: stable
+          override: true
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
