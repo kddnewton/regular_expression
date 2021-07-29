@@ -2,10 +2,9 @@
 
 require_relative "./test_helper"
 
-require_relative "./mspec"
-require_relative "./known_failures"
-
-require_relative "../spec/language/fixtures/classes"
+require_relative "./rubyspec/mspec"
+require_relative "./rubyspec/known_failures"
+require_relative "./rubyspec/language_specs"
 
 module RegularExpression
   # Patch string so that it can match against our own regexp classes. We're only

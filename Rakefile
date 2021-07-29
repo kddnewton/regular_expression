@@ -13,6 +13,10 @@ file "lib/regular_expression/parser.rb" => "lib/regular_expression/parser.y" do
   system("bundle exec racc lib/regular_expression/parser.y -o lib/regular_expression/parser.rb")
 end
 
+file "test/rubyspec/language_specs.rb" => "spec/language/fixtures/classes.rb" do |t|
+  cp(t.source, t.name)
+end
+
 rule %r{test/rubyspec/.*?_spec.rb} => "spec/language/regexp/%f" do |t|
   system("bin/spec #{t.source} #{t.name}")
 end
@@ -42,6 +46,7 @@ rubyspecs.each { |filepath| Rake::Task[filepath].enhance(["bin/spec"]) }
 
 task default: [
   "lib/regular_expression/parser.rb",
+  "test/rubyspec/language_specs.rb",
   *rubyspecs.pathmap("test/rubyspec/%f"),
   :test
 ]

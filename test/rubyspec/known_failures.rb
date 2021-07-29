@@ -15,8 +15,8 @@
 # test to pass but report at the end of the test run that the test should be
 # removed from the known failures list.
 
-source_path = "known_failures.txt"
-KNOWN_FAILURES = File.readlines(File.expand_path(source_path, __dir__)).map(&:chomp)
+source_filename = "known_failures.txt"
+KNOWN_FAILURES = File.readlines(File.expand_path(source_filename, __dir__), chomp: true)
 
 NOT_ACTUALLY_FAILURES = [] # rubocop:disable Style/MutableConstant
 UNKNOWN_FAILURES = [] # rubocop:disable Style/MutableConstant
@@ -25,7 +25,7 @@ Minitest.after_run do
   if NOT_ACTUALLY_FAILURES.any?
     warn(<<~MSG)
       The following ruby/spec specs passed, even though they were listed as \
-      known failures. Please remove them from test/#{source_path}.
+      known failures. Please remove them from test/rubyspec/#{source_filename}.
 
       #{NOT_ACTUALLY_FAILURES.join("\n")}
     MSG
@@ -36,7 +36,7 @@ Minitest.after_run do
   if UNKNOWN_FAILURES.any?
     warn(<<~MSG)
       The following ruby/spec specs failed. The skip the warning, add the name \
-      of the test to test/#{source_path}.
+      of the test to test/rubyspec/#{source_filename}.
 
       #{UNKNOWN_FAILURES.join("\n")}
     MSG
