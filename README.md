@@ -23,13 +23,17 @@ Or install it yourself as:
 
 ### Dependencies
 
+#### Cranelift
+
+One of the backends that the regular expression compiler can use is cranelift, which is a rust project with Ruby bindings handled by the `cranelift_ruby` gem. In order to use the compiler, you'll need to have `cargo` installed so that it can compile the rust native extension. On a Mac or Linux you can `curl https://sh.rustup.rs -sSf | sh`. For other platforms, searching _install cargo_ can tell you how. Additionally, you'll need your Ruby to have been compiled with the `--enable-shared` option.
+
 #### Capstone
 
-To call `#disasm` on the generated machine code, you'll need Capstone installed. On a Mac you can `brew install capstone`, or on Ubuntu you can `sudo apt-get install libcapstone-dev`. For other platforms, Googling _install capstone_ can tell you how.
+To call `#disasm` on the generated machine code, you'll need Capstone installed. On a Mac you can `brew install capstone`, or on Ubuntu you can `sudo apt-get install libcapstone-dev`. For other platforms, searching _install capstone_ can tell you how.
 
 #### Graphviz
 
-To call `#to_dot` on the syntax tree or the state machines, or run the tests, you'll need Graphviz installed. On a Mac you can `brew install graphviz`, or on Ubuntu you can `sudo apt-get install graphviz`. For other platforms, Googling _install graphviz_ can tell you how.
+To call `#to_dot` on the syntax tree or the state machines, or run the tests, you'll need Graphviz installed. On a Mac you can `brew install graphviz`, or on Ubuntu you can `sudo apt-get install graphviz`. For other platforms, searching _install graphviz_ can tell you how.
 
 ## Usage
 
