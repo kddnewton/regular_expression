@@ -1,0 +1,125 @@
+supports the \K keep operator
+support \x (hex characters)
+support \c (control characters)
+handles three digit octal escapes starting with 0
+handles control escapes with \C-x syntax
+supports the \R line break escape
+they're supported
+matches unicode Katakana properties
+matches Unicode marks with [[:word:]]
+match Unicode format characters with [[:print:]]
+matches Unicode digits with [[:alnum:]]
+matches unicode abbreviated character properties
+supports \X (unicode 9.0 with UTR #51 workarounds)
+supports [] (character class)
+match Unicode Nl characters with [[:word:]]
+doesn't match Unicode No characters with [[:word:]]
+match Unicode format characters with [[:graph:]]
+matches Unicode decimal digits with [[:word:]]
+supports \D (non-digit)
+doesn't match Unicode format characters with [[:cntrl:]]
+doesn't match Unicode control characters with [[:word:]]
+supports \S (non-space character)
+matches unicode Hangul properties
+matches Unicode title-case characters with [[:word:]]
+doesn't match Unicode format characters with [[:word:]]
+doesn't match Unicode private-use characters with [[:word:]]
+matches unicode script properties
+matches Unicode digits with [[:digit:]]
+matches unicode Hiragana properties
+matches Unicode uppercase characters with [[:word:]]
+supports [[:alpha:][:digit:][:etc:]] (predefined character classes)
+matches Unicode Pd characters with [[:punct:]]
+matches unicode Han properties
+matches Unicode lowercase characters with [[:word:]]
+supports \W (non-word character)
+supports \s (space character)
+doesn't match Unicode punctuation characters with [[:word:]]
+allows interpolation which mixes modifiers
+allows interpolation of literal regexps
+gives precedence to escape sequences over substitution
+throws RegexpError for malformed interpolation
+allows escape sequences in interpolated regexps
+supports + (1 or more of previous subexpression)
+supports {m,n}? (m to n of previous subexpression) - lazy)
+does not delete optional assertions
+treats ? after {n} quantifier as another quantifier, not as non-greedy marker
+matches zero-width capture groups in optional iterations of loops
+supports *? (0 or more of previous subexpression - lazy)
+supports +? (0 or more of previous subexpression - lazy)
+handles incomplete range quantifiers
+lets us use quantifiers on assertions
+supports * (0 or more of previous subexpression)
+supports {m,n} (m to n of previous subexpression)
+supports modifier combinations
+supports /i (case-insensitive)
+supports /o (once)
+supports . with /m
+supports (?imx-imx) (inline modifiers)
+invokes substitutions for /o only once
+supports /m (multiline)
+supports /x (extended syntax)
+supports (?imx-imx:expr) (scoped inline modifiers)
+supports \b (word boundary)
+supports \B (non-word-boundary)
+supports (?!<\b) (negative lookbehind with word boundary)
+supports (?!<) (negative lookbehind)
+supports (?<=\b) (positive lookbehind with word boundary)
+does not match ^ after trailing \n
+supports $ (line end anchor)
+supports (?<=) (positive lookbehind)
+supports ^ (line start anchor)
+supports \Z (string end anchor, including before trailing \n)
+supports \A (string start anchor)
+treats subexpression calls as distinct from simple back-references
+allows + and - in group names and referential constructs that don't use levels, i.e. subexpression calls
+allows access to back-references from the current level
+allows recursive subexpression calls
+allows numeric subexpression calls
+can match an optional quote, followed by content, followed by a matching quote, as the whole string
+supports <n> (backreference to previous group match)
+allows forward references
+resets nested <n> backreference before match of outer subexpression
+fails when trying to match a backreference to an unmatched capture group
+saves match data in the $~ pseudo-global variable
+allows either <> or '' in named conditional backreferences
+allows negative numeric backreferences
+regular numeric backreferences cannot start with 0
+will not clobber capture variables across threads
+disallows forward references >= 10
+delimited numeric backreferences can start with 0
+allows numeric conditional backreferences
+does not reset enclosed capture groups
+shouldn't cause the Regexp parser to get stuck in a loop
+allow extra empty iterations
+allow empty iterations in the middle of a loop
+make the Regexp proceed past the quantified expression on failure
+saves match data in the RegularExpression.last_match pseudo-global variable
+matches Unicode digits with [[:print:]]
+matches Unicode Pf characters with [[:punct:]]
+matches Unicode letter characters with [[:alpha:]]
+matches Unicode title-case characters with [[:print:]]
+matches Unicode letter characters with [[:graph:]]
+matches Unicode letter characters with [[:alnum:]]
+matches Unicode lowercase letter characters with [[:print:]]
+matches Unicode lowercase letter characters with [[:lower:]]
+matches Unicode uppercase letter characters with [[:print:]]
+doesn't match Unicode format characters with [[:space:]]
+doesn't match Unicode title-case characters with [[:upper:]]
+matches Unicode Po characters with [[:punct:]]
+match Unicode private-use characters with [[:graph:]]
+matches Unicode uppercase characters with [[:upper:]]
+match Unicode private-use characters with [[:print:]]
+matches Unicode Pi characters with [[:punct:]]
+matches Unicode marks with [[:print:]]
+doesn't match Unicode format characters with [[:upper:]]
+doesn't match Unicode format characters with [[:lower:]]
+doesn't match Unicode format characters with [[:punct:]]
+matches Unicode digits with [[:graph:]]
+matches Unicode space characters with [[:blank:]]
+doesn't match Unicode format characters with [[:digit:]]
+matches Unicode Ps characters with [[:punct:]]
+doesn't match Unicode title-case characters with [[:lower:]]
+matches Unicode marks with [[:graph:]]
+doesn't match Unicode title-case characters with [[:space:]]
+doesn't match Unicode format characters with [[:xdigit:]]

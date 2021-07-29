@@ -11,16 +11,21 @@ module RegularExpression
     }.freeze
 
     # Parses a String into a Flags object.
-    def self.parse(str)
-      flags = str.each_char.map do |flag|
-        CODES.fetch(flag) { raise ArgumentError, "Unsupported flag: #{flag}" }
-      end
+    def self.parse(string = nil)
+      flags =
+        (string || "").each_char.map do |flag|
+          CODES.fetch(flag) { raise ArgumentError, "Unsupported flag: #{flag}" }
+        end
 
       new(flags.reduce(&:|))
     end
 
     def initialize(value = nil)
       @value = value || 0
+    end
+
+    def ==(other)
+      other.is_a?(Flags) && value == other.value
     end
 
     # This is the free-spacing mode:

@@ -128,8 +128,8 @@ end
 
 ---- inner
 
-  def parse(str, flags = Flags.new)
-    @tokens = Lexer.new(str, flags).tokens
+  def parse(string, flags = Flags.new)
+    @tokens = Lexer.new(string, flags).tokens
     do_parse
   end
 

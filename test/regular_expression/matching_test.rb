@@ -302,7 +302,7 @@ module RegularExpression
       assert_operator(pattern, :match?, "3.1")
 
       # Now check that the right tokens were ignored
-      pattern = Pattern.new(<<~REGEXP, Regexp::EXTENDED)
+      pattern = Pattern.new(<<~REGEXP, "x")
         \\A
         [[:digit:]]+ # 1 or more digits before the decimal point
         (\\.         # Decimal point
@@ -315,7 +315,7 @@ module RegularExpression
     end
 
     def test_raises_syntax_errors
-      assert_raises(SyntaxError) do
+      assert_raises(Lexer::Error) do
         Parser.new.parse("\u0000")
       end
     end

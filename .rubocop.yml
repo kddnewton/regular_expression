@@ -7,6 +7,8 @@ AllCops:
   Exclude:
   - "coverage/**/*"
   - "lib/regular_expression/parser.rb"
+  - "spec/**/*"
+  - "test/rubyspec/*"
   - "vendor/**/*"
 
 Gemspec/RequiredRubyVersion:

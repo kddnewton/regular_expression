@@ -1,6 +1,19 @@
 # frozen_string_literal: true
 
 module RegularExpression
+  # This is to maintain compatibility with the Regexp.last_match. When a new
+  # MatchData object is allocated, we set it as the last match.
+  class << self
+    attr_accessor :last_match_data
+
+    # This is kind of a weird signature, but basically if you call
+    # Regexp.last_match then you get the last allocated MatchData object, and if
+    # you call it with an index you get the group at that index.
+    def last_match(index = nil)
+      index && last_match_data ? last_match_data[index] : last_match_data
+    end
+  end
+
   # This object represents a successful match against an input string. It is
   # created using the original string that was matched against along with the
   # indices that represent the capture groups.
@@ -35,6 +48,10 @@ module RegularExpression
         @groups << (start != -1 && finish != -1 ? string[start...finish] : nil)
         @aliases[captures[index]] = index if captures[index].is_a?(String)
       end
+
+      # Does this need to be per-thread? This is very likely unsafe, but rolling
+      # with it for now.
+      RegularExpression.last_match_data = self
     end
 
     # captures technically doesn't include $0
@@ -87,7 +104,9 @@ module RegularExpression
     end
 
     def ==(other)
-      string == other.string && indices == other.indices
+      other.is_a?(MatchData) &&
+        string == other.string &&
+        indices == other.indices
     end
 
     # This method is largely here to mirror the top-level MatchData object. It

@@ -2,6 +2,8 @@
 
 module RegularExpression
   class Lexer
+    Error = Class.new(StandardError)
+
     SINGLE = {
       "^" => :CARET,
       "(" => :LPAREN,
@@ -60,7 +62,7 @@ module RegularExpression
         when @scanner.scan(/\u0009|\u000A|\u000D|[\u0020-\uD7FF]|[\uE000-\uFFFD]/)
           result << [:CHAR, @scanner.matched]
         else
-          raise SyntaxError, @scanner.rest
+          raise Error, @scanner.rest
         end
       end
 
