@@ -20,9 +20,11 @@ module RegularExpression
         instance_eval(&block)
       end
 
-      define_method(:"test_#{name}_cranelift") do
-        @compiler = :cranelift
-        instance_eval(&block)
+      if Compiler::Cranelift.enabled?
+        define_method(:"test_#{name}_cranelift") do
+          @compiler = :cranelift
+          instance_eval(&block)
+        end
       end
 
       define_method(:"test_#{name}_ruby") do

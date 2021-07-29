@@ -3,6 +3,21 @@
 module RegularExpression
   module Compiler
     module Cranelift
+      # Cranelift is an optional backend that requires the cranelift_ruby gem.
+      # Not all users of this gem will use it, as it requires cargo to compile
+      # its native extension and requires the --enable-shared ruby configure
+      # option, which may not have been compiled in (see
+      # https://github.com/danielpclark/rutie#dynamic-vs-static-builds).
+      #
+      # So in order to not impose it as a runtime dependency, we optionally load
+      # it only if the user attempts to compile with this compiler.
+      def self.enabled?
+        require "cranelift_ruby"
+        true
+      rescue LoadError
+        false
+      end
+
       # A return status that indicates that the input string did not match the
       # state machine
       MATCHING_FAILED = 0
@@ -15,6 +30,7 @@ module RegularExpression
       # A return status that indicates that the input string matched the state
       # machine
       MATCHING_SUCCESS = 2
+
       class Compiled
         attr_reader :f_ptr, :f_size, :captures
 
@@ -43,11 +59,13 @@ module RegularExpression
 
         def to_proc
           indices = ([-1] * (captures.length * 2)).pack("q*")
-          function = Fiddle::Function.new(
-            @f_ptr,
-            [Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T, Fiddle::TYPE_VOIDP],
-            Fiddle::TYPE_INT8_T
-          )
+          function =
+            Fiddle::Function.new(
+              @f_ptr,
+              [Fiddle::TYPE_VOIDP, Fiddle::TYPE_SIZE_T, Fiddle::TYPE_VOIDP],
+              Fiddle::TYPE_INT8_T
+            )
+
           lambda do |string|
             value = function.call(string, string.length, indices)
             case value
@@ -72,8 +90,10 @@ module RegularExpression
 
       def self.compile(cfg, schedule)
         b = CraneliftRuby::CraneliftBuilder.new
+
         s = b.make_signature(%i[I64 I64 I64], [:I8])
         external_func_sig = b.make_signature([:I8], [:I64])
+
         f = b.make_function("regex", s, lambda { |bcx|
           external_func_sigref = bcx.import_signature(external_func_sig)
           initial_block = bcx.create_block
@@ -117,6 +137,7 @@ module RegularExpression
           schedule.each do |block|
             block_map[block.name] = bcx.create_block
           end
+
           bcx.jump(block_map[schedule[0].name], [])
           schedule.each do |block|
             bcx.switch_to_block(block_map[block.name])
@@ -373,9 +394,11 @@ module RegularExpression
 
           bcx.finalize
         })
+
         b.finalize
         f_ptr = b.get_function_pointer(f)
         f_size = b.get_function_size(f)
+
         Compiled.new(f_ptr, f_size, cfg.captures)
       end
     end

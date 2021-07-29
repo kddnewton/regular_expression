@@ -4,7 +4,6 @@ require "fiddle"
 require "fisk"
 require "fisk/helpers"
 require "set"
-require "cranelift_ruby"
 require "stringio"
 require "strscan"
 
