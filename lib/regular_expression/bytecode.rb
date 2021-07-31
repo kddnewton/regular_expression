@@ -31,7 +31,7 @@ module RegularExpression
         next if visited.include?(state)
 
         # Label the start of the state.
-        builder.mark_label(label[state])
+        builder.switch_to_block(label[state])
         visited.add(state)
 
         if state.is_a?(NFA::FinishState)
@@ -45,7 +45,7 @@ module RegularExpression
         # Other states have transitions out of them. Go through each
         # transition.
         state.transitions.each_with_index do |transition, index|
-          builder.mark_label(label[state, index])
+          builder.switch_to_block(label[state, index])
 
           if state.transitions.length > 1 && index != state.transitions.length - 1
             builder.push(Insns::PushIndex.new(backtracks))
@@ -135,7 +135,7 @@ module RegularExpression
           worklist.push([transition.state, next_fallback])
         end
 
-        builder.mark_label(label[state, state.transitions.size]) if needs_final_transition
+        builder.switch_to_block(label[state, state.transitions.size]) if needs_final_transition
 
         # If we don't have one of the transitions that always executes, then we
         # need to add the fallback to the output for this state.
@@ -146,7 +146,7 @@ module RegularExpression
       end
 
       # We always have a failure case - it's just the failure instruction.
-      builder.mark_label(:fail)
+      builder.switch_to_block(:fail)
       builder.push(Insns::Fail.new)
       builder.captures = captures.sort_by(&:index).map { |transition| transition.name || transition.index }
       builder.backtracks = backtracks
@@ -232,28 +232,56 @@ module RegularExpression
       Deoptimize = Class.new
     end
 
-    class Builder
+    class Block 
       attr_reader :insns # Array[Insns]
-      attr_reader :labels # Hash[Symbol, Integer]
-      attr_accessor :captures # Integer
-      attr_accessor :backtracks # Integer
-
       def initialize
         @insns = []
-        @labels = {}
-        @captures = 0
-        @backtracks = 0
-      end
-
-      def mark_label(label)
-        labels[label] = insns.size
       end
 
       def push(*new_insns)
         insns.push(*new_insns)
       end
+    end
+
+    class Builder
+      attr_reader :blocks # Array[Block]
+      attr_reader :current_block # Integer
+      attr_reader :blocks_map # Hash[Symbol, Integer]
+      attr_reader :inverse_blocks_map # Hash[Integer, Symbol]
+      attr_accessor :captures # Integer
+      attr_accessor :backtracks # Integer
+
+      def initialize
+        @blocks = []
+        @blocks_map = {}
+        @inverse_blocks_map = {}
+        @current_block = -1
+        @captures = 0
+        @backtracks = 0
+      end
+
+      def switch_to_block(label)
+        if blocks_map.key?(label)
+          current_block = blocks_map[label]
+        else
+          current_block = blocks.length
+          blocks.push(Block.new)
+          blocks_map[label] = current_block
+          inverse_blocks_map[current_block] = label
+        end
+      end
+
+      def push(*new_insns)
+        blocks[current_block].push(*new_insns)
+      end
 
       def build
+        insns = []
+        labels = {}
+        blocks.each_with_index do |block, index|
+          labels[inverse_blocks_map[index]] = insns.length
+          insns.push(*block.insns)
+        end
         Compiled.new(insns, labels, captures, backtracks)
       end
     end
