@@ -232,8 +232,9 @@ module RegularExpression
       Deoptimize = Class.new
     end
 
-    class Block 
+    class Block
       attr_reader :insns # Array[Insns]
+
       def initialize
         @insns = []
       end
@@ -262,9 +263,9 @@ module RegularExpression
 
       def switch_to_block(label)
         if blocks_map.key?(label)
-          current_block = blocks_map[label]
+          @current_block = blocks_map[label]
         else
-          current_block = blocks.length
+          @current_block = blocks.length
           blocks.push(Block.new)
           blocks_map[label] = current_block
           inverse_blocks_map[current_block] = label
