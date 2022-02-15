@@ -9,10 +9,10 @@ GEM
   remote: https://rubygems.org/
   specs:
     ast (2.4.2)
-    crabstone (4.0.3)
+    crabstone (4.0.4)
       ffi
     docile (1.4.0)
-    ffi (1.15.3)
+    ffi (1.15.5)
     fisk (2.2.0)
     graphviz (1.2.1)
       process-pipeline
