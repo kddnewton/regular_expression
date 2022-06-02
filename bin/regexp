@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+
+$:.unshift(File.expand_path("../lib", __dir__))
+require "regular_expression"
+
+source = ".*a*.*cb*"
+native = /#{source}/
+pattern = RegularExpression::Pattern.new(source)
+
+ast = RegularExpression::Parser.new(source, RegularExpression::Flags.new).parse
+nfa = RegularExpression::NFA.compile(ast)
+dfa = RegularExpression::DFA.compile(nfa)
+
+puts source
+pp ast
+puts RegularExpression::DiGraph.call(nfa, "build/nfa.svg")
+puts RegularExpression::DiGraph.call(dfa, "build/dfa.svg")
+
+format = "%-10s %-10s %-10s %-10s"
+puts format % ["Input", "Native", "NFA", "DFA"]
+
+["a", "aa", "aaa", "b", "bb", "ab", "aab", "aaacab"].each do |string|
+  puts format % [
+    string,
+    native.match?(string),
+    RegularExpression::NFA.match?(nfa, string),
+    RegularExpression::DFA.match?(dfa, string)
+  ]
+end

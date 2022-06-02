@@ -1,0 +1,21 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ffi (1.15.5)
+    graphviz (1.2.1)
+      process-pipeline
+    process-group (1.2.4)
+      process-terminal (~> 0.2.0)
+    process-pipeline (1.0.2)
+      process-group
+    process-terminal (0.2.0)
+      ffi
+
+PLATFORMS
+  x86_64-darwin-21
+
+DEPENDENCIES
+  graphviz
+
+BUNDLED WITH
+   2.4.0.dev
