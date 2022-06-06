@@ -224,7 +224,7 @@ module RegularExpression
       # Checks if the machine matches against the given string at any index in
       # the string.
       def match?(state, string)
-        (0...string.length).any? do |index|
+        (0..string.length).any? do |index|
           match_at?(state, string, index)
         end
       end

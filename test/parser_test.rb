@@ -45,15 +45,7 @@ module RegularExpression
     private
 
     def parse(source)
-      Parser.new(source).parse.tap do |node|
-        PP.pp(node, +"")
-
-        nfa = NFA.compile(node)
-        NFA.match?(nfa, "a")
-
-        dfa = DFA.compile(nfa)
-        DFA.match?(dfa, "a")
-      end
+      Parser.new(source).parse.tap { |node| PP.pp(node, +"") }
     end
   end
 end
