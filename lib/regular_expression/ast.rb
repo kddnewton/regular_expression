@@ -65,6 +65,9 @@ module RegularExpression
       # Visit a Pattern node.
       alias visit_pattern visit_child_nodes
 
+      # Visit a PlusQuantifier node.
+      alias visit_plus_quantifier visit_child_nodes
+
       # Visit a Quantified node.
       alias visit_quantified visit_child_nodes
 
@@ -107,6 +110,11 @@ module RegularExpression
           q.breakable
           q.seplist(node.expressions) { |expression| q.pp(expression) }
         end
+      end
+
+      # Visit a PlusQuantifier node.
+      def visit_plus_quantifier(node)
+        token("plus-quantifier")
       end
 
       # Visit a Quantified node.
@@ -195,6 +203,30 @@ module RegularExpression
 
       def deconstruct_keys(keys)
         { items: items, location: location }
+      end
+    end
+
+    # This is a quantifier that indicates that the item should be matched one
+    # or more times.
+    class PlusQuantifier < Node
+      attr_reader :location
+
+      def initialize(location:)
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_plus_quantifier(self)
+      end
+
+      def child_nodes
+        []
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { location: location }
       end
     end
 

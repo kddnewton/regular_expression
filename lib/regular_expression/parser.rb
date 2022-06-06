@@ -29,6 +29,7 @@ module RegularExpression
             case source[index..]
             in /\A\./ then :dot
             in /\A\*/ then :star
+            in /\A\+/ then :plus
             in /\A\|/ then :pipe
             in /\A./  then :char
             end
@@ -100,9 +101,14 @@ module RegularExpression
     # This creates an AST::StarQuantifier object if the next token is a star,
     # otherwise it will return nil.
     def maybe_parse_quantifier(tokens)
-      if tokens.peek in { type: :star, location: }
+      case tokens.peek
+      in { type: :star, location: }
         tokens.next
         AST::StarQuantifier.new(location: location)
+      in { type: :plus, location: }
+        tokens.next
+        AST::PlusQuantifier.new(location: location)
+      else
       end
     end
   end

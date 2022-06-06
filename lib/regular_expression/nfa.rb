@@ -96,6 +96,9 @@ module RegularExpression
           end
         in AST::Quantified[item: item, quantifier: quantifier]
           case quantifier
+          in AST::PlusQuantifier
+            connect(item, from, to)
+            to.connect(EpsilonTransition.new, from)
           in AST::StarQuantifier
             connect(item, from, from)
             from.connect(EpsilonTransition.new, to)
