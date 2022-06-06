@@ -16,6 +16,10 @@ module RegularExpression
 
     # Matches against the entire alphabet.
     class Any
+      def ==(other)
+        other in Any
+      end
+
       def to_a
         [self]
       end
@@ -35,6 +39,10 @@ module RegularExpression
 
       def initialize(alphabets:)
         @alphabets = alphabets
+      end
+
+      def ==(other)
+        other in Multiple[alphabets: ^(alphabets)]
       end
 
       def to_a
@@ -62,6 +70,10 @@ module RegularExpression
 
     # Matches nothing.
     class None
+      def ==(other)
+        other in None
+      end
+
       def to_a
         []
       end
@@ -82,6 +94,10 @@ module RegularExpression
       def initialize(from:, to:)
         @from = from
         @to = to
+      end
+
+      def ==(other)
+        other in Range[from: ^(from), to: ^(to)]
       end
 
       def to_a
@@ -114,6 +130,10 @@ module RegularExpression
 
       def initialize(value:)
         @value = value
+      end
+
+      def ==(other)
+        other in Value[value: ^(value)]
       end
 
       def to_a
