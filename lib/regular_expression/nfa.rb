@@ -100,6 +100,17 @@ module RegularExpression
         in AST::Quantified[item: item, quantifier: AST::PlusQuantifier]
           connect(item, from, to)
           to.connect(EpsilonTransition.new, from)
+        in AST::Quantified[item: item, quantifier: AST::RangeQuantifier[range:]]
+          inner = Array.new(range.end - 1) { State.new(label: labels.next) }
+          states = [from, *inner, to]
+
+          range.end.times do |index|
+            connect(item, states[index], states[index + 1])
+          end
+
+          (range.end - range.begin).times do |index|
+            states[range.begin + index].connect(EpsilonTransition.new, to)
+          end
         in AST::Quantified[item: item, quantifier: AST::StarQuantifier]
           connect(item, from, from)
           from.connect(EpsilonTransition.new, to)

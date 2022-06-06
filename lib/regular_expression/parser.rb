@@ -32,6 +32,8 @@ module RegularExpression
             in /\A\+/ then :plus
             in /\A\?/ then :qmark
             in /\A\|/ then :pipe
+            in /\A\{/ then :lbrace
+            in /\A\}/ then :rbrace
             in /\A./  then :char
             end
 
@@ -112,6 +114,24 @@ module RegularExpression
       in { type: :qmark, location: }
         tokens.next
         AST::OptionalQuantifier.new(location: location)
+      in { type: :lbrace, location: start_location }
+        tokens.next
+
+        digits = []
+        location = start_location
+
+        loop do
+          case tokens.next
+          in { type: :rbrace, location: end_location }
+            location = start_location.to(end_location)
+            break
+          in { type: :char, value: /\d/ => value }
+            digits << value
+          end
+        end
+
+        value = digits.join.to_i
+        AST::RangeQuantifier.new(range: value..value, location: location)
       else
       end
     end

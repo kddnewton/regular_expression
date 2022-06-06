@@ -74,6 +74,9 @@ module RegularExpression
       # Visit a Quantified node.
       alias visit_quantified visit_child_nodes
 
+      # Visit a RangeQuantifier node.
+      alias visit_range_quantifier visit_child_nodes
+
       # Visit a StarQuantifier node.
       alias visit_star_quantifier visit_child_nodes
     end
@@ -133,6 +136,14 @@ module RegularExpression
 
           q.breakable
           q.pp(node.quantifier)
+        end
+      end
+
+      # Visit a RangeQuantifier node.
+      def visit_range_quantifier(node)
+        token("range-quantifier") do
+          q.breakable
+          q.pp(node.range)
         end
       end
 
@@ -333,6 +344,31 @@ module RegularExpression
 
       def deconstruct_keys(keys)
         { item: item, quantifier: quantifier, location: location }
+      end
+    end
+
+    # This is a quantifier that indicates that the item should be matched a
+    # range of times.
+    class RangeQuantifier < Node
+      attr_reader :range, :location
+
+      def initialize(range:, location:)
+        @range = range
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_range_quantifier(self)
+      end
+
+      def child_nodes
+        []
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { range: range, location: location }
       end
     end
 
