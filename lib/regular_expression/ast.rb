@@ -65,6 +65,9 @@ module RegularExpression
       # Visit a Pattern node.
       alias visit_pattern visit_child_nodes
 
+      # Visit an OptionalQuantifier node.
+      alias visit_optional_quantifier visit_child_nodes
+
       # Visit a PlusQuantifier node.
       alias visit_plus_quantifier visit_child_nodes
 
@@ -102,6 +105,11 @@ module RegularExpression
           q.breakable
           q.pp(node.value)
         end
+      end
+
+      # Visit an OptionalQuantifier node.
+      def visit_optional_quantifier(node)
+        token("optional-quantifier")
       end
 
       # Visit a Pattern node.
@@ -156,31 +164,6 @@ module RegularExpression
       end
     end
 
-    # This is the root node of the AST. It contains a list of all of the
-    # expressions that make up the regexp.
-    class Pattern < Node
-      attr_reader :expressions, :location
-
-      def initialize(expressions:, location:)
-        @expressions = expressions
-        @location = location
-      end
-
-      def accept(visitor)
-        visitor.visit_pattern(self)
-      end
-
-      def child_nodes
-        expressions
-      end
-
-      alias deconstruct child_nodes
-
-      def deconstruct_keys(keys)
-        { expressions: expressions, location: location }
-      end
-    end
-
     # This contains a list of items that will be matched. Notably it does not
     # contain alternations (|), as that would be another expression node.
     class Expression < Node
@@ -203,6 +186,102 @@ module RegularExpression
 
       def deconstruct_keys(keys)
         { items: items, location: location }
+      end
+    end
+
+    # This will match any given value in the input string.
+    class MatchAny < Node
+      attr_reader :location
+
+      def initialize(location:)
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_match_any(self)
+      end
+
+      def child_nodes
+        []
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { location: location }
+      end
+    end
+
+    # This is a single character that must be matched.
+    class MatchCharacter < Node
+      attr_reader :value, :location
+
+      def initialize(value:, location:)
+        @value = value
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_match_character(self)
+      end
+
+      def child_nodes
+        []
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { value: value, location: location }
+      end
+    end
+
+    # This is a quantifier that indicates that the item can be optionally
+    # matched.
+    class OptionalQuantifier < Node
+      attr_reader :location
+
+      def initialize(location:)
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_optional_quantifier(self)
+      end
+
+      def child_nodes
+        []
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { location: location }
+      end
+    end
+
+    # This is the root node of the AST. It contains a list of all of the
+    # expressions that make up the regexp.
+    class Pattern < Node
+      attr_reader :expressions, :location
+
+      def initialize(expressions:, location:)
+        @expressions = expressions
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_pattern(self)
+      end
+
+      def child_nodes
+        expressions
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { expressions: expressions, location: location }
       end
     end
 
@@ -278,53 +357,6 @@ module RegularExpression
 
       def deconstruct_keys(keys)
         { location: location }
-      end
-    end
-
-    # This will match any given value in the input string.
-    class MatchAny < Node
-      attr_reader :location
-
-      def initialize(location:)
-        @location = location
-      end
-
-      def accept(visitor)
-        visitor.visit_match_any(self)
-      end
-
-      def child_nodes
-        []
-      end
-
-      alias deconstruct child_nodes
-
-      def deconstruct_keys(keys)
-        { location: location }
-      end
-    end
-
-    # This is a single character that must be matched.
-    class MatchCharacter < Node
-      attr_reader :value, :location
-
-      def initialize(value:, location:)
-        @value = value
-        @location = location
-      end
-
-      def accept(visitor)
-        visitor.visit_match_character(self)
-      end
-
-      def child_nodes
-        []
-      end
-
-      alias deconstruct child_nodes
-
-      def deconstruct_keys(keys)
-        { value: value, location: location }
       end
     end
   end

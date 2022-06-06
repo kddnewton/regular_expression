@@ -30,6 +30,7 @@ module RegularExpression
             in /\A\./ then :dot
             in /\A\*/ then :star
             in /\A\+/ then :plus
+            in /\A\?/ then :qmark
             in /\A\|/ then :pipe
             in /\A./  then :char
             end
@@ -108,6 +109,9 @@ module RegularExpression
       in { type: :plus, location: }
         tokens.next
         AST::PlusQuantifier.new(location: location)
+      in { type: :qmark, location: }
+        tokens.next
+        AST::OptionalQuantifier.new(location: location)
       else
       end
     end

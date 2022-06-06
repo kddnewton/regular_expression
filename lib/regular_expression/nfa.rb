@@ -94,15 +94,15 @@ module RegularExpression
           expressions.each do |expression|
             connect(expression, from, to)
           end
-        in AST::Quantified[item: item, quantifier: quantifier]
-          case quantifier
-          in AST::PlusQuantifier
-            connect(item, from, to)
-            to.connect(EpsilonTransition.new, from)
-          in AST::StarQuantifier
-            connect(item, from, from)
-            from.connect(EpsilonTransition.new, to)
-          end
+        in AST::Quantified[item: item, quantifier: AST::OptionalQuantifier]
+          connect(item, from, to)
+          from.connect(EpsilonTransition.new, to)
+        in AST::Quantified[item: item, quantifier: AST::PlusQuantifier]
+          connect(item, from, to)
+          to.connect(EpsilonTransition.new, from)
+        in AST::Quantified[item: item, quantifier: AST::StarQuantifier]
+          connect(item, from, from)
+          from.connect(EpsilonTransition.new, to)
         end
       end
     end
