@@ -21,6 +21,19 @@ module RegularExpression
       ]]
     end
 
+    def test_group
+      parse("(a|b)") => AST::Pattern[AST::Expression[
+        AST::Group[
+          AST::Expression[
+            AST::MatchCharacter[value: "a"]
+          ],
+          AST::Expression[
+            AST::MatchCharacter[value: "b"]
+          ]
+        ]
+      ]]
+    end
+
     def test_match_character
       parse("a") => AST::Pattern[AST::Expression[
         AST::MatchCharacter[value: "a"]
@@ -30,6 +43,15 @@ module RegularExpression
     def test_match_any
       parse(".") => AST::Pattern[AST::Expression[
         AST::MatchAny
+      ]]
+    end
+
+    def test_range_quantifier
+      parse("a{3}") => AST::Pattern[AST::Expression[
+        AST::Quantified[
+          AST::MatchCharacter[value: "a"],
+          AST::RangeQuantifier[minimum: 3, maximum: 3]
+        ]
       ]]
     end
 

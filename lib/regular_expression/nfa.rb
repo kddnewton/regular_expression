@@ -86,6 +86,10 @@ module RegularExpression
           items.each_with_index do |item, index|
             connect(item, states[index], states[index + 1])
           end
+        in AST::Group
+          node.expressions.each do |expression|
+            connect(expression, from, to)
+          end
         in AST::MatchAny
           from.connect(AnyTransition.new, to)
         in AST::MatchCharacter[value: value]
@@ -100,16 +104,16 @@ module RegularExpression
         in AST::Quantified[item: item, quantifier: AST::PlusQuantifier]
           connect(item, from, to)
           to.connect(EpsilonTransition.new, from)
-        in AST::Quantified[item: item, quantifier: AST::RangeQuantifier[range:]]
-          inner = Array.new(range.end - 1) { State.new(label: labels.next) }
+        in AST::Quantified[item: item, quantifier: AST::RangeQuantifier[minimum:, maximum:]]
+          inner = Array.new(maximum - 1) { State.new(label: labels.next) }
           states = [from, *inner, to]
 
-          range.end.times do |index|
+          maximum.times do |index|
             connect(item, states[index], states[index + 1])
           end
 
-          (range.end - range.begin).times do |index|
-            states[range.begin + index].connect(EpsilonTransition.new, to)
+          (maximum - minimum).times do |index|
+            states[minimum + index].connect(EpsilonTransition.new, to)
           end
         in AST::Quantified[item: item, quantifier: AST::StarQuantifier]
           connect(item, from, from)

@@ -56,6 +56,9 @@ module RegularExpression
       # Visit an Expression node.
       alias visit_expression visit_child_nodes
 
+      # Visit a Group node.
+      alias visit_group visit_child_nodes
+
       # Visit a MatchAny node.
       alias visit_match_any visit_child_nodes
 
@@ -94,6 +97,14 @@ module RegularExpression
         token("expression") do
           q.breakable
           q.seplist(node.items) { |item| q.pp(item) }
+        end
+      end
+
+      # Visit a Group node.
+      def visit_group(node)
+        token("group") do
+          q.breakable
+          q.seplist(node.expressions) { |expression| q.pp(expression) }
         end
       end
 
@@ -143,7 +154,7 @@ module RegularExpression
       def visit_range_quantifier(node)
         token("range-quantifier") do
           q.breakable
-          q.pp(node.range)
+          q.text("#{node.minimum}-#{node.maximum}")
         end
       end
 
@@ -197,6 +208,31 @@ module RegularExpression
 
       def deconstruct_keys(keys)
         { items: items, location: location }
+      end
+    end
+
+    # This represents a grouping with the pattern that has its own child
+    # expressions.
+    class Group < Node
+      attr_reader :expressions, :location
+
+      def initialize(expressions:, location:)
+        @expressions = expressions
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_group(self)
+      end
+
+      def child_nodes
+        expressions
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { expressions: expressions, location: location }
       end
     end
 
@@ -350,10 +386,11 @@ module RegularExpression
     # This is a quantifier that indicates that the item should be matched a
     # range of times.
     class RangeQuantifier < Node
-      attr_reader :range, :location
+      attr_reader :minimum, :maximum, :location
 
-      def initialize(range:, location:)
-        @range = range
+      def initialize(minimum:, maximum:, location:)
+        @minimum = minimum
+        @maximum = maximum
         @location = location
       end
 
@@ -368,7 +405,7 @@ module RegularExpression
       alias deconstruct child_nodes
 
       def deconstruct_keys(keys)
-        { range: range, location: location }
+        { minimum: minimum, maximum: maximum, location: location }
       end
     end
 

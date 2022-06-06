@@ -13,6 +13,11 @@ module RegularExpression
       assert_matches("ab", "xxx ab xxx")
     end
 
+    def test_group
+      assert_matches("a(b|c)", "ab")
+      assert_matches("a(b|c)", "ac")
+    end
+
     def test_match_any
       assert_matches(".", "a")
       assert_matches(".", "b")

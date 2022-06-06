@@ -34,6 +34,8 @@ module RegularExpression
             in /\A\|/ then :pipe
             in /\A\{/ then :lbrace
             in /\A\}/ then :rbrace
+            in /\A\(/ then :lparen
+            in /\A\)/ then :rparen
             in /\A./  then :char
             end
 
@@ -66,7 +68,7 @@ module RegularExpression
     # match in sequence.
     def parse_expression(tokens)
       items = []
-      items << parse_item(tokens) until (tokens.peek in { type: :pipe | :EOF })
+      items << parse_item(tokens) until (tokens.peek in { type: :pipe | :EOF | :rparen })
 
       location =
         if items.any?
@@ -82,11 +84,15 @@ module RegularExpression
     # represents an item within an expression to match.
     def parse_item(tokens)
       item =
-        case tokens.next
+        case tokens.peek
         in { type: :char, value:, location: }
+          tokens.next
           AST::MatchCharacter.new(value: value, location: location)
         in { type: :dot, location: }
+          tokens.next
           AST::MatchAny.new(location: location)
+        in { type: :lparen }
+          parse_group(tokens)
         end
 
       if (quantifier = maybe_parse_quantifier(tokens))
@@ -99,6 +105,30 @@ module RegularExpression
       end
 
       item
+    end
+
+    # This creates an AST::Group object that contains a list of expressions to
+    # match.
+    def parse_group(tokens)
+      start = tokens.next
+      start => { type: :lparen }
+
+      expressions = []
+
+      loop do
+        case tokens.peek
+        in { type: :rparen }
+          break
+        in { type: :pipe }
+          tokens.next
+        else
+          expressions << parse_expression(tokens)
+        end
+      end
+
+      tokens.peek => { type: :rparen }
+      location = start.location.to(tokens.next.location)
+      AST::Group.new(expressions: expressions, location: location)
     end
 
     # This creates an AST::StarQuantifier object if the next token is a star,
@@ -131,7 +161,7 @@ module RegularExpression
         end
 
         value = digits.join.to_i
-        AST::RangeQuantifier.new(range: value..value, location: location)
+        AST::RangeQuantifier.new(minimum: value, maximum: value, location: location)
       else
       end
     end
