@@ -6,7 +6,7 @@ module RegularExpression
   class Parser
     attr_reader :source, :flags
 
-    def initialize(source, flags)
+    def initialize(source, flags = Flags.new)
       @source = source
       @flags = flags
     end
