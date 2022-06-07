@@ -1,7 +1,6 @@
 # TODO
 
 * Character classes
-* Repetition (`{n,}`, `{,m}`, `{n,m}`)
 * Non-greedy repetition (`*?`, `+?`)
 * Capturing
 * Subexpression calls

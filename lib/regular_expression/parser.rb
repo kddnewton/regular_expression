@@ -7,6 +7,9 @@ module RegularExpression
     # We build a custom enumerator here to make it easier to rollback to a
     # specific point. This is necessary to support arbitrary lookahead.
     class Lexer
+      class Rollback < StandardError
+      end
+
       attr_reader :tokens, :cached, :index
 
       def initialize(source)
@@ -25,6 +28,17 @@ module RegularExpression
 
       def peek
         index == cached.length ? tokens.peek : cached[index]
+      end
+
+      def rollback
+        raise Rollback
+      end
+
+      def transaction
+        saved_index = @index
+        yield
+      rescue Rollback
+        @index = saved_index
       end
 
       private
@@ -47,6 +61,7 @@ module RegularExpression
               in /\A\}/ then :rbrace
               in /\A\(/ then :lparen
               in /\A\)/ then :rparen
+              in /\A,/  then :comma
               in /\A./  then :char
               end
 
@@ -171,23 +186,76 @@ module RegularExpression
         tokens.next
         AST::OptionalQuantifier.new(location: location)
       in { type: :lbrace, location: start_location }
-        tokens.next
+        # Here we're going to parse the range quantifier syntax. This can match
+        # a couple of different combinations:
+        #
+        #     {n}
+        #     {n,}
+        #     {,m}
+        #     {n,m}
+        #
+        # There can't be any spaces between the braces and the numbers/comma. In
+        # order to properly match this, we need the lexer to be able to rollback
+        # to a specific point, so we'll use a transaction here. We'll build a
+        # little state machine that can help us navigate the parsing.
+        #
+        #                  +-------+                 +---------+ ------------+
+        # ---- lbrace ---> | start | ---- digit ---> | minimum |             |
+        #                  +-------+                 +---------+ <--- digit -+
+        #                      |                       |    |
+        #   +-------+ <----- comma                     |  rbrace
+        #   | comma |             +------ comma -------+    |
+        #   +-------+             V                         V
+        #      |             +---------+               +---------+
+        #      +-- digit --> | maximum | -- rbrace --> || final ||
+        #                    +---------+               +---------+
+        #                    |         ^
+        #                    +- digit -+
+        #
+        tokens.transaction do
+          tokens.next => { type: :lbrace }
+          state = :start
 
-        digits = []
-        location = start_location
+          minimum_digits = []
+          maximum_digits = []
 
-        loop do
-          case tokens.next
-          in { type: :rbrace, location: end_location }
-            location = start_location.to(end_location)
-            break
-          in { type: :char, value: /\d/ => value }
-            digits << value
+          location = start_location
+
+          loop do
+            case [state, tokens.next]
+            in [:start, { type: :char, value: /\d/ => value }]
+              minimum_digits << value
+              state = :minimum
+            in [:start, { type: :comma }]
+              state = :comma
+            in [:minimum, { type: :char, value: /\d/ => value }]
+              minimum_digits << value
+            in [:minimum, { type: :comma }]
+              state = :maximum
+            in [:minimum, { type: :rbrace, location: end_location }]
+              maximum_digits = minimum_digits
+              location = start_location.to(end_location)
+              break
+            in [:comma, { type: :char, value: /\d/ => value }]
+              maximum_digits << value
+              state = :maximum
+            in [:maximum, { type: :char, value: /\d/ => value }]
+              maximum_digits << value
+            in [:maximum, { type: :rbrace, location: end_location }]
+              location = start_location.to(end_location)
+              break
+            else
+              tokens.rollback
+              return
+            end
           end
-        end
 
-        value = digits.join.to_i
-        AST::RangeQuantifier.new(minimum: value, maximum: value, location: location)
+          AST::RangeQuantifier.new(
+            minimum: minimum_digits.empty? ? 0 : minimum_digits.join.to_i,
+            maximum: maximum_digits.empty? ? Float::INFINITY : maximum_digits.join.to_i,
+            location: location
+          )
+        end
       else
       end
     end

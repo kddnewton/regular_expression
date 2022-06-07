@@ -46,11 +46,38 @@ module RegularExpression
       ]]
     end
 
-    def test_range_quantifier
+    def test_range_quantifier_single
       parse("a{3}") => AST::Pattern[AST::Expression[
         AST::Quantified[
           AST::MatchCharacter[value: "a"],
           AST::RangeQuantifier[minimum: 3, maximum: 3]
+        ]
+      ]]
+    end
+
+    def test_range_quantifier_endless
+      parse("a{3,}") => AST::Pattern[AST::Expression[
+        AST::Quantified[
+          AST::MatchCharacter[value: "a"],
+          AST::RangeQuantifier[minimum: 3, maximum: Float::INFINITY]
+        ]
+      ]]
+    end
+
+    def test_range_quantifier_beginless
+      parse("a{,3}") => AST::Pattern[AST::Expression[
+        AST::Quantified[
+          AST::MatchCharacter[value: "a"],
+          AST::RangeQuantifier[minimum: 0, maximum: 3]
+        ]
+      ]]
+    end
+
+    def test_range_quantifier_range
+      parse("a{3,5}") => AST::Pattern[AST::Expression[
+        AST::Quantified[
+          AST::MatchCharacter[value: "a"],
+          AST::RangeQuantifier[minimum: 3, maximum: 5]
         ]
       ]]
     end

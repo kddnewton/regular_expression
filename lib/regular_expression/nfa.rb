@@ -104,8 +104,17 @@ module RegularExpression
         in AST::Quantified[item: item, quantifier: AST::PlusQuantifier]
           connect(item, from, to)
           to.connect(EpsilonTransition.new, from)
+        in AST::Quantified[item: item, quantifier: AST::RangeQuantifier[minimum:, maximum: Float::INFINITY]]
+          inner = minimum == 0 ? [] : Array.new(minimum - 1) { State.new(label: labels.next) }
+          states = [from, *inner, to]
+
+          minimum.times do |index|
+            connect(item, states[index], states[index + 1])
+          end
+
+          states[-1].connect(EpsilonTransition.new, states[-2])
         in AST::Quantified[item: item, quantifier: AST::RangeQuantifier[minimum:, maximum:]]
-          inner = Array.new(maximum - 1) { State.new(label: labels.next) }
+          inner = maximum == 0 ? [] : Array.new(maximum - 1) { State.new(label: labels.next) }
           states = [from, *inner, to]
 
           maximum.times do |index|

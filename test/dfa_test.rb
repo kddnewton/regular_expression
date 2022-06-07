@@ -29,8 +29,27 @@ module RegularExpression
       assert_matches("a?", "a")
     end
 
-    def test_range_quantifier
+    def test_range_quantifier_single
       assert_matches("a{3}", "xxx aaa xxx")
+    end
+
+    def test_range_quantifier_endless
+      assert_matches("a{3,}", "xxx aaa xxx")
+      assert_matches("a{3,}", "xxx aaaa xxx")
+      assert_matches("a{3,}", "xxx aaaaa xxx")
+    end
+
+    def test_range_quantifier_beginless
+      assert_matches("a{,3}", "xxx  xxx")
+      assert_matches("a{,3}", "xxx a xxx")
+      assert_matches("a{,3}", "xxx aa xxx")
+      assert_matches("a{,3}", "xxx aaa xxx")
+    end
+
+    def test_range_quantifier_range
+      assert_matches("a{3,5}", "xxx aaa xxx")
+      assert_matches("a{3,5}", "xxx aaaa xxx")
+      assert_matches("a{3,5}", "xxx aaaaa xxx")
     end
 
     def test_star_quantifier
@@ -49,14 +68,22 @@ module RegularExpression
     private
 
     def assert_matches(source, string)
+      check_matches(:assert, source, string)
+    end
+
+    def refute_matches(source, string)
+      check_matches(:refute, source, string)
+    end
+
+    def check_matches(predicate, source, string)
       node = Parser.new(source).parse
       nfa = NFA.compile(node)
       dfa = DFA.compile(nfa)
 
-      assert(/#{source}/.match?(string))
-      assert(NFA.match?(nfa, string))
-      assert(DFA.match?(dfa, string))
-      assert(Pattern.new(source).match?(string))
+      public_send(predicate, /#{source}/.match?(string))
+      public_send(predicate, NFA.match?(nfa, string))
+      public_send(predicate, DFA.match?(dfa, string))
+      public_send(predicate, Pattern.new(source).match?(string))
     end
   end
 end
