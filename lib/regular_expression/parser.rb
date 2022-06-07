@@ -208,18 +208,18 @@ module RegularExpression
       # to a specific point, so we'll use a transaction here. We'll build a
       # little state machine that can help us navigate the parsing.
       #
-      #                  +-------+                 +---------+ ------------+
-      # ---- lbrace ---> | start | ---- digit ---> | minimum |             |
-      #                  +-------+                 +---------+ <--- digit -+
-      #                      |                       |    |
-      #   +-------+ <----- comma                     |  rbrace
-      #   | comma |             +------ comma -------+    |
-      #   +-------+             V                         V
-      #      |             +---------+               +---------+
-      #      +-- digit --> | maximum | -- rbrace --> || final ||
-      #                    +---------+               +---------+
-      #                    |         ^
-      #                    +- digit -+
+      #                  ┌───────┐                 ┌─────────┐ ────────────┐
+      # ──── lbrace ───> │ start │ ──── digit ───> │ minimum │             │
+      #                  └───────┘                 └─────────┘ <─── digit ─┘
+      #                      │                       │    │
+      #   ┌───────┐          │                       │  rbrace
+      #   │ comma │ <───── comma  ┌──── comma ───────┘    │
+      #   └───────┘               V                       V
+      #      │             ┌─────────┐               ┌─────────┐
+      #      └── digit ──> │ maximum │ ── rbrace ──> │| final |│
+      #                    └─────────┘               └─────────┘
+      #                    │         ^
+      #                    └─ digit ─┘
       #
       minimum_digits = []
       maximum_digits = []
