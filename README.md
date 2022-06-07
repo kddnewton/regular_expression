@@ -4,7 +4,6 @@
 * Repetition (`{n,}`, `{,m}`, `{n,m}`)
 * Non-greedy repetition (`*?`, `+?`)
 * Capturing
-* Grouping
 * Subexpression calls
 * Character properties
 * Anchors

@@ -4,6 +4,63 @@ module RegularExpression
   # This object is responsible for turning a source string into an AST::Pattern
   # node.
   class Parser
+    # We build a custom enumerator here to make it easier to rollback to a
+    # specific point. This is necessary to support arbitrary lookahead.
+    class Lexer
+      attr_reader :tokens, :cached, :index
+
+      def initialize(source)
+        @tokens = make_tokens(source)
+        @cached = []
+        @index = 0
+      end
+
+      def next
+        cached << tokens.next if index == cached.length
+        result = cached[index]
+
+        @index += 1
+        result
+      end
+
+      def peek
+        index == cached.length ? tokens.peek : cached[index]
+      end
+
+      private
+
+      # This walks through the source of the regular expression and yields each
+      # lexical token (AST::Token) it finds in the source back to an enumerator.
+      def make_tokens(source)
+        Enumerator.new do |enum|
+          index = 0
+
+          while index < source.length
+            type =
+              case source[index..]
+              in /\A\./ then :dot
+              in /\A\*/ then :star
+              in /\A\+/ then :plus
+              in /\A\?/ then :qmark
+              in /\A\|/ then :pipe
+              in /\A\{/ then :lbrace
+              in /\A\}/ then :rbrace
+              in /\A\(/ then :lparen
+              in /\A\)/ then :rparen
+              in /\A./  then :char
+              end
+
+            location = AST::Location[index...(index + $&.length)]
+            enum << AST::Token.new(type: type, value: $&, location: location)
+            index += $&.length
+          end
+
+          location = AST::Location[index...index]
+          enum << AST::Token.new(type: :EOF, value: nil, location: location)
+        end
+      end
+    end
+
     attr_reader :source, :flags
 
     def initialize(source, flags = Flags.new)
@@ -13,41 +70,10 @@ module RegularExpression
 
     # This parses the regular expression and returns an AST::Pattern node.
     def parse
-      parse_pattern(each_token)
+      parse_pattern(Lexer.new(source))
     end
 
     private
-
-    # This walks through the source of the regular expression and yields each
-    # lexical token (AST::Token) it finds in the source back to an enumerator.
-    def each_token
-      Enumerator.new do |enum|
-        index = 0
-
-        while index < source.length
-          type =
-            case source[index..]
-            in /\A\./ then :dot
-            in /\A\*/ then :star
-            in /\A\+/ then :plus
-            in /\A\?/ then :qmark
-            in /\A\|/ then :pipe
-            in /\A\{/ then :lbrace
-            in /\A\}/ then :rbrace
-            in /\A\(/ then :lparen
-            in /\A\)/ then :rparen
-            in /\A./  then :char
-            end
-
-          location = AST::Location[index...(index + $&.length)]
-          enum << AST::Token.new(type: type, value: $&, location: location)
-          index += $&.length
-        end
-
-        location = AST::Location[index...index]
-        enum << AST::Token.new(type: :EOF, value: nil, location: location)
-      end
-    end
 
     # This creates an AST::Pattern object that is the root of the AST. It parses
     # each expression in turn, then gathers them up together.
