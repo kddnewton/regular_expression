@@ -52,6 +52,10 @@ module RegularExpression
       assert_matches("a{3,5}", "xxx aaaaa xxx")
     end
 
+    def test_range_quantifier_invalid
+      assert_matches("a{ 3}", "xxx a{ 3} xxx")
+    end
+
     def test_star_quantifier
       assert_matches("a*", "xxx  xxx")
       assert_matches("a*", "xxx a xxx")

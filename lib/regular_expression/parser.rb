@@ -39,6 +39,7 @@ module RegularExpression
         yield
       rescue Rollback
         @index = saved_index
+        nil
       end
 
       private
@@ -126,7 +127,7 @@ module RegularExpression
     def parse_item(tokens)
       item =
         case tokens.peek
-        in { type: :char, value:, location: }
+        in { type: :char | :lbrace | :rbrace, value:, location: }
           tokens.next
           AST::MatchCharacter.new(value: value, location: location)
         in { type: :dot, location: }
@@ -185,78 +186,82 @@ module RegularExpression
       in { type: :qmark, location: }
         tokens.next
         AST::OptionalQuantifier.new(location: location)
-      in { type: :lbrace, location: start_location }
-        # Here we're going to parse the range quantifier syntax. This can match
-        # a couple of different combinations:
-        #
-        #     {n}
-        #     {n,}
-        #     {,m}
-        #     {n,m}
-        #
-        # There can't be any spaces between the braces and the numbers/comma. In
-        # order to properly match this, we need the lexer to be able to rollback
-        # to a specific point, so we'll use a transaction here. We'll build a
-        # little state machine that can help us navigate the parsing.
-        #
-        #                  +-------+                 +---------+ ------------+
-        # ---- lbrace ---> | start | ---- digit ---> | minimum |             |
-        #                  +-------+                 +---------+ <--- digit -+
-        #                      |                       |    |
-        #   +-------+ <----- comma                     |  rbrace
-        #   | comma |             +------ comma -------+    |
-        #   +-------+             V                         V
-        #      |             +---------+               +---------+
-        #      +-- digit --> | maximum | -- rbrace --> || final ||
-        #                    +---------+               +---------+
-        #                    |         ^
-        #                    +- digit -+
-        #
-        tokens.transaction do
-          tokens.next => { type: :lbrace }
-          state = :start
-
-          minimum_digits = []
-          maximum_digits = []
-
-          location = start_location
-
-          loop do
-            case [state, tokens.next]
-            in [:start, { type: :char, value: /\d/ => value }]
-              minimum_digits << value
-              state = :minimum
-            in [:start, { type: :comma }]
-              state = :comma
-            in [:minimum, { type: :char, value: /\d/ => value }]
-              minimum_digits << value
-            in [:minimum, { type: :comma }]
-              state = :maximum
-            in [:minimum, { type: :rbrace, location: end_location }]
-              maximum_digits = minimum_digits
-              location = start_location.to(end_location)
-              break
-            in [:comma, { type: :char, value: /\d/ => value }]
-              maximum_digits << value
-              state = :maximum
-            in [:maximum, { type: :char, value: /\d/ => value }]
-              maximum_digits << value
-            in [:maximum, { type: :rbrace, location: end_location }]
-              location = start_location.to(end_location)
-              break
-            else
-              tokens.rollback
-              return
-            end
-          end
-
-          AST::RangeQuantifier.new(
-            minimum: minimum_digits.empty? ? 0 : minimum_digits.join.to_i,
-            maximum: maximum_digits.empty? ? Float::INFINITY : maximum_digits.join.to_i,
-            location: location
-          )
-        end
+      in { type: :lbrace }
+        maybe_parser_range_quantifier(tokens)
       else
+        # No quantifier, so return nil.
+      end
+    end
+
+    # This creates an AST::RangeQuantifier object that contains a minimum and
+    # maximum number of times to match if the tokens match the correct pattern.
+    # This can match a couple of different combinations:
+    #
+    #     {n}
+    #     {n,}
+    #     {,m}
+    #     {n,m}
+    #
+    def maybe_parser_range_quantifier(tokens)
+      # There can't be any spaces between the braces and the numbers/comma. In
+      # order to properly match this, we need the lexer to be able to rollback
+      # to a specific point, so we'll use a transaction here. We'll build a
+      # little state machine that can help us navigate the parsing.
+      #
+      #                  +-------+                 +---------+ ------------+
+      # ---- lbrace ---> | start | ---- digit ---> | minimum |             |
+      #                  +-------+                 +---------+ <--- digit -+
+      #                      |                       |    |
+      #   +-------+ <----- comma                     |  rbrace
+      #   | comma |             +------ comma -------+    |
+      #   +-------+             V                         V
+      #      |             +---------+               +---------+
+      #      +-- digit --> | maximum | -- rbrace --> || final ||
+      #                    +---------+               +---------+
+      #                    |         ^
+      #                    +- digit -+
+      #
+      minimum_digits = []
+      maximum_digits = []
+
+      tokens.transaction do
+        tokens.next => { type: :lbrace, location: start_location }
+        state = :start
+
+        loop do
+          case [state, tokens.next]
+          in [:start, { type: :char, value: /\d/ => value }]
+            minimum_digits << value
+            state = :minimum
+          in [:start, { type: :comma }]
+            state = :comma
+          in [:minimum, { type: :char, value: /\d/ => value }]
+            minimum_digits << value
+          in [:minimum, { type: :comma }]
+            state = :maximum
+          in [:minimum, { type: :rbrace, location: end_location }]
+            minimum = minimum_digits.join.to_i
+
+            return AST::RangeQuantifier.new(
+              minimum: minimum,
+              maximum: minimum,
+              location: start_location.to(end_location)
+            )
+          in [:comma, { type: :char, value: /\d/ => value }]
+            maximum_digits << value
+            state = :maximum
+          in [:maximum, { type: :char, value: /\d/ => value }]
+            maximum_digits << value
+          in [:maximum, { type: :rbrace, location: end_location }]
+            return AST::RangeQuantifier.new(
+              minimum: minimum_digits.empty? ? 0 : minimum_digits.join.to_i,
+              maximum: maximum_digits.empty? ? Float::INFINITY : maximum_digits.join.to_i,
+              location: start_location.to(end_location)
+            )
+          else
+            tokens.rollback
+          end
+        end
       end
     end
   end
