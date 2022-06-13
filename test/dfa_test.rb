@@ -24,6 +24,24 @@ module RegularExpression
       assert_matches(".", "c")
     end
 
+    def test_match_class
+      assert_matches("\\d", "1")
+      assert_matches("\\d", "9")
+      refute_matches("\\d", "a")
+
+      assert_matches("\\h", "1")
+      assert_matches("\\h", "a")
+      refute_matches("\\h", "x")
+
+      assert_matches("\\s", " ")
+      assert_matches("\\s", "\t")
+      refute_matches("\\s", "a")
+
+      assert_matches("\\w", "1")
+      assert_matches("\\w", "a")
+      refute_matches("\\w", "-")
+    end
+
     def test_optional_quantifier
       assert_matches("a?", "")
       assert_matches("a?", "a")

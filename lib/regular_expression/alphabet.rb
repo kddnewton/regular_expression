@@ -360,18 +360,9 @@ module RegularExpression
       in [Multiple[alphabets: [*rest, last]], Range[from:, to:]] if from > last.maximum
         Multiple[*rest, *combine(last, Range[from, to])]
       in [Multiple[alphabets:], Range[from:, to:]]
-        next_alphabets = (alphabets + [right]).sort_by(&:minimum)
-        start_index = next_alphabets.index(right)
-
-        end_index =
-          next_alphabets[start_index..].index do |alphabet|
-            alphabet.minimum > to
-          end
-
-        Multiple[
-          *next_alphabets[0...start_index],
-          *next_alphabets[start_index..(start_index + (end_index || 0))]
-        ]
+        (alphabets + [right]).sort_by(&:minimum).inject(None.new) do |result, alphabet|
+          combine(result, alphabet)
+        end
       in [Multiple[alphabets: [first, *rest]], Value[value:]] if value < first.minimum
         Multiple[*combine(Value[value], first), *rest]
       in [Multiple[alphabets: [*rest, last]], Value[value:]] if value > last.maximum
