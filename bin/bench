@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/inline"
+require "csv"
+
+gemfile do
+  source "https://rubygems.org"
+  gem "benchmark-ips"
+  gem "graphviz"
+end
+
+$:.unshift(File.expand_path("../lib", __dir__))
+require "regular_expression"
+
+CSV.open("bench.csv", "w") do |csv|
+  csv << ["#", "Native", "RegExp"]
+
+  (10..30).each do |size|
+    string = "a" * size
+
+    native = Regexp.new("a?" * size + "a" * size)
+    regexp = RegularExpression::Pattern.new(".+" + "a?" * size + "a" * size)
+
+    benchmark =
+      Benchmark.ips do |x|
+        x.report("native") { native.match?(string) }
+        x.report("regexp") { regexp.match?(string) }
+        x.compare!
+      end
+
+    csv << [
+      size,
+      *benchmark.entries.map do |entry|
+        entry.iterations / entry.microseconds * 1_000_000
+      end
+    ]
+  end
+end
