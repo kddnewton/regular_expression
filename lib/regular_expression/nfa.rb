@@ -94,6 +94,10 @@ module RegularExpression
           from.connect(AnyTransition.new, to)
         in AST::MatchCharacter[value: value]
           from.connect(CharacterTransition.new(value: value), to)
+        in AST::MatchClass[name: :digit]
+          ("0".."9").each do |value|
+            from.connect(CharacterTransition.new(value: value), to)
+          end
         in AST::Pattern[expressions: expressions]
           expressions.each do |expression|
             connect(expression, from, to)

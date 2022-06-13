@@ -65,6 +65,9 @@ module RegularExpression
       # Visit a MatchCharacter node.
       alias visit_match_character visit_child_nodes
 
+      # Visit a MatchClass node.
+      alias visit_match_class visit_child_nodes
+
       # Visit a Pattern node.
       alias visit_pattern visit_child_nodes
 
@@ -118,6 +121,14 @@ module RegularExpression
         token("match-character") do
           q.breakable
           q.pp(node.value)
+        end
+      end
+
+      # Visit a MatchClass node.
+      def visit_match_class(node)
+        token("match-class") do
+          q.breakable
+          q.text(node.name.to_s)
         end
       end
 
@@ -280,6 +291,30 @@ module RegularExpression
 
       def deconstruct_keys(keys)
         { value: value, location: location }
+      end
+    end
+
+    # This is a class of characters that must be matched.
+    class MatchClass < Node
+      attr_reader :name, :location
+
+      def initialize(name:, location:)
+        @name = name
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_match_class(self)
+      end
+
+      def child_nodes
+        []
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { name: name, location: location }
       end
     end
 

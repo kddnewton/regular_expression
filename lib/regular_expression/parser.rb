@@ -53,17 +53,18 @@ module RegularExpression
           while index < source.length
             type =
               case source[index..]
-              in /\A\./ then :dot
-              in /\A\*/ then :star
-              in /\A\+/ then :plus
-              in /\A\?/ then :qmark
-              in /\A\|/ then :pipe
-              in /\A\{/ then :lbrace
-              in /\A\}/ then :rbrace
-              in /\A\(/ then :lparen
-              in /\A\)/ then :rparen
-              in /\A,/  then :comma
-              in /\A./  then :char
+              in /\A\./   then :dot
+              in /\A\*/   then :star
+              in /\A\+/   then :plus
+              in /\A\?/   then :qmark
+              in /\A\|/   then :pipe
+              in /\A\{/   then :lbrace
+              in /\A\}/   then :rbrace
+              in /\A\(/   then :lparen
+              in /\A\)/   then :rparen
+              in /\A,/    then :comma
+              in %r{\A\\} then :backslash
+              in /\A./    then :char
               end
 
             location = AST::Location[index...(index + $&.length)]
@@ -127,6 +128,17 @@ module RegularExpression
     def parse_item(tokens)
       item =
         case tokens.peek
+        in { type: :backslash, location: }
+          tokens.next
+
+          case tokens.peek
+          in { type: :char, value: "d", location: escaped }
+            tokens.next
+            AST::MatchClass.new(name: :digit, location: location.to(escaped))
+          in { value:, location: escaped }
+            tokens.next
+            AST::MatchCharacter.new(value: value, location: location.to(escaped))
+          end
         in { type: :char | :lbrace | :rbrace, value:, location: }
           tokens.next
           AST::MatchCharacter.new(value: value, location: location)

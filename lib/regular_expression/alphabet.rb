@@ -373,6 +373,8 @@ module RegularExpression
         Multiple[left, right]
       in [Value[value:], Value[value: ^value]]
         left
+      in [Value[value:], Value[value: ^(value + 1)]]
+        Range[value, value + 1]
       in [Value[value: left_value], Value[value: right_value]]
         Multiple[Value[left_value], Value[right_value]]
       end
