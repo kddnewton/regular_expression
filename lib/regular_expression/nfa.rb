@@ -160,34 +160,48 @@ module RegularExpression
       end
     end
 
-    class << self
-      # This takes an AST::Pattern node and converts it into an NFA.
-      def compile(pattern)
-        Compiler.new.call(pattern)
+    # This class wraps a set of states and transitions with the ability to
+    # execute them against a given input.
+    class Machine
+      attr_reader :start_state
+
+      def initialize(start_state:)
+        @start_state = start_state
       end
 
-      # Executes the machine against the given string at the given index.
-      def match?(state, string, index = 0)
+      # Executes the machine against the given string.
+      def match?(string)
+        match_at?(start_state, string, 0)
+      end
+
+      private
+
+      def match_at?(state, string, index)
         matched =
           state.transitions.any? do |transition, to|
             case transition
             in AnyTransition
-              match?(to, string, index + 1) if index < string.length
+              match_at?(to, string, index + 1) if index < string.length
             in CharacterTransition[value:]
               if index < string.length && string[index] == value
-                match?(to, string, index + 1)
+                match_at?(to, string, index + 1)
               end
             in EpsilonTransition
-              match?(to, string, index)
+              match_at?(to, string, index)
             in RangeTransition[from: range_from, to: range_to]
               if index < string.length && (range_from..range_to).cover?(string[index])
-                match?(to, string, index + 1)
+                match_at?(to, string, index + 1)
               end
             end
           end
 
         matched || state.final?
       end
+    end
+
+    # This takes an AST::Pattern node and converts it into an NFA.
+    def self.compile(pattern)
+      Machine.new(start_state: Compiler.new.call(pattern))
     end
   end
 end

@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "graphviz"
 
 module RegularExpression
   # A small module used for converting state machines into digraphs to be used
   # by graphviz. This is just to make it easier to debug.
   module DiGraph
-    def self.call(start, path)
+    def self.call(start_state, path)
       states = Set.new
-      queue = [start]
+      queue = [start_state]
 
       # First, gather up a list of all of the states in the state machine.
       while (state = queue.shift)

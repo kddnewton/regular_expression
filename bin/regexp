@@ -16,17 +16,12 @@ dfa = RegularExpression::DFA.compile(nfa)
 
 puts source
 pp ast
-puts RegularExpression::DiGraph.call(nfa, "build/nfa.svg")
-puts RegularExpression::DiGraph.call(dfa, "build/dfa.svg")
+puts RegularExpression::DiGraph.call(nfa.start_state, "build/nfa.svg")
+puts RegularExpression::DiGraph.call(dfa.start_state, "build/dfa.svg")
 
 format = "%-10s %-10s %-10s %-10s"
 puts format % ["Input", "Native", "NFA", "DFA"]
 
 ["a", "aa", "aaa", "b", "bb", "ab", "aab", "aaacab"].each do |string|
-  puts format % [
-    string,
-    native.match?(string),
-    RegularExpression::NFA.match?(nfa, string),
-    RegularExpression::DFA.match?(dfa, string)
-  ]
+  puts format % [string, native.match?(string), nfa.match?(string), dfa.match?(string)]
 end

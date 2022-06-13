@@ -226,30 +226,50 @@ module RegularExpression
       end
     end
 
-    class << self
-      # This converts an NFA into a DFA.
-      def compile(start)
-        Compiler.new.call(start)
+    # This class wraps a set of states and transitions with the ability to
+    # execute them against a given input.
+    class Machine
+      attr_reader :start_state
+
+      def initialize(start_state:)
+        @start_state = start_state
       end
 
-      # Executes the machine against the given string at the given index.
-      def match?(state, string, index = 0)
-        return state.final? if index == string.length
+      # Executes the machine against the given string.
+      def match?(string)
+        current = start_state
+        index = 0
 
-        selected =
-          state.transitions.detect do |transition, to|
-            case transition
-            in DFA::AnyTransition
-              break to
-            in DFA::CharacterTransition[value:]
-              break to if string[index].ord == value
-            in DFA::RangeTransition[from: min, to: max]
-              break to if (min..max).cover?(string[index].ord)
+        loop do
+          return current.final? if index == string.length
+
+          selected =
+            current.transitions.detect do |transition, to|
+              case transition
+              in DFA::AnyTransition
+                break to
+              in DFA::CharacterTransition[value:]
+                break to if string[index].ord == value
+              in DFA::RangeTransition[from: min, to: max]
+                break to if (min..max).cover?(string[index].ord)
+              end
             end
-          end
 
-        (selected && match?(selected, string, index + 1)) || state.final?
+          if !selected
+            return current.final?
+          elsif selected.final?
+            return true
+          else
+            current = selected
+            index += 1
+          end
+        end
       end
+    end
+
+    # This converts an NFA into a DFA.
+    def self.compile(nfa)
+      Machine.new(start_state: Compiler.new.call(nfa.start_state))
     end
   end
 end

@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "fileutils"
 require "set"
-require "stringio"
 
 require_relative "regular_expression/alphabet"
 require_relative "regular_expression/ast"
@@ -21,17 +19,25 @@ module RegularExpression
     def initialize(source, flags = "")
       @source = source
       @flags = Flags[flags]
+      @machine = dfa
+    end
 
+    def ast
       # We inject .* into the source so that when we loop over the input strings
       # to check for matches we don't have to look at every index in the string.
-      normalized = ".*#{source}"
+      Parser.new(".*#{source}", flags).parse
+    end
 
-      # Compile the source into an AST, then an NFA, then a DFA.
-      @machine = DFA.compile(NFA.compile(Parser.new(normalized, flags).parse))
+    def nfa
+      NFA.compile(ast)
+    end
+
+    def dfa
+      DFA.compile(nfa)
     end
 
     def match?(string)
-      DFA.match?(machine, string)
+      machine.match?(string)
     end
   end
 end

@@ -4,7 +4,6 @@ require "test_helper"
 
 module RegularExpression
   class DFATest < Minitest::Test
-=begin
     def test_alternation
       assert_matches("a|b", "xxx a xxx")
       assert_matches("a|b", "xxx b xxx")
@@ -81,7 +80,7 @@ module RegularExpression
       assert_matches("a*", "xxx aa xxx")
       assert_matches("a*", "xxx aaa xxx")
     end
-=end
+
     def test_plus_quantifier
       assert_matches("a+", "xxx a xxx")
       assert_matches("a+", "xxx aa xxx")
@@ -99,14 +98,16 @@ module RegularExpression
     end
 
     def check_matches(predicate, source, string)
-      node = Parser.new(".*#{source}").parse
-      nfa = NFA.compile(node)
-      dfa = DFA.compile(nfa)
+      pattern = Pattern.new(source)
+
+      # Exercise the pretty-print here just to get some extra coverage. Really
+      # this should be its own test.
+      PP.pp(pattern.ast, +"")
 
       public_send(predicate, /#{source}/.match?(string))
-      public_send(predicate, NFA.match?(nfa, string))
-      public_send(predicate, DFA.match?(dfa, string))
-      public_send(predicate, Pattern.new(source).match?(string))
+      public_send(predicate, pattern.nfa.match?(string))
+      public_send(predicate, pattern.dfa.match?(string))
+      public_send(predicate, pattern.match?(string))
     end
   end
 end
