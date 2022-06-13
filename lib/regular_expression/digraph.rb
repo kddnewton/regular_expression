@@ -49,6 +49,8 @@ module RegularExpression
               value
             in NFA::EpsilonTransition
               "ε"
+            in NFA::RangeTransition[from: min, to: max]
+              "#{min}-#{max}"
             end
 
           nodes[from].connect(nodes[to], label: label)

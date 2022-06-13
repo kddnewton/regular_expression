@@ -158,6 +158,8 @@ module RegularExpression
               Alphabet::Value.new(value: value.ord)
             in NFA::EpsilonTransition
               Alphabet::None.new
+            in NFA::RangeTransition[from:, to:]
+              Alphabet::Range.new(from: from.ord, to: to.ord)
             end
           )
         end
@@ -210,8 +212,12 @@ module RegularExpression
           true
         in [Alphabet::Range[from:, to:], NFA::CharacterTransition[value:]]
           (from..to).cover?(value.ord)
+        in [Alphabet::Range[from: from_ord, to: to_ord], NFA::RangeTransition[from:, to:]]
+          from_ord <= from.ord && to_ord >= to.ord
         in [Alphabet::Value[value: ord], NFA::CharacterTransition[value:]]
           value.ord == ord
+        in [Alphabet::Value[value: ord], NFA::RangeTransition[from:, to:]]
+          (from.ord..to.ord).cover?(ord)
         end
       end
     end

@@ -129,16 +129,7 @@ module RegularExpression
       item =
         case tokens.peek
         in { type: :backslash, location: }
-          tokens.next
-
-          case tokens.peek
-          in { type: :char, value: "d", location: escaped }
-            tokens.next
-            AST::MatchClass.new(name: :digit, location: location.to(escaped))
-          in { value:, location: escaped }
-            tokens.next
-            AST::MatchCharacter.new(value: value, location: location.to(escaped))
-          end
+          parse_escaped(tokens)
         in { type: :char | :lbrace | :rbrace, value:, location: }
           tokens.next
           AST::MatchCharacter.new(value: value, location: location)
@@ -159,6 +150,23 @@ module RegularExpression
       end
 
       item
+    end
+
+    # This creates either a MatchClass (if the escaped value is a character
+    # class) or a MatchCharacter.
+    def parse_escaped(tokens)
+      tokens.next => { type: :backslash, location: }
+
+      case tokens.next
+      in { type: :char, value: "d", location: escaped }
+        AST::MatchClass.new(name: :digit, location: location.to(escaped))
+      in { type: :char, value: "h", location: escaped }
+        AST::MatchClass.new(name: :hex, location: location.to(escaped))
+      in { type: :char, value: "w", location: escaped }
+        AST::MatchClass.new(name: :word, location: location.to(escaped))
+      in { value:, location: escaped }
+        AST::MatchCharacter.new(value: value, location: location.to(escaped))
+      end
     end
 
     # This creates an AST::Group object that contains a list of expressions to

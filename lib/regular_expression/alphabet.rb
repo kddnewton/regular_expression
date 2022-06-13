@@ -204,8 +204,29 @@ module RegularExpression
         #
         # [.  .  .  .][.  .  .][.]
         Multiple[*alphabets]
-      in [Multiple, Range]
-        raise NotImplementedError
+      in [Multiple[alphabets:], Range[from:, to:]]
+        #    [.]   [.  .]      [.]
+        # [.  .  .  .  .]
+        # [.][.][.][.  .]      [.]
+        before = []
+        overlap = []
+        after = []
+
+        alphabets.each do |alphabet|
+          if alphabet.maximum < from
+            before << alphabet
+          elsif alphabet.minimum > to
+            after << alphabet
+          else
+            overlap << alphabet
+          end
+        end
+
+        Multiple[
+          *before,
+          *overlap.inject(Range[from, to]) { |alphabet, overlapped| overlay(alphabet, overlapped) }.to_a,
+          *after
+        ]
       in [Multiple[alphabets:] => multiple, Value[value:]] if value < multiple.minimum
         #             [.  .  .][.]
         #       [.]
@@ -263,8 +284,29 @@ module RegularExpression
         #       [.]
         #       [.]
         Value[value]
-      in [Range, Range]
-        raise NotImplementedError
+      in [Range[from: left_from, to: left_to], Range[from: right_from, to: right_to]] if right_from > left_to
+        # [.  .  .]
+        #          [.  .  .]
+        # [.  .  .][.  .  .]
+        Multiple[Range[left_from, left_to], Range[right_from, right_to]]
+      in [Range[from: left_from, to: left_to], Range[from: right_from, to: right_to]] if right_to > left_to
+        # [.  .  .]
+        #       [.  .  .]
+        # [.  .][.][.  .]
+        Multiple[
+          Range[left_from, right_from - 1],
+          Range[right_from, left_to],
+          Range[left_to + 1, right_to]
+        ]
+      in [Range[from: left_from, to: left_to], Range[from: right_from, to: right_to]]
+        # [.  .  .  .  .  .]
+        #       [.  .  .]
+        # [.  .][.  .  .][.]
+        Multiple[
+          Range[left_from, right_from - 1],
+          Range[right_from, right_to],
+          Range[right_to + 1, left_to]
+        ]
       in [Range[from:, to:], Value[value: ^from]]
         #       [.  .  .]
         #       [.]
@@ -313,6 +355,10 @@ module RegularExpression
         right
       in [Multiple, Multiple]
         raise NotImplementedError
+      in [Multiple[alphabets: [first, *rest]], Range[from:, to:]] if to < first.minimum
+        Multiple[*combine(Range[from, to], first), *rest]
+      in [Multiple[alphabets: [*rest, last]], Range[from:, to:]] if from > last.maximum
+        Multiple[*rest, *combine(last, Range[from, to])]
       in [Multiple[alphabets:], Range[from:, to:]]
         next_alphabets = (alphabets + [right]).sort_by(&:minimum)
         start_index = next_alphabets.index(right)
@@ -324,12 +370,12 @@ module RegularExpression
 
         Multiple[
           *next_alphabets[0...start_index],
-          *next_alphabets[start_index..end_index]
+          *next_alphabets[start_index..(start_index + (end_index || 0))]
         ]
-      in [Multiple[alphabets:] => multiple, Value[value:]] if value < multiple.minimum
-        Multiple[Value[value], *alphabets]
-      in [Multiple[alphabets:] => multiple, Value[value:]] if value > multiple.maximum
-        Multiple[*alphabets, Value[value]]
+      in [Multiple[alphabets: [first, *rest]], Value[value:]] if value < first.minimum
+        Multiple[*combine(Value[value], first), *rest]
+      in [Multiple[alphabets: [*rest, last]], Value[value:]] if value > last.maximum
+        Multiple[*rest, *combine(last, Value[value])]
       in [Multiple[alphabets:], Value[value:]]
         index = -1
         matched =
@@ -368,11 +414,11 @@ module RegularExpression
       in [Range[from:, to:], Value[value: ^(to + 1)]]
         Range[from, to + 1]
       in [Range[from:, to:], Value[value:]] if value < from
-        Multiple[right, left]
+        Multiple[Value[value], Range[from, to]]
       in [Range[from:, to:], Value[value:]] if value > to
-        Multiple[left, right]
+        Multiple[Range[from, to], Value[value]]
       in [Value[value:], Value[value: ^value]]
-        left
+        Value[value]
       in [Value[value:], Value[value: ^(value + 1)]]
         Range[value, value + 1]
       in [Value[value: left_value], Value[value: right_value]]

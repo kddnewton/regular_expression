@@ -57,6 +57,21 @@ module RegularExpression
     class EpsilonTransition
     end
 
+    # This represents a transition between two states in the NFA that matches
+    # against a range of characters.
+    class RangeTransition
+      attr_reader :from, :to
+
+      def initialize(from:, to:)
+        @from = from
+        @to = to
+      end
+
+      def deconstruct_keys(keys)
+        { from: from, to: to }
+      end
+    end
+
     # This class compiles an AST into an NFA.
     class Compiler
       attr_reader :labels
@@ -95,9 +110,16 @@ module RegularExpression
         in AST::MatchCharacter[value: value]
           from.connect(CharacterTransition.new(value: value), to)
         in AST::MatchClass[name: :digit]
-          ("0".."9").each do |value|
-            from.connect(CharacterTransition.new(value: value), to)
-          end
+          from.connect(RangeTransition.new(from: "0", to: "9"), to)
+        in AST::MatchClass[name: :hex]
+          from.connect(RangeTransition.new(from: "0", to: "9"), to)
+          from.connect(RangeTransition.new(from: "A", to: "F"), to)
+          from.connect(RangeTransition.new(from: "a", to: "f"), to)
+        in AST::MatchClass[name: :word]
+          from.connect(RangeTransition.new(from: "0", to: "9"), to)
+          from.connect(CharacterTransition.new(value: "_"), to)
+          from.connect(RangeTransition.new(from: "A", to: "Z"), to)
+          from.connect(RangeTransition.new(from: "a", to: "z"), to)
         in AST::Pattern[expressions: expressions]
           expressions.each do |expression|
             connect(expression, from, to)
@@ -164,6 +186,10 @@ module RegularExpression
               end
             in EpsilonTransition
               match_at?(to, string, index)
+            in RangeTransition[from: range_from, to: range_to]
+              if index < string.length && (range_from..range_to).cover?(string[index])
+                match_at?(to, string, index + 1)
+              end
             end
           end
 
