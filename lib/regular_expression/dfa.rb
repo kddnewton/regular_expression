@@ -102,33 +102,34 @@ module RegularExpression
         queue = [compiled]
 
         while (state = queue.shift)
-          # First, we're going to try each alphabet against each state and see
-          # where it transitions.
-          alphabet_states = {}
+          # First, we're going to build up a mapping of states to the alphabet
+          # pieces that lead to those states.
+          alphabet_states = Hash.new { |hash, key| hash[key] = [] }
 
           alphabet_for(state).to_a.each do |alphabet|
-            alphabet_states[alphabet] = Set.new
+            states = Set.new
 
             state.each_transition do |transition, next_state|
               next if transition in NFA::EpsilonTransition
-
-              alphabet_states[alphabet] << next_state if matches?(alphabet, transition)
+              states << next_state if matches?(alphabet, transition)
             end
+
+            alphabet_states[State.new(states: expand(states.to_a))] << alphabet
           end
 
-          # Now we're going to invert the alphabet states so that we don't have
-          # any duplicate states. This will mean we can have multiple
-          # transitions to the new states as well.
-          states_alphabets = Hash.new { |hash, key| hash[key] = [] }
-
-          alphabet_states.each do |alphabet, states|
-            states_alphabets[State.new(states: expand(states.to_a))] << alphabet
-          end
-
-          # Finally, we're going to add the new states and all of the associated
+          # Next, we're going to add the new states and all of the associated
           # transitions.
-          states_alphabets.each do |next_state, alphabets|
-            alphabets.each do |alphabet|
+          alphabet_states.each do |next_state, alphabets|
+            # First, we're going to reduce the alphabets to the minimal set that
+            # can be represented. For example if we have a-c and d, then we'll
+            # just add a transition that's a-d. This will always result in one
+            # alphabet at the most since we have the Multiple class.
+            transition_alphabet =
+              alphabets.inject(Alphabet::None.new) do |alphabet, next_alphabet|
+                Alphabet.combine(alphabet, next_alphabet)
+              end
+
+            transition_alphabet.to_a.each do |alphabet|
               connect(state, next_state, alphabet)
             end
 

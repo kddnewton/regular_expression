@@ -152,8 +152,12 @@ module RegularExpression
       end
     end
 
+    def self.sorted(left, right)
+      [left, right].sort_by { |alphabet| [alphabet.class.name, alphabet.minimum, alphabet.maximum] }
+    end
+
     def self.overlay(left, right)
-      case [left, right].sort_by { |alphabet| [alphabet.class.name, alphabet.minimum, alphabet.maximum] }
+      case sorted(left, right)
       in [Any, Any]
         # [.  .  .  .  .  .  .  .]
         # [.  .  .  .  .  .  .  .]
@@ -295,6 +299,81 @@ module RegularExpression
         #       [.]
         #             [.]
         #       [.]   [.]
+        Multiple[Value[left_value], Value[right_value]]
+      end
+    end
+
+    def self.combine(left, right)
+      case sorted(left, right)
+      in [Any, _] | [_, Any]
+        Any.new
+      in [_, None]
+        left
+      in [None, _]
+        right
+      in [Multiple, Multiple]
+        raise NotImplementedError
+      in [Multiple[alphabets:], Range[from:, to:]]
+        next_alphabets = (alphabets + [right]).sort_by(&:minimum)
+        start_index = next_alphabets.index(right)
+
+        end_index =
+          next_alphabets[start_index..].index do |alphabet|
+            alphabet.minimum > to
+          end
+
+        Multiple[
+          *next_alphabets[0...start_index],
+          *next_alphabets[start_index..end_index]
+        ]
+      in [Multiple[alphabets:] => multiple, Value[value:]] if value < multiple.minimum
+        Multiple[Value[value], *alphabets]
+      in [Multiple[alphabets:] => multiple, Value[value:]] if value > multiple.maximum
+        Multiple[*alphabets, Value[value]]
+      in [Multiple[alphabets:], Value[value:]]
+        index = -1
+        matched =
+          alphabets.detect do |alphabet|
+            index += 1
+
+            case alphabet
+            in Range[from:, to:] if (from..to).cover?(value)
+              true
+            in Value[value: ^value]
+              true
+            in Range[from:] if from > value
+              break
+            in Value[value: other_value] if other_value > value
+              break
+            else
+              false
+            end
+          end
+
+        if matched
+          left
+        else
+          Multiple[*alphabets[0...index], Value[value], *alphabets[index..-1]]
+        end
+      in [Range[from: left_from, to: left_to], Range[from: ^(left_to + 1), to: right_to]]
+        Range[left_from, right_to]
+      in [Range[to: left_to], Range[from: right_from]] if left_to < right_from
+        Multiple[left, right]
+      in [Range[from:, to: left_to], Range[to: right_to]]
+        Range[from, [left_to, right_to].max]
+      in [Range[from:, to:], Value[value:]] if (from..to).cover?(value)
+        left
+      in [Range[from:, to:], Value[value: ^(from - 1)]]
+        Range[from - 1, to]
+      in [Range[from:, to:], Value[value: ^(to + 1)]]
+        Range[from, to + 1]
+      in [Range[from:, to:], Value[value:]] if value < from
+        Multiple[right, left]
+      in [Range[from:, to:], Value[value:]] if value > to
+        Multiple[left, right]
+      in [Value[value:], Value[value: ^value]]
+        left
+      in [Value[value: left_value], Value[value: right_value]]
         Multiple[Value[left_value], Value[right_value]]
       end
     end
