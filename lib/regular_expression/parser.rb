@@ -162,6 +162,18 @@ module RegularExpression
         AST::MatchClass.new(name: :digit, location: location.to(escaped))
       in { type: :char, value: "h", location: escaped }
         AST::MatchClass.new(name: :hex, location: location.to(escaped))
+      in { type: :char, value: "p", location: escaped }
+        if tokens.peek in { type: :lbrace }
+          tokens.next
+
+          value = +""
+          value << tokens.next.value until tokens.peek in { type: :rbrace }
+
+          tokens.next => { type: :rbrace, location: property }
+          AST::MatchProperty.new(value: value, location: location.to(property))
+        else
+          AST::MatchCharacter.new(value: value, location: location.to(escaped))
+        end
       in { type: :char, value: "s", location: escaped }
         AST::MatchClass.new(name: :space, location: location.to(escaped))
       in { type: :char, value: "w", location: escaped }

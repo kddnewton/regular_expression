@@ -4,16 +4,6 @@ module RegularExpression
   module Unicode
     FILEPATH = File.join(__dir__, "unicode", "cache.txt")
 
-    # This represents an individual value in the cache. It is used when other
-    # values with the same property are not contiguous.
-    class Value
-      attr_reader :value
-
-      def initialize(value:)
-        @value = value
-      end
-    end
-
     # This represents multiple values in the cache. It is used when other values
     # with the same property are contiguous.
     class Range
@@ -22,6 +12,24 @@ module RegularExpression
       def initialize(from:, to:)
         @from = from
         @to = to
+      end
+
+      def deconstruct_keys(keys)
+        { from: from, to: to }
+      end
+    end
+
+    # This represents an individual value in the cache. It is used when other
+    # values with the same property are not contiguous.
+    class Value
+      attr_reader :value
+
+      def initialize(value:)
+        @value = value
+      end
+
+      def deconstruct_keys(keys)
+        { value: value }
       end
     end
 

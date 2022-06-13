@@ -74,10 +74,11 @@ module RegularExpression
 
     # This class compiles an AST into an NFA.
     class Compiler
-      attr_reader :labels
+      attr_reader :labels, :unicode
 
       def initialize
         @labels = ("1"..).each
+        @unicode = Unicode::Cache.new
       end
 
       def call(pattern)
@@ -123,6 +124,30 @@ module RegularExpression
           from.connect(CharacterTransition.new(value: "_"), to)
           from.connect(RangeTransition.new(from: "A", to: "Z"), to)
           from.connect(RangeTransition.new(from: "a", to: "z"), to)
+        in AST::MatchProperty[value:]
+          entries =
+            if unicode.key?(value)
+              unicode[value]
+            elsif value.include?("=")
+              raise "Invalid character property: #{value}"
+            elsif unicode.key?("Block=#{value}")
+              unicode["Block=#{value}"]
+            elsif unicode.key?("General_Category=#{value}")
+              unicode["General_Category=#{value}"]
+            elsif unicode.key?("#{value}=True")
+              unicode["#{value}=True"]
+            else
+              raise "Invalid character property: #{value}"
+            end
+
+          entries.each do |entry|
+            case entry
+            in Unicode::Range[from: range_from, to: range_to]
+              from.connect(RangeTransition.new(from: range_from.chr(Encoding::UTF_8), to: range_to.chr(Encoding::UTF_8)), to)
+            in Unicode::Value[value:]
+              from.connect(CharacterTransition.new(value: value.chr(Encoding::UTF_8)), to)
+            end
+          end
         in AST::Pattern[expressions: expressions]
           expressions.each do |expression|
             connect(expression, from, to)
