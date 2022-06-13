@@ -115,6 +115,9 @@ module RegularExpression
           from.connect(RangeTransition.new(from: "0", to: "9"), to)
           from.connect(RangeTransition.new(from: "A", to: "F"), to)
           from.connect(RangeTransition.new(from: "a", to: "f"), to)
+        in AST::MatchClass[name: :space]
+          from.connect(RangeTransition.new(from: "\t", to: "\r"), to)
+          from.connect(CharacterTransition.new(value: " "), to)
         in AST::MatchClass[name: :word]
           from.connect(RangeTransition.new(from: "0", to: "9"), to)
           from.connect(CharacterTransition.new(value: "_"), to)

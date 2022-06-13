@@ -6,7 +6,7 @@ require "bundler/setup"
 $:.unshift(File.expand_path("../lib", __dir__))
 require "regular_expression"
 
-source = "a*.*b*c\\w"
+source = "a*.*b*c"
 native = /#{source}/
 pattern = RegularExpression::Pattern.new(source)
 

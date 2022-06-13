@@ -42,15 +42,15 @@ module RegularExpression
             in DFA::AnyTransition | NFA::AnyTransition
               "."
             in DFA::CharacterTransition[value:]
-              value.chr(Encoding::UTF_8)
+              value.chr(Encoding::UTF_8).inspect
             in DFA::RangeTransition[from: min, to: max]
-              "#{min.chr(Encoding::UTF_8)}-#{max.chr(Encoding::UTF_8)}"
+              "#{min.chr(Encoding::UTF_8).inspect}-#{max.chr(Encoding::UTF_8).inspect}"
             in NFA::CharacterTransition[value:]
-              value
+              value.inspect
             in NFA::EpsilonTransition
               "ε"
             in NFA::RangeTransition[from: min, to: max]
-              "#{min}-#{max}"
+              "#{min.inspect}-#{max.inspect}"
             end
 
           nodes[from].connect(nodes[to], label: label)
