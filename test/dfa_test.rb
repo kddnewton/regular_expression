@@ -42,6 +42,10 @@ module RegularExpression
       refute_matches("\\w", "-")
     end
 
+    def test_match_property
+      assert_matches("\\p{Math}", "+")
+    end
+
     def test_optional_quantifier
       assert_matches("a?", "")
       assert_matches("a?", "a")

@@ -3,7 +3,9 @@
 require "bundler/gem_tasks"
 require "rake/testtask"
 
-file "lib/regular_expression/unicode.txt" do
+UNICODE_CACHE = "lib/regular_expression/unicode/cache.txt"
+
+file UNICODE_CACHE do
   require "bundler/setup"
 
   $:.unshift(File.expand_path("lib", __dir__))
@@ -13,7 +15,7 @@ file "lib/regular_expression/unicode.txt" do
   RegularExpression::Unicode.generate
 end
 
-Rake::TestTask.new(test: "lib/regular_expression/unicode.txt") do |t|
+Rake::TestTask.new(test: UNICODE_CACHE) do |t|
   t.libs << "test"
   t.libs << "lib"
   t.test_files = FileList["test/**/*_test.rb"]
