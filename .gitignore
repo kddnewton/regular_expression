@@ -1,3 +1,4 @@
 bench.csv
 build
 coverage
+lib/regular_expression/unicode/cache.txt

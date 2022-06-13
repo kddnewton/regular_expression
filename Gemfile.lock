@@ -13,6 +13,7 @@ GEM
     process-terminal (0.2.0)
       ffi
     rake (13.0.6)
+    rubyzip (2.3.2)
     simplecov (0.21.2)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -27,7 +28,8 @@ DEPENDENCIES
   graphviz
   minitest
   rake
+  rubyzip
   simplecov
 
 BUNDLED WITH
-   2.4.0.dev
+   2.3.6
