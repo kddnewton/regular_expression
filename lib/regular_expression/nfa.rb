@@ -166,32 +166,22 @@ module RegularExpression
         Compiler.new.call(pattern)
       end
 
-      # Checks if the machine matches against the given string at any index in
-      # the string.
-      def match?(state, string)
-        (0..string.length).any? do |index|
-          match_at?(state, string, index)
-        end
-      end
-
-      private
-
       # Executes the machine against the given string at the given index.
-      def match_at?(state, string, index = 0)
+      def match?(state, string, index = 0)
         matched =
           state.transitions.any? do |transition, to|
             case transition
             in AnyTransition
-              match_at?(to, string, index + 1) if index < string.length
+              match?(to, string, index + 1) if index < string.length
             in CharacterTransition[value:]
               if index < string.length && string[index] == value
-                match_at?(to, string, index + 1)
+                match?(to, string, index + 1)
               end
             in EpsilonTransition
-              match_at?(to, string, index)
+              match?(to, string, index)
             in RangeTransition[from: range_from, to: range_to]
               if index < string.length && (range_from..range_to).cover?(string[index])
-                match_at?(to, string, index + 1)
+                match?(to, string, index + 1)
               end
             end
           end

@@ -22,8 +22,12 @@ module RegularExpression
       @source = source
       @flags = Flags[flags]
 
+      # We inject .* into the source so that when we loop over the input strings
+      # to check for matches we don't have to look at every index in the string.
+      normalized = ".*#{source}"
+
       # Compile the source into an AST, then an NFA, then a DFA.
-      @machine = DFA.compile(NFA.compile(Parser.new(source, flags).parse))
+      @machine = DFA.compile(NFA.compile(Parser.new(normalized, flags).parse))
     end
 
     def match?(string)

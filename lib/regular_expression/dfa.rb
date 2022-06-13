@@ -37,7 +37,7 @@ module RegularExpression
       end
 
       def label
-        states.map(&:label).join(",")
+        "{#{states.map(&:label).join(",")}}"
       end
 
       def pretty_print(q)
@@ -98,13 +98,17 @@ module RegularExpression
       def call(start)
         compiled = State.new(states: expand([start]))
 
+        expanded_states = {}
+        expanded_states[compiled.states] = compiled
+
         visited_states = Set.new([compiled])
         queue = [compiled]
 
         while (state = queue.shift)
           # First, we're going to build up a mapping of states to the alphabet
           # pieces that lead to those states.
-          alphabet_states = Hash.new { |hash, key| hash[key] = [] }
+          alphabet_states =
+            Hash.new { |hash, key| hash[key] = Alphabet::None.new }
 
           alphabet_for(state).to_a.each do |alphabet|
             states = Set.new
@@ -114,22 +118,22 @@ module RegularExpression
               states << next_state if matches?(alphabet, transition)
             end
 
-            alphabet_states[State.new(states: expand(states.to_a))] << alphabet
+            expanded = expand(states.to_a)
+            next_state =
+              if expanded_states.key?(expanded)
+                expanded_states[expanded]
+              else
+                expanded_states[expanded] = State.new(states: expanded)
+              end
+
+            alphabet_states[next_state] =
+              Alphabet.combine(alphabet_states[next_state], alphabet)
           end
 
           # Next, we're going to add the new states and all of the associated
           # transitions.
-          alphabet_states.each do |next_state, alphabets|
-            # First, we're going to reduce the alphabets to the minimal set that
-            # can be represented. For example if we have a-c and d, then we'll
-            # just add a transition that's a-d. This will always result in one
-            # alphabet at the most since we have the Multiple class.
-            transition_alphabet =
-              alphabets.inject(Alphabet::None.new) do |alphabet, next_alphabet|
-                Alphabet.combine(alphabet, next_alphabet)
-              end
-
-            transition_alphabet.to_a.each do |alphabet|
+          alphabet_states.each do |next_state, next_alphabet|
+            next_alphabet.to_a.each do |alphabet|
               connect(state, next_state, alphabet)
             end
 
@@ -228,18 +232,8 @@ module RegularExpression
         Compiler.new.call(start)
       end
 
-      # Checks if the machine matches against the given string at any index in
-      # the string.
-      def match?(state, string)
-        (0..string.length).any? do |index|
-          match_at?(state, string, index)
-        end
-      end
-
-      private
-
       # Executes the machine against the given string at the given index.
-      def match_at?(state, string, index = 0)
+      def match?(state, string, index = 0)
         return state.final? if index == string.length
 
         selected =
@@ -254,7 +248,7 @@ module RegularExpression
             end
           end
 
-        (selected && match_at?(selected, string, index + 1)) || state.final?
+        (selected && match?(selected, string, index + 1)) || state.final?
       end
     end
   end
