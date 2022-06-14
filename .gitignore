@@ -1,4 +1,3 @@
-bench.csv
 build
 coverage
 lib/regular_expression/unicode/*.txt
