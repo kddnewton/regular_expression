@@ -7,9 +7,10 @@ module RegularExpression
     # This represents a state in the deterministic state machine. It contains a
     # sublist of states from the non-deterministic state machine.
     class State
-      attr_reader :states, :transitions
+      attr_reader :label, :states, :transitions
 
-      def initialize(states:, transitions: {})
+      def initialize(label:, states:, transitions: {})
+        @label = label
         @states = states
         @transitions = transitions
       end
@@ -34,14 +35,6 @@ module RegularExpression
 
       def hash
         states.hash
-      end
-
-      def label
-        "{#{states.map(&:label).join(",")}}"
-      end
-
-      def pretty_print(q)
-        q.text(label)
       end
 
       def connect(transition, state)
@@ -85,6 +78,12 @@ module RegularExpression
 
     # This class is responsible for compiling an NFA into a DFA.
     class Compiler
+      attr_reader :labels
+
+      def initialize
+        @labels = ("1"..).each
+      end
+
       # This method converts a non-deterministic finite automata into a
       # deterministic finite automata. The best link I could find that describes
       # the general approach taken here is here:
@@ -96,7 +95,7 @@ module RegularExpression
       # machine should transition to. In effect, this means we're removing all
       # epsilon transitions.
       def call(start)
-        compiled = State.new(states: expand([start]))
+        compiled = State.new(label: labels.next, states: expand([start]))
 
         expanded_states = {}
         expanded_states[compiled.states] = compiled
@@ -123,7 +122,7 @@ module RegularExpression
               if expanded_states.key?(expanded)
                 expanded_states[expanded]
               else
-                expanded_states[expanded] = State.new(states: expanded)
+                expanded_states[expanded] = State.new(label: labels.next, states: expanded)
               end
 
             alphabet_states[next_state] =
