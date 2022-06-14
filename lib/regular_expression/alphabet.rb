@@ -62,7 +62,7 @@ module RegularExpression
       end
 
       def self.[](*alphabets)
-        alphabets.compact.then do |compacted|
+        alphabets.reject { |alphabet| alphabet.is_a?(None) }.then do |compacted|
           compacted.one? ? compacted.first : new(alphabets: compacted)
         end
       end
@@ -113,9 +113,9 @@ module RegularExpression
 
       def self.[](from, to)
         if to < from
-          nil
+          None.new
         elsif from < MINIMUM || to > MAXIMUM
-          nil
+          None.new
         elsif from == to
           Value.new(value: from)
         else

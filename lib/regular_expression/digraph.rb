@@ -43,13 +43,13 @@ module RegularExpression
             in DFA::AnyTransition | NFA::AnyTransition
               "."
             in DFA::CharacterTransition[value:]
-              value.chr(Encoding::UTF_8).inspect
+              "0x#{value.to_s(16)}"
             in NFA::CharacterTransition[value:]
-              value.chr(Encoding::UTF_8).inspect
+              "0x#{value.to_s(16)}"
             in DFA::RangeTransition[from: min, to: max]
-              "#{min.chr(Encoding::UTF_8).inspect}-#{max.chr(Encoding::UTF_8).inspect}"
+              "0x#{min.to_s(16)}-0x#{max.to_s(16)}"
             in NFA::RangeTransition[from: min, to: max]
-              "#{min.chr(Encoding::UTF_8).inspect}-#{max.chr(Encoding::UTF_8).inspect}"
+              "0x#{min.to_s(16)}-0x#{max.to_s(16)}"
             in NFA::EpsilonTransition
               "ε"
             end

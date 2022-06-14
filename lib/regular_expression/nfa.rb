@@ -91,6 +91,141 @@ module RegularExpression
 
       private
 
+      # Connect between \u{0000} and \u{007F}
+      # Bytes are always of the form 0xxxxxxx
+      def connect_range_1byte(min, max, from, to)
+        from.connect(RangeTransition.new(from: min, to: [0x007F, max].min), to)
+      end
+
+      # Connect between \u{0080} and \u{07FF}
+      # Bytes are always of the form 110xxxxx 10xxxxxx
+      def connect_range_2byte(min, max, from, to)
+        byte1_mask = ->(value) { (value >> 6) | 0b11000000 }
+        byte2_mask = ->(value) { value & ((1 << 6) - 1) | 0b10000000 }
+
+        byte1_step = 1 << 7
+
+        0x0080.step(0x07FF, byte1_step) do |step|
+          if min <= (step + byte1_step) && max >= step
+            byte1_transition = CharacterTransition.new(value: byte1_mask[step])
+            byte2_transition = RangeTransition.new(from: byte2_mask[[0x0080, min].max], to: byte2_mask[[0x07FF, max].min])
+
+            byte1 = State.new(label: labels.next)
+
+            from.connect(byte1_transition, byte1)
+            byte1.connect(byte2_transition, to)
+          end
+        end
+      end
+
+      # Connect between \u{0800} and \u{FFFF}
+      # Bytes are always of the form 1110xxxx 10xxxxxx 10xxxxxx
+      def connect_range_3byte(min, max, from, to)
+        byte1_mask = ->(value) { (value >> 12) | 0b11100000 }
+        byte2_mask = ->(value) { (value >> 6) & ((1 << 6) - 1) | 0b10000000 }
+        byte3_mask = ->(value) { value & ((1 << 6) - 1) | 0b10000000 }
+
+        byte1_step = 1 << 13
+        byte2_step = 1 << 7
+
+        0x0800.step(0xFFFF, byte1_step) do |parent_step|
+          if min <= (parent_step + byte1_step) && max >= parent_step
+            byte1_transition = CharacterTransition.new(value: byte1_mask[parent_step])
+
+            parent_step.step(parent_step + byte1_step, byte2_step) do |child_step|
+              if min <= (child_step + byte2_step) && max >= child_step
+                byte2_transition = CharacterTransition.new(value: byte2_mask[child_step])
+                byte3_transition = RangeTransition.new(from: byte3_mask[[parent_step, min].max], to: byte3_mask[[(parent_step + byte1_step), max].min])
+
+                byte1 = State.new(label: labels.next)
+                byte2 = State.new(label: labels.next)
+
+                from.connect(byte1_transition, byte1)
+                byte1.connect(byte2_transition, byte2)
+                byte2.connect(byte3_transition, to)
+              end
+            end
+          end
+        end
+      end
+
+      # Connect between \u{10000} and \u{10FFFF}
+      # Bytes are always of the form 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+      def connect_range_4byte(min, max, from, to)
+        byte1_mask = ->(value) { (value >> 18) | 0b11100000 }
+        byte2_mask = ->(value) { (value >> 12) & ((1 << 6) - 1) | 0b10000000 }
+        byte3_mask = ->(value) { (value >> 6) & ((1 << 6) - 1) | 0b10000000 }
+        byte4_mask = ->(value) { value & ((1 << 6) - 1) | 0b10000000 }
+
+        byte1_step = 1 << 19
+        byte2_step = 1 << 13
+        byte3_step = 1 << 7
+
+        0x10000.step(0x10FFFF, byte1_step) do |grand_parent_step|
+          if min <= (grand_parent_step + byte1_step) && max >= grand_parent_step
+            byte1_transition = CharacterTransition.new(value: byte1_mask[grand_parent_step])
+
+            grand_parent_step.step(grand_parent_step + byte1_step, byte2_step) do |parent_step|
+              if min <= (parent_step + byte2_step) && max >= parent_step
+                byte2_transition = CharacterTransition.new(value: byte2_mask[parent_step])
+
+                parent_step.step(parent_step + byte2_step, byte3_step) do |child_step|
+                  if min <= (child_step + byte3_step) && max >= child_step
+                    byte3_transition = CharacterTransition.new(value: byte3_mask[child_step])
+                    byte4_transition = RangeTransition.new(from: byte4_mask[[parent_step, min].max], to: byte4_mask[[(parent_step + byte2_step), max].min])
+
+                    byte1 = State.new(label: labels.next)
+                    byte2 = State.new(label: labels.next)
+                    byte3 = State.new(label: labels.next)
+
+                    from.connect(byte1_transition, byte1)
+                    byte1.connect(byte2_transition, byte2)
+                    byte2.connect(byte3_transition, byte3)
+                    byte3.connect(byte4_transition, to)
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+
+      # Connect a range of values between two states. Similar to connect_value,
+      # this also breaks it up into its component bytes, but it's a little
+      # harder because we need to mask a bunch of times to get the correct
+      # groupings.
+      #
+      # Below is a table representing how a codepoint is represented in UTF-8.
+      # We'll use this to encode the byte sequence into the state transitions
+      # so that we can just compare one byte at a time.
+      #
+      # +-----------+------------+----------+----------+----------+----------+
+      # | Minimum   | Maximum    | Byte 1   | Byte 2   | Byte 3   | Byte 4   |
+      # +-----------+------------+----------+----------+----------+----------+
+      # | \u{0000}  | \u{007F}   | 0xxxxxxx	|          |          |          |
+      # | \u{0080}  | \u{07FF}   | 110xxxxx | 10xxxxxx |          |          |
+      # | \u{0800}  | \u{FFFF}   | 1110xxxx | 10xxxxxx | 10xxxxxx	|          |
+      # | \u{10000} | \u{10FFFF} | 11110xxx | 10xxxxxx | 10xxxxxx | 10xxxxxx |
+      # +-----------+------------+----------+----------+----------+----------+
+      def connect_range(min, max, from, to)
+        connect_range_1byte(min, max, from, to) if min <= 0x007F
+        connect_range_2byte(min, max, from, to) if min <= 0x07FF && max >= 0x0080
+        connect_range_3byte(min, max, from, to) if min <= 0xFFFF && max >= 0x0800
+        connect_range_4byte(min, max, from, to) if max >= 0x10000
+      end
+
+      # Connect an individual value between two states. This breaks it up into
+      # its byte representation and creates states for each one. Since this is
+      # an NFA it's okay for us to duplicate transitions here.
+      def connect_value(value, from, to)
+        bytes = value.chr(Encoding::UTF_8).bytes
+        states = [from, *Array.new(bytes.length - 1) { State.new(label: labels.next) }, to]
+
+        bytes.each_with_index do |byte, index|
+          states[index].connect(CharacterTransition.new(value: byte), states[index + 1])
+        end
+      end
+
       # This takes a node in the AST and two states in the NFA and creates
       # whatever transitions it needs to between the two states.
       def connect(node, from, to)
@@ -109,7 +244,7 @@ module RegularExpression
         in AST::MatchAny
           from.connect(AnyTransition.new, to)
         in AST::MatchCharacter[value: value]
-          from.connect(CharacterTransition.new(value: value.ord), to)
+          connect_value(value.ord, from, to)
         in AST::MatchClass[name: :digit]
           from.connect(RangeTransition.new(from: "0".ord, to: "9".ord), to)
         in AST::MatchClass[name: :hex]
@@ -125,8 +260,13 @@ module RegularExpression
           from.connect(RangeTransition.new(from: "A".ord, to: "Z".ord), to)
           from.connect(RangeTransition.new(from: "a".ord, to: "z".ord), to)
         in AST::MatchProperty[value:]
-          unicode[value].each do |transition|
-            from.connect(transition, to)
+          unicode[value].each do |entry|
+            case entry
+            in Unicode::Range[min:, max:]
+              connect_range(min, max, from, to)
+            in Unicode::Value[value:]
+              connect_value(value, from, to)
+            end
           end
         in AST::Pattern[expressions: expressions]
           expressions.each do |expression|

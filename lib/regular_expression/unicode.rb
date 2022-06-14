@@ -4,6 +4,33 @@ module RegularExpression
   module Unicode
     CACHE_DIRECTORY = File.join(__dir__, "unicode")
 
+    # This represents a range of codepoints.
+    class Range
+      attr_reader :min, :max
+
+      def initialize(min:, max:)
+        @min = min
+        @max = max
+      end
+
+      def deconstruct_keys(keys)
+        { min: min, max: max }
+      end
+    end
+
+    # This represents a single codepoint.
+    class Value
+      attr_reader :value
+
+      def initialize(value:)
+        @value = value
+      end
+
+      def deconstruct_keys(keys)
+        { value: value }
+      end
+    end
+
     # This class represents the cache of all of the expressions that we have
     # previously calculated within the \p{} syntax. We use this cache to quickly
     # efficiently craft transitions between states using properties.
@@ -32,9 +59,9 @@ module RegularExpression
 
         entry.split(",").map do |entry|
           if entry =~ /\A(\d+)\.\.(\d+)\z/
-            NFA::RangeTransition.new(from: $1.to_i, to: $2.to_i)
+            Range.new(min: $1.to_i, max: $2.to_i)
           else
-            NFA::CharacterTransition.new(value: entry.to_i)
+            Value.new(value: entry.to_i)
           end
         end
       end
