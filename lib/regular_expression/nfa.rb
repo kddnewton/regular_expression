@@ -109,21 +109,21 @@ module RegularExpression
         in AST::MatchAny
           from.connect(AnyTransition.new, to)
         in AST::MatchCharacter[value: value]
-          from.connect(CharacterTransition.new(value: value), to)
+          from.connect(CharacterTransition.new(value: value.ord), to)
         in AST::MatchClass[name: :digit]
-          from.connect(RangeTransition.new(from: "0", to: "9"), to)
+          from.connect(RangeTransition.new(from: "0".ord, to: "9".ord), to)
         in AST::MatchClass[name: :hex]
-          from.connect(RangeTransition.new(from: "0", to: "9"), to)
-          from.connect(RangeTransition.new(from: "A", to: "F"), to)
-          from.connect(RangeTransition.new(from: "a", to: "f"), to)
+          from.connect(RangeTransition.new(from: "0".ord, to: "9".ord), to)
+          from.connect(RangeTransition.new(from: "A".ord, to: "F".ord), to)
+          from.connect(RangeTransition.new(from: "a".ord, to: "f".ord), to)
         in AST::MatchClass[name: :space]
-          from.connect(RangeTransition.new(from: "\t", to: "\r"), to)
-          from.connect(CharacterTransition.new(value: " "), to)
+          from.connect(RangeTransition.new(from: "\t".ord, to: "\r".ord), to)
+          from.connect(CharacterTransition.new(value: " ".ord), to)
         in AST::MatchClass[name: :word]
-          from.connect(RangeTransition.new(from: "0", to: "9"), to)
-          from.connect(CharacterTransition.new(value: "_"), to)
-          from.connect(RangeTransition.new(from: "A", to: "Z"), to)
-          from.connect(RangeTransition.new(from: "a", to: "z"), to)
+          from.connect(RangeTransition.new(from: "0".ord, to: "9".ord), to)
+          from.connect(CharacterTransition.new(value: "_".ord), to)
+          from.connect(RangeTransition.new(from: "A".ord, to: "Z".ord), to)
+          from.connect(RangeTransition.new(from: "a".ord, to: "z".ord), to)
         in AST::MatchProperty[value:]
           unicode[value].each do |transition|
             from.connect(transition, to)
@@ -188,13 +188,13 @@ module RegularExpression
             in AnyTransition
               match_at?(to, string, index + 1) if index < string.length
             in CharacterTransition[value:]
-              if index < string.length && string[index] == value
+              if index < string.length && string[index].ord == value
                 match_at?(to, string, index + 1)
               end
             in EpsilonTransition
               match_at?(to, string, index)
             in RangeTransition[from: range_from, to: range_to]
-              if index < string.length && (range_from..range_to).cover?(string[index])
+              if index < string.length && (range_from..range_to).cover?(string[index].ord)
                 match_at?(to, string, index + 1)
               end
             end

@@ -32,9 +32,9 @@ module RegularExpression
 
         entry.split(",").map do |entry|
           if entry =~ /\A(\d+)\.\.(\d+)\z/
-            NFA::RangeTransition.new(from: $1.to_i.chr(Encoding::UTF_8), to: $2.to_i.chr(Encoding::UTF_8))
+            NFA::RangeTransition.new(from: $1.to_i, to: $2.to_i)
           else
-            NFA::CharacterTransition.new(value: entry.to_i.chr(Encoding::UTF_8))
+            NFA::CharacterTransition.new(value: entry.to_i)
           end
         end
       end
