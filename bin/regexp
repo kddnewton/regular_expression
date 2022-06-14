@@ -6,13 +6,13 @@ require "bundler/setup"
 $:.unshift(File.expand_path("../lib", __dir__))
 require "regular_expression"
 
-source = "a{1,2}b*"
+source = "[abc]b"
 native = /#{source}/
 pattern = RegularExpression::Pattern.new(source)
 
-ast = RegularExpression::Parser.new(source, RegularExpression::Flags.new).parse
-nfa = RegularExpression::NFA.compile(ast)
-dfa = RegularExpression::DFA.compile(nfa)
+ast = pattern.ast
+nfa = pattern.nfa
+dfa = pattern.dfa
 
 puts source
 pp ast

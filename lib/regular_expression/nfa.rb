@@ -93,7 +93,7 @@ module RegularExpression
 
       # This implements the necessary interface for the UTF8::Encoder class to
       # connect between two states.
-      class UTF8Connector
+      class Connector
         attr_reader :from, :to, :labels
 
         def initialize(from:, to:, labels:)
@@ -120,7 +120,7 @@ module RegularExpression
       # harder because we need to mask a bunch of times to get the correct
       # groupings.
       def connect_range(min, max, from, to)
-        connector = UTF8Connector.new(from: from, to: to, labels: labels)
+        connector = Connector.new(from: from, to: to, labels: labels)
         UTF8::Encoder.new(min..max).connect(connector)
       end
 
@@ -178,6 +178,10 @@ module RegularExpression
               connect_value(value, from, to)
             end
           end
+        in AST::MatchRange[from: min, to: max]
+          connect_range(min, max, from, to)
+        in AST::MatchSet[items:]
+          items.each { |item| connect(item, from, to) }
         in AST::Pattern[expressions: expressions]
           expressions.each do |expression|
             connect(expression, from, to)

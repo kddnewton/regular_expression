@@ -62,6 +62,9 @@ module RegularExpression
               in /\A\}/   then :rbrace
               in /\A\(/   then :lparen
               in /\A\)/   then :rparen
+              in /\A\[/   then :lbracket
+              in /\A\]/   then :rbracket
+              in /\A-/    then :dash
               in /\A,/    then :comma
               in %r{\A\\} then :backslash
               in /\A./    then :char
@@ -128,7 +131,9 @@ module RegularExpression
     def parse_item(tokens)
       item =
         case tokens.peek
-        in { type: :backslash, location: }
+        in { type: :lbracket }
+          parse_character_set(tokens)
+        in { type: :backslash }
           parse_escaped(tokens)
         in { type: :char | :lbrace | :rbrace, value:, location: }
           tokens.next
@@ -152,8 +157,30 @@ module RegularExpression
       item
     end
 
-    # This creates either a MatchClass (if the escaped value is a character
-    # class) or a MatchCharacter.
+    # This creates an AST::MatchSet, which contains a list of
+    # AST::MatchCharacter and AST::MatchRange objects.
+    def parse_character_set(tokens)
+      tokens.next => { type: :lbracket, location: slocation }
+      items = []
+
+      loop do
+        case tokens.next
+        in { type: :rbracket, location: elocation }
+          return AST::MatchSet.new(items: items, inverted: false, location: slocation.to(elocation))
+        in { value: svalue, location: }
+          if tokens.peek in { type: :dash }
+            tokens.next
+            tokens.next => { value: evalue, location: elocation }
+            items << AST::MatchRange.new(from: svalue, to: evalue, location: location.to(elocation))
+          else
+            items << AST::MatchCharacter.new(value: svalue, location: location)
+          end
+        end
+      end
+    end
+
+    # This creates either a MatchProperty (if the escaped value is a character
+    # property) or a MatchCharacter.
     def parse_escaped(tokens)
       tokens.next => { type: :backslash, location: }
 

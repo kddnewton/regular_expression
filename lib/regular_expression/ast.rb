@@ -71,6 +71,12 @@ module RegularExpression
       # Visit a MatchProperty node.
       alias visit_match_property visit_child_nodes
 
+      # Visit a MatchRange node.
+      alias visit_match_range visit_child_nodes
+
+      # Visit a MatchSet node.
+      alias visit_match_set visit_child_nodes
+
       # Visit a Pattern node.
       alias visit_pattern visit_child_nodes
 
@@ -140,6 +146,25 @@ module RegularExpression
         token("match-property") do
           q.breakable
           q.pp(node.value)
+        end
+      end
+
+      # Visit a MatchRange node.
+      def visit_match_range(node)
+        token("match-range") do
+          q.breakable
+          q.pp(node.from)
+
+          q.breakable
+          q.pp(node.to)
+        end
+      end
+
+      # Visit a MatchSet node.
+      def visit_match_set(node)
+        token("match-set") do
+          q.breakable
+          q.seplist(node.items) { |item| q.pp(item) }
         end
       end
 
@@ -350,6 +375,60 @@ module RegularExpression
 
       def deconstruct_keys(keys)
         { value: value, location: location }
+      end
+    end
+
+    # This is a range of characters that must be matched.
+    class MatchRange < Node
+      attr_reader :from, :to, :location
+
+      def initialize(from:, to:, location:)
+        @from = from
+        @to = to
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_match_range(self)
+      end
+
+      def child_nodes
+        []
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { from: from, to: to, location: location }
+      end
+    end
+
+    # This is a set of characters and ranges that must be matched.
+    class MatchSet < Node
+      attr_reader :items, :location
+
+      def initialize(items:, inverted:, location:)
+        @items = items
+        @inverted = inverted
+        @location = location
+      end
+
+      def accept(visitor)
+        visitor.visit_match_set(self)
+      end
+
+      def child_nodes
+        items
+      end
+
+      alias deconstruct child_nodes
+
+      def deconstruct_keys(keys)
+        { items: items, inverted: inverted?, location: location }
+      end
+
+      def inverted?
+        @inverted
       end
     end
 
