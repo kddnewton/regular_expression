@@ -10,6 +10,7 @@ require_relative "regular_expression/flags"
 require_relative "regular_expression/nfa"
 require_relative "regular_expression/parser"
 require_relative "regular_expression/unicode"
+require_relative "regular_expression/utf8"
 
 module RegularExpression
   # This is the main class that represents a regular expression. It effectively

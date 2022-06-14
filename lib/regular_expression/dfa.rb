@@ -237,10 +237,12 @@ module RegularExpression
       # Executes the machine against the given string.
       def match?(string)
         current = start_state
+
         index = 0
+        bytes = string.bytes
 
         loop do
-          return current.final? if index == string.length
+          return current.final? if index == bytes.length
 
           selected =
             current.transitions.detect do |transition, to|
@@ -248,9 +250,9 @@ module RegularExpression
               in DFA::AnyTransition
                 break to
               in DFA::CharacterTransition[value:]
-                break to if string[index].ord == value
+                break to if bytes[index] == value
               in DFA::RangeTransition[from: min, to: max]
-                break to if (min..max).cover?(string[index].ord)
+                break to if (min..max).cover?(bytes[index])
               end
             end
 
