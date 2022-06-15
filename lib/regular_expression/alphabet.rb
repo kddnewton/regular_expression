@@ -31,6 +31,10 @@ module RegularExpression
       def maximum
         MAXIMUM
       end
+
+      def pretty_print(q)
+        q.text("(any)")
+      end
     end
 
     # Matches against a set of multiple child alphabets.
@@ -61,6 +65,18 @@ module RegularExpression
         alphabets.last.maximum
       end
 
+      def pretty_print(q)
+        q.group do
+          q.text("(multiple")
+          q.nest(2) do
+            q.breakable
+            q.seplist(alphabets) { |alphabet| q.pp(alphabet) }
+          end
+          q.breakable("")
+          q.text(")")
+        end
+      end
+
       def self.[](*alphabets)
         alphabets.reject { |alphabet| alphabet.is_a?(None) }.then do |compacted|
           compacted.one? ? compacted.first : new(alphabets: compacted)
@@ -84,6 +100,10 @@ module RegularExpression
 
       def maximum
         MAXIMUM
+      end
+
+      def pretty_print(q)
+        q.text("(none)")
       end
     end
 
@@ -110,6 +130,20 @@ module RegularExpression
 
       alias minimum from
       alias maximum to
+
+      def pretty_print(q)
+        q.group do
+          q.text("(range")
+          q.nest(2) do
+            q.breakable
+            q.pp(from)
+            q.breakable
+            q.pp(to)
+          end
+          q.breakable("")
+          q.text(")")
+        end
+      end
 
       def self.[](from, to)
         if to < from
@@ -146,6 +180,18 @@ module RegularExpression
 
       alias minimum value
       alias maximum value
+
+      def pretty_print(q)
+        q.group do
+          q.text("(value")
+          q.nest(2) do
+            q.breakable
+            q.pp(value)
+          end
+          q.breakable("")
+          q.text(")")
+        end
+      end
 
       def self.[](value)
         new(value: value)

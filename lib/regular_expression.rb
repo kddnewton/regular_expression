@@ -27,7 +27,8 @@ module RegularExpression
     def ast
       # We inject .* into the source so that when we loop over the input strings
       # to check for matches we don't have to look at every index in the string.
-      Parser.new(".*#{source}", flags).parse
+      normalized = ".*#{source}"
+      Parser.new(normalized, flags).parse
     end
 
     def nfa

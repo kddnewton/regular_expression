@@ -7,7 +7,7 @@ module RegularExpression
     # This represents a state in the deterministic state machine. It contains a
     # sublist of states from the non-deterministic state machine.
     class State
-      attr_reader :label, :states, :transitions
+      attr_reader :states, :transitions
 
       def initialize(label:, states:, transitions: {})
         @label = label
@@ -31,6 +31,11 @@ module RegularExpression
 
       def final?
         states.any?(&:final?)
+      end
+
+      def label
+        @label
+        # "{#{states.map(&:label).join(",")}}"
       end
 
       def hash
@@ -118,6 +123,13 @@ module RegularExpression
             end
 
             expanded = expand(states.to_a)
+
+            # This should never happen. Because of the way we split up the
+            # alphabets, we should always be able to find a state that matches
+            # the current alphabet we're looking at. If we can't, then we've
+            # got a problem.
+            raise if expanded.empty?
+
             next_state =
               if expanded_states.key?(expanded)
                 expanded_states[expanded]
@@ -215,8 +227,8 @@ module RegularExpression
           true
         in [Alphabet::Range[from:, to:], NFA::CharacterTransition[value:]]
           (from..to).cover?(value)
-        in [Alphabet::Range[from: from_ord, to: to_ord], NFA::RangeTransition[from:, to:]]
-          from_ord <= from && to_ord >= to
+        in [Alphabet::Range[from: alpha_from, to: alpha_to], NFA::RangeTransition[from:, to:]]
+          from <= alpha_from && to >= alpha_to
         in [Alphabet::Value[value: ord], NFA::CharacterTransition[value:]]
           value == ord
         in [Alphabet::Value[value: ord], NFA::RangeTransition[from:, to:]]

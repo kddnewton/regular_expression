@@ -20,17 +20,24 @@ module RegularExpression
       BYTES3_RANGE = 0x0800..0xFFFF
       BYTES4_RANGE = 0x10000..0x10FFFF
 
-      attr_reader :range
+      attr_reader :connector
 
-      def initialize(range)
-        @range = range
+      def initialize(connector)
+        @connector = connector
       end
 
-      def connect(connector)
-        connect_bytes1(connector) if ranges_overlap?(range, BYTES1_RANGE)
-        connect_bytes2(connector) if ranges_overlap?(range, BYTES2_RANGE)
-        connect_bytes3(connector) if ranges_overlap?(range, BYTES3_RANGE)
-        connect_bytes4(connector) if ranges_overlap?(range, BYTES4_RANGE)
+      def connect_range(range)
+        connect_bytes1(range) if ranges_overlap?(range, BYTES1_RANGE)
+        connect_bytes2(range) if ranges_overlap?(range, BYTES2_RANGE)
+        connect_bytes3(range) if ranges_overlap?(range, BYTES3_RANGE)
+        connect_bytes4(range) if ranges_overlap?(range, BYTES4_RANGE)
+      end
+
+      def connect_any
+        connect_bytes1(BYTES1_RANGE)
+        connect_bytes2(BYTES2_RANGE)
+        connect_bytes3(BYTES3_RANGE)
+        connect_bytes4(BYTES4_RANGE)
       end
 
       private
@@ -52,10 +59,16 @@ module RegularExpression
         left.begin <= right.end && right.begin <= left.end
       end
 
+      # Check if a range entirely encapsulates another range. If it does, we can
+      # usually shortcut doing further subdivision of the range.
+      def range_encapsulates?(outer, inner)
+        outer.begin <= inner.begin && outer.end >= inner.end
+      end
+
       # Connect the states for values that fall within the range that would be
       # encoded with a single byte.
-      def connect_bytes1(connector)
-        connector.connect(
+      def connect_bytes1(range)
+        connector.connect_range(
           connector.from,
           connector.to,
           [BYTES1_RANGE.begin, range.begin].max..[BYTES1_RANGE.end, range.end].min
@@ -72,7 +85,19 @@ module RegularExpression
 
       # Connect the states for values that fall within the range that would be
       # encoded with two bytes.
-      def connect_bytes2(connector)
+      def connect_bytes2(range)
+        # We can shortcut if the range entirely encapsulates the potential range
+        # of codepoints that can be encoded with two bytes.
+        if range_encapsulates?(range, BYTES2_RANGE)
+          min_bytes = encode_bytes2(BYTES2_RANGE.begin)
+          max_bytes = encode_bytes2(BYTES2_RANGE.end)
+
+          byte1 = connector.state
+          connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
+          connector.connect_range(byte1, connector.to, min_bytes[1]..max_bytes[1])
+          return
+        end
+
         byte1_step = 1 << 6
 
         BYTES2_RANGE.begin.step(BYTES2_RANGE.end, byte1_step) do |step_min|
@@ -84,8 +109,8 @@ module RegularExpression
             assert_equal_leading_bytes(min_bytes, max_bytes)
 
             byte1 = connector.state
-            connector.connect(connector.from, byte1, min_bytes[0]..max_bytes[0])
-            connector.connect(byte1, connector.to, min_bytes[1]..max_bytes[1])
+            connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
+            connector.connect_range(byte1, connector.to, min_bytes[1]..max_bytes[1])
           end
         end
       end
@@ -101,7 +126,22 @@ module RegularExpression
 
       # Connect the states for values that fall within the range that would be
       # encoded with three bytes.
-      def connect_bytes3(connector)
+      def connect_bytes3(range)
+        # We can shortcut if the range entirely encapsulates the potential range
+        # of codepoints that can be encoded with three bytes.
+        if range_encapsulates?(range, BYTES3_RANGE)
+          min_bytes = encode_bytes3(BYTES3_RANGE.begin)
+          max_bytes = encode_bytes3(BYTES3_RANGE.end)
+
+          byte1 = connector.state
+          byte2 = connector.state
+
+          connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
+          connector.connect_range(byte1, byte2, min_bytes[1]..max_bytes[1])
+          connector.connect_range(byte2, connector.to, min_bytes[2]..max_bytes[2])
+          return
+        end
+
         byte1_step = 1 << 12
         byte2_step = 1 << 6
 
@@ -120,9 +160,9 @@ module RegularExpression
                 byte1 = connector.state
                 byte2 = connector.state
 
-                connector.connect(connector.from, byte1, min_bytes[0]..max_bytes[0])
-                connector.connect(byte1, byte2, min_bytes[1]..max_bytes[1])
-                connector.connect(byte2, connector.to, min_bytes[2]..max_bytes[2])
+                connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
+                connector.connect_range(byte1, byte2, min_bytes[1]..max_bytes[1])
+                connector.connect_range(byte2, connector.to, min_bytes[2]..max_bytes[2])
               end
             end
           end
@@ -141,7 +181,24 @@ module RegularExpression
 
       # Connect the states for values that fall within the range that would be
       # encoded with four bytes.
-      def connect_bytes4(connector)
+      def connect_bytes4(range)
+        # We can shortcut if the range entirely encapsulates the potential range
+        # of codepoints that can be encoded with four bytes.
+        if range_encapsulates?(range, BYTES4_RANGE)
+          min_bytes = encode_bytes4(BYTES4_RANGE.begin)
+          max_bytes = encode_bytes4(BYTES4_RANGE.end)
+
+          byte1 = connector.state
+          byte2 = connector.state
+          byte3 = connector.state
+
+          connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
+          connector.connect_range(byte1, byte2, min_bytes[1]..max_bytes[1])
+          connector.connect_range(byte2, byte3, min_bytes[2]..max_bytes[2])
+          connector.connect_range(byte3, connector.to, min_bytes[3]..max_bytes[3])
+          return
+        end
+
         byte1_step = 1 << 18
         byte2_step = 1 << 12
         byte3_step = 1 << 6
@@ -166,10 +223,10 @@ module RegularExpression
                     byte2 = connector.state
                     byte3 = connector.state
 
-                    connector.connect(connector.from, byte1, min_bytes[0]..max_bytes[0])
-                    connector.connect(byte1, byte2, min_bytes[1]..max_bytes[1])
-                    connector.connect(byte2, byte3, min_bytes[2]..max_bytes[2])
-                    connector.connect(byte3, connector.to, min_bytes[3]..max_bytes[3])
+                    connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
+                    connector.connect_range(byte1, byte2, min_bytes[1]..max_bytes[1])
+                    connector.connect_range(byte2, byte3, min_bytes[2]..max_bytes[2])
+                    connector.connect_range(byte3, connector.to, min_bytes[3]..max_bytes[3])
                   end
                 end
               end

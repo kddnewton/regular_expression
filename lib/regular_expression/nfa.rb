@@ -36,6 +36,9 @@ module RegularExpression
     # This represents a transition between two states in the NFA that accepts
     # any character.
     class AnyTransition
+      def pretty_print(q)
+        q.text("(any)")
+      end
     end
 
     # This represents a transition between two states in the NFA that matches
@@ -50,11 +53,26 @@ module RegularExpression
       def deconstruct_keys(keys)
         { value: value }
       end
+
+      def pretty_print(q)
+        q.group do
+          q.text("(character")
+          q.nest(2) do
+            q.breakable
+            q.pp(value)
+          end
+          q.breakable("")
+          q.text(")")
+        end
+      end
     end
 
     # This represents a transition between two states in the NFA that is allowed
     # to transition without matching any characters.
     class EpsilonTransition
+      def pretty_print(q)
+        q.text("(epsilon)")
+      end
     end
 
     # This represents a transition between two states in the NFA that matches
@@ -69,6 +87,20 @@ module RegularExpression
 
       def deconstruct_keys(keys)
         { from: from, to: to }
+      end
+
+      def pretty_print(q)
+        q.group do
+          q.text("(range")
+          q.nest(2) do
+            q.breakable
+            q.pp(from)
+            q.breakable
+            q.pp(to)
+          end
+          q.breakable("")
+          q.text(")")
+        end
       end
     end
 
@@ -102,7 +134,7 @@ module RegularExpression
           @labels = labels
         end
 
-        def connect(left, right, range)
+        def connect_range(left, right, range)
           if range.begin == range.end
             left.connect(CharacterTransition.new(value: range.begin), right)
           else
@@ -121,7 +153,7 @@ module RegularExpression
       # groupings.
       def connect_range(min, max, from, to)
         connector = Connector.new(from: from, to: to, labels: labels)
-        UTF8::Encoder.new(min..max).connect(connector)
+        UTF8::Encoder.new(connector).connect_range(min..max)
       end
 
       # Connect an individual value between two states. This breaks it up into
@@ -134,6 +166,14 @@ module RegularExpression
         bytes.each_with_index do |byte, index|
           states[index].connect(CharacterTransition.new(value: byte), states[index + 1])
         end
+      end
+
+      # Connect two states by a transition that will accept any input. This
+      # needs to factor in the encoding since "any input" could be a variable
+      # number of bytes.
+      def connect_any(from, to)
+        connector = Connector.new(from: from, to: to, labels: labels)
+        UTF8::Encoder.new(connector).connect_any
       end
 
       # This takes a node in the AST and two states in the NFA and creates
@@ -152,7 +192,7 @@ module RegularExpression
             connect(expression, from, to)
           end
         in AST::MatchAny
-          from.connect(AnyTransition.new, to)
+          connect_any(from, to)
         in AST::MatchCharacter[value: value]
           connect_value(value.ord, from, to)
         in AST::MatchClass[name: :digit]
