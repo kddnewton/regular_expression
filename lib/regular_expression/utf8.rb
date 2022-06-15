@@ -42,17 +42,6 @@ module RegularExpression
 
       private
 
-      # This is just a sanity check. When we're stepping through the possible
-      # range of codepoints to encode into the state machine, we step in
-      # increments that maintain the same leading bytes. We do this so we can
-      # minimize the number of transitions that we are adding to the state
-      # machine.
-      def assert_equal_leading_bytes(bytes1, bytes2)
-        bytes1[0...-1].zip(bytes2[0...-1]).each do |(left, right)|
-          raise if left != right
-        end
-      end
-
       # Check if two ranges overlap. Used to determine if we need to add
       # transitions between states for a given range of codepoints.
       def ranges_overlap?(left, right)
@@ -63,6 +52,24 @@ module RegularExpression
       # usually shortcut doing further subdivision of the range.
       def range_encapsulates?(outer, inner)
         outer.begin <= inner.begin && outer.end >= inner.end
+      end
+
+      # Connect a sequence of bytes between the from and to states on the
+      # connector.
+      def connect_byte_sequence(min_bytes, max_bytes)
+        states = [
+          connector.from,
+          *Array.new(min_bytes.length - 1) { connector.state },
+          connector.to
+        ]
+
+        min_bytes.length.times do |index|
+          connector.connect_range(
+            states[index],
+            states[index + 1],
+            min_bytes[index]..max_bytes[index]
+          )
+        end
       end
 
       # Connect the states for values that fall within the range that would be
@@ -91,10 +98,7 @@ module RegularExpression
         if range_encapsulates?(range, BYTES2_RANGE)
           min_bytes = encode_bytes2(BYTES2_RANGE.begin)
           max_bytes = encode_bytes2(BYTES2_RANGE.end)
-
-          byte1 = connector.state
-          connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
-          connector.connect_range(byte1, connector.to, min_bytes[1]..max_bytes[1])
+          connect_byte_sequence(min_bytes, max_bytes)
           return
         end
 
@@ -106,11 +110,7 @@ module RegularExpression
           if ranges_overlap?(range, step_min..step_max)
             min_bytes = encode_bytes2([step_min, range.begin].max)
             max_bytes = encode_bytes2([step_max, range.end].min)
-            assert_equal_leading_bytes(min_bytes, max_bytes)
-
-            byte1 = connector.state
-            connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
-            connector.connect_range(byte1, connector.to, min_bytes[1]..max_bytes[1])
+            connect_byte_sequence(min_bytes, max_bytes)
           end
         end
       end
@@ -132,13 +132,7 @@ module RegularExpression
         if range_encapsulates?(range, BYTES3_RANGE)
           min_bytes = encode_bytes3(BYTES3_RANGE.begin)
           max_bytes = encode_bytes3(BYTES3_RANGE.end)
-
-          byte1 = connector.state
-          byte2 = connector.state
-
-          connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
-          connector.connect_range(byte1, byte2, min_bytes[1]..max_bytes[1])
-          connector.connect_range(byte2, connector.to, min_bytes[2]..max_bytes[2])
+          connect_byte_sequence(min_bytes, max_bytes)
           return
         end
 
@@ -148,21 +142,21 @@ module RegularExpression
         BYTES3_RANGE.begin.step(BYTES3_RANGE.end, byte1_step) do |parent_step_min|
           parent_step_max = parent_step_min + byte1_step - 1
 
-          if ranges_overlap?(range, parent_step_min..parent_step_max)
+          if range_encapsulates?(range, parent_step_min..parent_step_max)
+            # If we can shortcut because the range entirely encapsulates this
+            # slice of the second byte, then we do that here.
+            min_bytes = encode_bytes3(parent_step_min)
+            max_bytes = encode_bytes3(parent_step_max)
+            connect_byte_sequence(min_bytes, max_bytes)
+          elsif ranges_overlap?(range, parent_step_min..parent_step_max)
+            # Otherwise, we need to further slice down into the third byte.
             parent_step_min.step(parent_step_max, byte2_step) do |child_step_min|
               child_step_max = child_step_min + byte2_step - 1
 
               if ranges_overlap?(range, child_step_min..child_step_max)
                 min_bytes = encode_bytes3([child_step_min, range.begin].max)
                 max_bytes = encode_bytes3([child_step_max, range.end].min)
-                assert_equal_leading_bytes(min_bytes, max_bytes)
-
-                byte1 = connector.state
-                byte2 = connector.state
-
-                connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
-                connector.connect_range(byte1, byte2, min_bytes[1]..max_bytes[1])
-                connector.connect_range(byte2, connector.to, min_bytes[2]..max_bytes[2])
+                connect_byte_sequence(min_bytes, max_bytes)
               end
             end
           end
@@ -187,15 +181,7 @@ module RegularExpression
         if range_encapsulates?(range, BYTES4_RANGE)
           min_bytes = encode_bytes4(BYTES4_RANGE.begin)
           max_bytes = encode_bytes4(BYTES4_RANGE.end)
-
-          byte1 = connector.state
-          byte2 = connector.state
-          byte3 = connector.state
-
-          connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
-          connector.connect_range(byte1, byte2, min_bytes[1]..max_bytes[1])
-          connector.connect_range(byte2, byte3, min_bytes[2]..max_bytes[2])
-          connector.connect_range(byte3, connector.to, min_bytes[3]..max_bytes[3])
+          connect_byte_sequence(min_bytes, max_bytes)
           return
         end
 
@@ -206,27 +192,32 @@ module RegularExpression
         BYTES4_RANGE.begin.step(BYTES4_RANGE.end, byte1_step) do |grand_parent_step_min|
           grand_parent_step_max = grand_parent_step_min + byte1_step - 1
 
-          if ranges_overlap?(range, grand_parent_step_min..grand_parent_step_max)
+          if range_encapsulates?(range, grand_parent_step_min..grand_parent_step_max)
+            # If we can shortcut because the range entirely encapsulates this
+            # slice of the second byte, then we do that here.
+            min_bytes = encode_bytes4(grand_parent_step_min)
+            max_bytes = encode_bytes4(grand_parent_step_max)
+            connect_byte_sequence(min_bytes, max_bytes)
+          elsif ranges_overlap?(range, grand_parent_step_min..grand_parent_step_max)
+            # Otherwise, we need to further slice down into the third byte.
             grand_parent_step_min.step(grand_parent_step_max, byte2_step) do |parent_step_min|
               parent_step_max = parent_step_min + byte2_step - 1
 
-              if ranges_overlap?(range, parent_step_min..parent_step_max)
+              if range_encapsulates?(range, parent_step_min..parent_step_max)
+                # If we can shortcut because the range entirely encapsulates
+                # this slice of the third byte, then we do that here.
+                min_bytes = encode_bytes4(parent_step_min)
+                max_bytes = encode_bytes4(parent_step_max)
+                connect_byte_sequence(min_bytes, max_bytes)
+              elsif ranges_overlap?(range, parent_step_min..parent_step_max)
+                # Otherwise, we need to further slice down into the fourth byte.
                 parent_step_min.step(parent_step_max, byte3_step) do |child_step_min|
                   child_step_max = child_step_min + byte3_step - 1
 
                   if ranges_overlap?(range, child_step_min..child_step_max)
                     min_bytes = encode_bytes4([child_step_min, range.begin].max)
                     max_bytes = encode_bytes4([child_step_max, range.end].min)
-                    assert_equal_leading_bytes(min_bytes, max_bytes)
-
-                    byte1 = connector.state
-                    byte2 = connector.state
-                    byte3 = connector.state
-
-                    connector.connect_range(connector.from, byte1, min_bytes[0]..max_bytes[0])
-                    connector.connect_range(byte1, byte2, min_bytes[1]..max_bytes[1])
-                    connector.connect_range(byte2, byte3, min_bytes[2]..max_bytes[2])
-                    connector.connect_range(byte3, connector.to, min_bytes[3]..max_bytes[3])
+                    connect_byte_sequence(min_bytes, max_bytes)
                   end
                 end
               end

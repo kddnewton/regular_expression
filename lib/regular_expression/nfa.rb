@@ -219,7 +219,7 @@ module RegularExpression
             end
           end
         in AST::MatchRange[from: min, to: max]
-          connect_range(min, max, from, to)
+          connect_range(min.ord, max.ord, from, to)
         in AST::MatchSet[items:]
           items.each { |item| connect(item, from, to) }
         in AST::Pattern[expressions: expressions]
