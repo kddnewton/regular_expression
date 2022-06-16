@@ -54,31 +54,12 @@ module RegularExpression
         outer.begin <= inner.begin && outer.end >= inner.end
       end
 
-      # Connect a sequence of bytes between the from and to states on the
-      # connector.
-      def connect_byte_sequence(min_bytes, max_bytes)
-        states = [
-          connector.from,
-          *Array.new(min_bytes.length - 1) { connector.state },
-          connector.to
-        ]
-
-        min_bytes.length.times do |index|
-          connector.connect_range(
-            states[index],
-            states[index + 1],
-            min_bytes[index]..max_bytes[index]
-          )
-        end
-      end
-
       # Connect the states for values that fall within the range that would be
       # encoded with a single byte.
       def connect_bytes1(range)
-        connector.connect_range(
-          connector.from,
-          connector.to,
-          [BYTES1_RANGE.begin, range.begin].max..[BYTES1_RANGE.end, range.end].min
+        connector.connect(
+          [[BYTES1_RANGE.begin, range.begin].max],
+          [[BYTES1_RANGE.end, range.end].min]
         )
       end
 
@@ -98,7 +79,7 @@ module RegularExpression
         if range_encapsulates?(range, BYTES2_RANGE)
           min_bytes = encode_bytes2(BYTES2_RANGE.begin)
           max_bytes = encode_bytes2(BYTES2_RANGE.end)
-          connect_byte_sequence(min_bytes, max_bytes)
+          connector.connect(min_bytes, max_bytes)
           return
         end
 
@@ -110,7 +91,7 @@ module RegularExpression
           if ranges_overlap?(range, step_min..step_max)
             min_bytes = encode_bytes2([step_min, range.begin].max)
             max_bytes = encode_bytes2([step_max, range.end].min)
-            connect_byte_sequence(min_bytes, max_bytes)
+            connector.connect(min_bytes, max_bytes)
           end
         end
       end
@@ -132,7 +113,7 @@ module RegularExpression
         if range_encapsulates?(range, BYTES3_RANGE)
           min_bytes = encode_bytes3(BYTES3_RANGE.begin)
           max_bytes = encode_bytes3(BYTES3_RANGE.end)
-          connect_byte_sequence(min_bytes, max_bytes)
+          connector.connect(min_bytes, max_bytes)
           return
         end
 
@@ -147,7 +128,7 @@ module RegularExpression
             # slice of the second byte, then we do that here.
             min_bytes = encode_bytes3(parent_step_min)
             max_bytes = encode_bytes3(parent_step_max)
-            connect_byte_sequence(min_bytes, max_bytes)
+            connector.connect(min_bytes, max_bytes)
           elsif ranges_overlap?(range, parent_step_min..parent_step_max)
             # Otherwise, we need to further slice down into the third byte.
             parent_step_min.step(parent_step_max, byte2_step) do |child_step_min|
@@ -156,7 +137,7 @@ module RegularExpression
               if ranges_overlap?(range, child_step_min..child_step_max)
                 min_bytes = encode_bytes3([child_step_min, range.begin].max)
                 max_bytes = encode_bytes3([child_step_max, range.end].min)
-                connect_byte_sequence(min_bytes, max_bytes)
+                connector.connect(min_bytes, max_bytes)
               end
             end
           end
@@ -181,7 +162,7 @@ module RegularExpression
         if range_encapsulates?(range, BYTES4_RANGE)
           min_bytes = encode_bytes4(BYTES4_RANGE.begin)
           max_bytes = encode_bytes4(BYTES4_RANGE.end)
-          connect_byte_sequence(min_bytes, max_bytes)
+          connector.connect(min_bytes, max_bytes)
           return
         end
 
@@ -197,7 +178,7 @@ module RegularExpression
             # slice of the second byte, then we do that here.
             min_bytes = encode_bytes4(grand_parent_step_min)
             max_bytes = encode_bytes4(grand_parent_step_max)
-            connect_byte_sequence(min_bytes, max_bytes)
+            connector.connect(min_bytes, max_bytes)
           elsif ranges_overlap?(range, grand_parent_step_min..grand_parent_step_max)
             # Otherwise, we need to further slice down into the third byte.
             grand_parent_step_min.step(grand_parent_step_max, byte2_step) do |parent_step_min|
@@ -208,7 +189,7 @@ module RegularExpression
                 # this slice of the third byte, then we do that here.
                 min_bytes = encode_bytes4(parent_step_min)
                 max_bytes = encode_bytes4(parent_step_max)
-                connect_byte_sequence(min_bytes, max_bytes)
+                connector.connect(min_bytes, max_bytes)
               elsif ranges_overlap?(range, parent_step_min..parent_step_max)
                 # Otherwise, we need to further slice down into the fourth byte.
                 parent_step_min.step(parent_step_max, byte3_step) do |child_step_min|
@@ -217,7 +198,7 @@ module RegularExpression
                   if ranges_overlap?(range, child_step_min..child_step_max)
                     min_bytes = encode_bytes4([child_step_min, range.begin].max)
                     max_bytes = encode_bytes4([child_step_max, range.end].min)
-                    connect_byte_sequence(min_bytes, max_bytes)
+                    connector.connect(min_bytes, max_bytes)
                   end
                 end
               end

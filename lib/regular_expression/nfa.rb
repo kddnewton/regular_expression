@@ -106,6 +106,38 @@ module RegularExpression
 
     # This class compiles an AST into an NFA.
     class Compiler
+      # This implements the necessary interface for the encoding classes to
+      # connect between two states.
+      class Connector
+        attr_reader :from, :to, :labels
+
+        def initialize(from:, to:, labels:)
+          @from = from
+          @to = to
+          @labels = labels
+        end
+
+        # This method accepts two arrays of bytes of equal length.
+        def connect(min_bytes, max_bytes)
+          states = [
+            from,
+            *Array.new(min_bytes.length - 1) { State.new(label: labels.next) },
+            to
+          ]
+
+          min_bytes.length.times do |index|
+            transition =
+              if min_bytes[index] == max_bytes[index]
+                CharacterTransition.new(value: min_bytes[index])
+              else
+                RangeTransition.new(from: min_bytes[index], to: max_bytes[index])
+              end
+
+            states[index].connect(transition, states[index + 1])
+          end
+        end
+      end
+
       attr_reader :labels, :unicode
 
       def initialize
@@ -122,30 +154,6 @@ module RegularExpression
       end
 
       private
-
-      # This implements the necessary interface for the UTF8::Encoder class to
-      # connect between two states.
-      class Connector
-        attr_reader :from, :to, :labels
-
-        def initialize(from:, to:, labels:)
-          @from = from
-          @to = to
-          @labels = labels
-        end
-
-        def connect_range(left, right, range)
-          if range.begin == range.end
-            left.connect(CharacterTransition.new(value: range.begin), right)
-          else
-            left.connect(RangeTransition.new(from: range.begin, to: range.end), right)
-          end
-        end
-
-        def state
-          State.new(label: labels.next)
-        end
-      end
 
       # Connect a range of values between two states. Similar to connect_value,
       # this also breaks it up into its component bytes, but it's a little
