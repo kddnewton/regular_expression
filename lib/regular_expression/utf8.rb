@@ -26,6 +26,13 @@ module RegularExpression
         @connector = connector
       end
 
+      def connect_any
+        connect_bytes1(BYTES1_RANGE)
+        connect_bytes2(BYTES2_RANGE)
+        connect_bytes3(BYTES3_RANGE)
+        connect_bytes4(BYTES4_RANGE)
+      end
+
       def connect_range(range)
         connect_bytes1(range) if ranges_overlap?(range, BYTES1_RANGE)
         connect_bytes2(range) if ranges_overlap?(range, BYTES2_RANGE)
@@ -33,11 +40,13 @@ module RegularExpression
         connect_bytes4(range) if ranges_overlap?(range, BYTES4_RANGE)
       end
 
-      def connect_any
-        connect_bytes1(BYTES1_RANGE)
-        connect_bytes2(BYTES2_RANGE)
-        connect_bytes3(BYTES3_RANGE)
-        connect_bytes4(BYTES4_RANGE)
+      def connect_value(value)
+        case value
+        when BYTES1_RANGE then connect_bytes1(value..value)
+        when BYTES2_RANGE then connect_bytes2(value..value)
+        when BYTES3_RANGE then connect_bytes3(value..value)
+        when BYTES4_RANGE then connect_bytes4(value..value)
+        end
       end
 
       private

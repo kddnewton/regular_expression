@@ -155,6 +155,14 @@ module RegularExpression
 
       private
 
+      # Connect an individual value between two states. This breaks it up into
+      # its byte representation and creates states for each one. Since this is
+      # an NFA it's okay for us to duplicate transitions here.
+      def connect_value(value, from, to)
+        connector = Connector.new(from: from, to: to, labels: labels)
+        UTF8::Encoder.new(connector).connect_value(value)
+      end
+
       # Connect a range of values between two states. Similar to connect_value,
       # this also breaks it up into its component bytes, but it's a little
       # harder because we need to mask a bunch of times to get the correct
@@ -162,18 +170,6 @@ module RegularExpression
       def connect_range(min, max, from, to)
         connector = Connector.new(from: from, to: to, labels: labels)
         UTF8::Encoder.new(connector).connect_range(min..max)
-      end
-
-      # Connect an individual value between two states. This breaks it up into
-      # its byte representation and creates states for each one. Since this is
-      # an NFA it's okay for us to duplicate transitions here.
-      def connect_value(value, from, to)
-        bytes = value.chr(Encoding::UTF_8).bytes
-        states = [from, *Array.new(bytes.length - 1) { State.new(label: labels.next) }, to]
-
-        bytes.each_with_index do |byte, index|
-          states[index].connect(CharacterTransition.new(value: byte), states[index + 1])
-        end
       end
 
       # Connect two states by a transition that will accept any input. This
@@ -204,19 +200,19 @@ module RegularExpression
         in AST::MatchCharacter[value: value]
           connect_value(value.ord, from, to)
         in AST::MatchClass[name: :digit]
-          from.connect(RangeTransition.new(from: "0".ord, to: "9".ord), to)
+          connect_range("0".ord, "9".ord, from, to)
         in AST::MatchClass[name: :hex]
-          from.connect(RangeTransition.new(from: "0".ord, to: "9".ord), to)
-          from.connect(RangeTransition.new(from: "A".ord, to: "F".ord), to)
-          from.connect(RangeTransition.new(from: "a".ord, to: "f".ord), to)
+          connect_range("0".ord, "9".ord, from, to)
+          connect_range("A".ord, "F".ord, from, to)
+          connect_range("a".ord, "f".ord, from, to)
         in AST::MatchClass[name: :space]
-          from.connect(RangeTransition.new(from: "\t".ord, to: "\r".ord), to)
-          from.connect(CharacterTransition.new(value: " ".ord), to)
+          connect_range("\t".ord, "\r".ord, from, to)
+          connect_value(" ".ord, from, to)
         in AST::MatchClass[name: :word]
-          from.connect(RangeTransition.new(from: "0".ord, to: "9".ord), to)
-          from.connect(CharacterTransition.new(value: "_".ord), to)
-          from.connect(RangeTransition.new(from: "A".ord, to: "Z".ord), to)
-          from.connect(RangeTransition.new(from: "a".ord, to: "z".ord), to)
+          connect_range("0".ord, "9".ord, from, to)
+          connect_value("_".ord, from, to)
+          connect_range("A".ord, "Z".ord, from, to)
+          connect_range("a".ord, "z".ord, from, to)
         in AST::MatchProperty[value:]
           unicode[value].each do |entry|
             case entry
