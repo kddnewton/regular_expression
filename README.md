@@ -1,3 +1,7 @@
+# DEPRECATED
+
+Being replaced by [kddnewton/exreg](https://github.com/kddnewton/exreg).
+
 # RegularExpression
 
 [![Build Status](https://github.com/kddnewton/regular_expression/workflows/Main/badge.svg)](https://github.com/kddnewton/regular_expression/actions)
